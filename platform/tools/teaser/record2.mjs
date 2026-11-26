@@ -50,7 +50,7 @@ async function caption(en, ar) {
       document.head.appendChild(style);
       box = document.createElement('div');
       box.id = 'demo-caption';
-      box.style.cssText = 'position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:86%;z-index:2147483647;background:rgba(7,14,20,.86);border:1px solid rgba(243,217,139,.35);border-radius:18px;color:#fff;text-align:center;padding:10px 28px 12px;font-family:system-ui,sans-serif;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:capin .35s ease both';
+      box.style.cssText = 'position:fixed;left:50%;bottom:26px;transform:translateX(-50%);width:max-content;max-width:88%;z-index:2147483647;background:rgba(7,14,20,.86);border:1px solid rgba(243,217,139,.35);border-radius:18px;color:#fff;text-align:center;padding:10px 28px 12px;font-family:system-ui,sans-serif;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:capin .35s ease both';
       document.body.appendChild(box);
     }
     box.innerHTML = '';
