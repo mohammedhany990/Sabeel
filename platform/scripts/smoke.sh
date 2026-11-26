@@ -58,6 +58,9 @@ check "profile created from auth.user.registered event" "Smoke Test" "$NAME"
 echo "== quran =="
 check "list surahs" "Al-Faatiha" "$(curl -s "$BASE/api/v1/quran/surahs" -H "$AUTH" | jq -r '.[0].nameEn')"
 check "read ayah 1:1" "1" "$(curl -s "$BASE/api/v1/quran/ayahs/1/1" -H "$AUTH" | jq -r '.ayahNumber')"
+check "editions list has 5 sources" "5" "$(curl -s "$BASE/api/v1/quran/editions" | jq -r 'length')"
+check "muyassar tafsir for 2:255 is Arabic text" "true" "$(curl -s "$BASE/api/v1/quran/editions/arabic_moyassar/2/255" | jq -r '.entries[0].text | test("[\u0600-\u06FF]")')"
+check "english translation version" "1.0.21" "$(curl -s "$BASE/api/v1/quran/editions/english_rwwad/1/2" | jq -r '.edition.version')"
 check "per-ayah audio url" "https://everyayah.com/data/Alafasy_128kbps/001001.mp3" \
   "$(curl -s "$BASE/api/v1/quran/reciters/1/audio?surah=1&ayah=1" -H "$AUTH" | jq -r '.audioUrl')"
 check "full-surah audio url" "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3" \
