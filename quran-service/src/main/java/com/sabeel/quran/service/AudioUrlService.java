@@ -29,11 +29,15 @@ public class AudioUrlService {
     }
 
     private String effectiveBase(String override, String defaultBase) {
-        if (override.isEmpty()) {
+        if (override.isEmpty() || !isPublicDefaultHost(defaultBase)) {
             return defaultBase;
         }
         String clean = trimSlash(defaultBase);
         return override + clean.substring(clean.lastIndexOf('/'));
+    }
+
+    private boolean isPublicDefaultHost(String base) {
+        return base != null && (base.contains("//everyayah.com/") || base.contains("//download.quranicaudio.com/"));
     }
 
     private String trimSlash(String value) {

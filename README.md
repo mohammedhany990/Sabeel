@@ -62,7 +62,43 @@ Audio links come from the quran-service API (`/reciters/{id}/ayahs/...` and the 
 - `QURAN_AUDIO_AYAH_BASE_URL`, for example `https://audio.example.org/ayah`. The API then returns `https://audio.example.org/ayah/<reciter folder>/<surah 3 digits><ayah 3 digits>.mp3`, for example `.../Alafasy_128kbps/001001.mp3`.
 - `QURAN_AUDIO_SURAH_BASE_URL`, for example `https://audio.example.org/surah`, giving `.../<reciter folder>/<surah 3 digits>.mp3`.
 
-The `<reciter folder>` is the last segment of the reciter's default base URL (for example `Alafasy_128kbps` or `mishaari_raashid_al_3afaasee`), so keep those folder names. Leave both empty to keep the public hosts. The files must be reachable over public HTTPS from the user's browser; the recitation-service only accepts public http(s) audio URLs. This project does not host or copy any audio.
+The `<reciter folder>` is the last segment of the reciter's default base URL (for example `Alafasy_128kbps` or `mishaari_raashid_al_3afaasee`), so keep those folder names. Leave both empty to keep the public hosts. The override applies only to the built-in reciters. Reciters you add yourself (next section) use their own URLs. The files must be reachable over public HTTPS from the user's browser; the recitation-service only accepts public http(s) audio URLs. This project does not host or copy any audio.
+
+## Adding your own reciters
+
+Reciters come from one JSON file. The built-in list is `quran-service/src/main/resources/quran/reciters.json`. To add your own, copy `platform/reciters/reciters.example.json` to `platform/reciters/reciters.json`, edit it, set `QURAN_RECITERS_FILE=/app/reciters/reciters.json` in `platform/.env`, and restart quran-service (`docker compose up -d quran-service`). The file is read at every start and each reciter is inserted or updated by its `key`, so editing an entry and restarting changes it. A reciter cannot be removed by deleting its entry; delete the row in the `reciters` table of `sabeel_quran` for that.
+
+Example entry:
+
+```json
+{
+  "reciters": [
+    {
+      "key": "my-sheikh",
+      "nameAr": "اسم القارئ",
+      "nameEn": "Reciter Name",
+      "country": "Egypt",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://audio.example.org/ayah/my-sheikh",
+      "surahBaseUrl": "https://audio.example.org/surah/my-sheikh"
+    }
+  ]
+}
+```
+
+Fields: `key` (lowercase letters, digits, `-` or `_`, unique and permanent), `nameAr`, `nameEn`, `country` and `style` (shown in the app), `ayahBaseUrl` (required, folder with one file per ayah), `surahBaseUrl` (optional, folder with one file per surah; without it the full-surah audio endpoint answers not found for that reciter).
+
+Folder layout for your mp3 files (the surah and ayah numbers are zero-padded to 3 digits):
+
+```
+ayah/my-sheikh/001001.mp3    Al-Fatihah ayah 1
+ayah/my-sheikh/001002.mp3
+ayah/my-sheikh/114006.mp3    An-Nas ayah 6
+surah/my-sheikh/001.mp3      Al-Fatihah, whole surah
+surah/my-sheikh/114.mp3
+```
+
+Serve the `ayah` and `surah` folders from any static HTTPS host (an object storage bucket, or nginx with `root /srv/audio;` and `autoindex off;`). Browsers play the files directly from the URLs the API returns, so the host must allow plain GET and, if it is on another domain than the web app, send `Access-Control-Allow-Origin: *` for audio if you also want the web app to read them as media (plain `<audio>` playback works without it). The web app needs no change: it lists reciters from the API and plays the returned URLs, so a new reciter appears after the restart. The recitation-service only accepts public http(s) audio URLs for evaluation. This project does not host or copy any audio; check that you may use the recordings you host.
 
 ## Production readiness
 

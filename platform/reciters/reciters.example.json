@@ -1,0 +1,13 @@
+{
+  "reciters": [
+    {
+      "key": "my-sheikh",
+      "nameAr": "اسم القارئ",
+      "nameEn": "Reciter Name",
+      "country": "Egypt",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://audio.example.org/ayah/my-sheikh",
+      "surahBaseUrl": "https://audio.example.org/surah/my-sheikh"
+    }
+  ]
+}

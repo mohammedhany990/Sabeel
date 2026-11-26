@@ -1,0 +1,49 @@
+{
+  "reciters": [
+    {
+      "key": "alafasy",
+      "nameAr": "مشاري راشد العفاسي",
+      "nameEn": "Mishary Rashid Alafasy",
+      "country": "Kuwait",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://everyayah.com/data/Alafasy_128kbps",
+      "surahBaseUrl": "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee"
+    },
+    {
+      "key": "husary",
+      "nameAr": "محمود خليل الحصري",
+      "nameEn": "Mahmoud Khalil Al-Husary",
+      "country": "Egypt",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://everyayah.com/data/Husary_128kbps",
+      "surahBaseUrl": "https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree"
+    },
+    {
+      "key": "abdul-basit",
+      "nameAr": "عبد الباسط عبد الصمد",
+      "nameEn": "Abdul Basit Abdus Samad",
+      "country": "Egypt",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://everyayah.com/data/Abdul_Basit_Murattal_64kbps",
+      "surahBaseUrl": "https://download.quranicaudio.com/quran/abdul_basit_murattal"
+    },
+    {
+      "key": "minshawi",
+      "nameAr": "محمد صديق المنشاوي",
+      "nameEn": "Mohamed Siddiq Al-Minshawi",
+      "country": "Egypt",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://everyayah.com/data/Minshawy_Murattal_128kbps",
+      "surahBaseUrl": "https://download.quranicaudio.com/quran/muhammad_siddeeq_al-minshaawee"
+    },
+    {
+      "key": "sudais",
+      "nameAr": "عبد الرحمن السديس",
+      "nameEn": "Abdul Rahman Al-Sudais",
+      "country": "Saudi Arabia",
+      "style": "Murattal",
+      "ayahBaseUrl": "https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps",
+      "surahBaseUrl": "https://download.quranicaudio.com/quran/abdurrahmaan_as-sudays"
+    }
+  ]
+}

@@ -15,6 +15,9 @@ public class Reciter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(unique = true)
+    private String reciterKey;
+
     @Column(nullable = false)
     private String nameAr;
 

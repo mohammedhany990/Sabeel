@@ -1,10 +1,8 @@
 package com.sabeel.quran.seed;
 
 import com.sabeel.quran.domain.Ayah;
-import com.sabeel.quran.domain.Reciter;
 import com.sabeel.quran.domain.Surah;
 import com.sabeel.quran.repository.AyahRepository;
-import com.sabeel.quran.repository.ReciterRepository;
 import com.sabeel.quran.repository.SurahRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +19,7 @@ import java.util.List;
 public class QuranSeeder implements CommandLineRunner {
     private final SurahRepository surahRepository;
     private final AyahRepository ayahRepository;
-    private final ReciterRepository reciterRepository;
+    private final ReciterCatalog reciterCatalog;
 
     @Value("${quran.seed.mode:full}")
     private String seedMode;
@@ -37,6 +35,7 @@ public class QuranSeeder implements CommandLineRunner {
                 surahRepository.deleteAllInBatch();
                 seedFull();
             }
+            reciterCatalog.sync();
             return;
         }
         if (full) {
@@ -47,7 +46,7 @@ public class QuranSeeder implements CommandLineRunner {
             seedSurahs();
             seedAyahs();
         }
-        seedReciters();
+        reciterCatalog.sync();
     }
 
     private void seedFull() {
@@ -112,19 +111,5 @@ public class QuranSeeder implements CommandLineRunner {
                     .page(meta[i][3]).juz(meta[i][4]).hizb(meta[i][4] == 30 ? 60 : 1)
                     .build());
         }
-    }
-
-    private void seedReciters() {
-        reciterRepository.saveAll(List.of(
-                reciter("مشاري راشد العفاسي", "Mishary Rashid Alafasy", "Kuwait", "Murattal", "https://everyayah.com/data/Alafasy_128kbps", "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee"),
-                reciter("محمود خليل الحصري", "Mahmoud Khalil Al-Husary", "Egypt", "Murattal", "https://everyayah.com/data/Husary_128kbps", "https://download.quranicaudio.com/quran/mahmood_khaleel_al-husaree"),
-                reciter("عبد الباسط عبد الصمد", "Abdul Basit Abdus Samad", "Egypt", "Murattal", "https://everyayah.com/data/Abdul_Basit_Murattal_64kbps", "https://download.quranicaudio.com/quran/abdul_basit_murattal"),
-                reciter("محمد صديق المنشاوي", "Mohamed Siddiq Al-Minshawi", "Egypt", "Murattal", "https://everyayah.com/data/Minshawy_Murattal_128kbps", "https://download.quranicaudio.com/quran/muhammad_siddeeq_al-minshaawee"),
-                reciter("عبد الرحمن السديس", "Abdul Rahman Al-Sudais", "Saudi Arabia", "Murattal", "https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps", "https://download.quranicaudio.com/quran/abdurrahmaan_as-sudays")));
-    }
-
-    private Reciter reciter(String ar, String en, String country, String style, String baseUrl, String fullBaseUrl) {
-        return Reciter.builder().nameAr(ar).nameEn(en).country(country).style(style)
-                .audioBaseUrl(baseUrl).fullAudioBaseUrl(fullBaseUrl).build();
     }
 }
