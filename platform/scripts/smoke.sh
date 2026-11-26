@@ -119,6 +119,14 @@ check "tasbeeh total after saving 33" "33" \
 check "tasbeeh rejects an unknown phrase" "400" \
   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/v1/azkar/tasbeeh" -H "$AUTH" -H 'Content-Type: application/json' -d '{"phrase":"NOPE","count":1}')"
 
+echo "== khatma =="
+check "khatma starts with a daily target" "21" \
+  "$(curl -s -X POST "$BASE/api/v1/quran/khatma" -H "$AUTH" -H 'Content-Type: application/json' -d '{"days":30}' | jq -r '.pagesPerDay')"
+check "khatma progress is stored" "100" \
+  "$(curl -s -X PUT "$BASE/api/v1/quran/khatma/progress" -H "$AUTH" -H 'Content-Type: application/json' -d '{"page":100}' | jq -r '.currentPage')"
+check "second khatma is rejected" "409" \
+  "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/v1/quran/khatma" -H "$AUTH" -H 'Content-Type: application/json' -d '{"days":10}')"
+
 echo "== learning =="
 TEACHER_TOKEN=$(curl -s -X POST "$BASE/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"teacher@sabeel.dev","password":"P@ssw0rd!23"}' | jq -r '.accessToken')

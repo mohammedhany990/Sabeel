@@ -517,6 +517,17 @@ export const AR: Record<string, string> = {
   "Save count": "حفظ العدد",
   "Counted on this device until you save.": "يُعدّ على هذا الجهاز حتى تحفظ.",
   "Saved.": "تم الحفظ.",
+  "Khatma plan": "خطة الختمة",
+  "Finish in (days)": "أنهِ في (أيام)",
+  "Start khatma": "ابدأ الختمة",
+  "Last page read": "آخر صفحة قرأتها",
+  "Update": "تحديث",
+  "Abandon": "إلغاء الخطة",
+  "Pages per day": "صفحات في اليوم",
+  "Days left": "الأيام المتبقية",
+  "On track": "على المسار",
+  "Behind schedule": "متأخر عن الخطة",
+  "Khatma complete. May Allah accept it.": "تمت الختمة. تقبل الله منك.",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {

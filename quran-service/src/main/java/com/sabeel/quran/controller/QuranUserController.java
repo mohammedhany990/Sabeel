@@ -19,6 +19,7 @@ import java.util.UUID;
 @Tag(name = "Quran personal")
 public class QuranUserController {
     private final QuranService quranService;
+    private final com.sabeel.quran.service.KhatmaService khatmaService;
 
     @PostMapping("/bookmarks")
     @ResponseStatus(HttpStatus.CREATED)
@@ -58,6 +59,34 @@ public class QuranUserController {
                                                  @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
         return quranService.history(userId(auth), page, size);
+    }
+
+    @PostMapping("/khatma")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Start a khatma plan over a number of days")
+    public KhatmaResponse startKhatma(Authentication auth, @Valid @RequestBody KhatmaRequest request) {
+        return khatmaService.start(userId(auth), request.days(), com.sabeel.quran.service.KhatmaService.todayUtc());
+    }
+
+    @GetMapping("/khatma")
+    @Operation(summary = "My active khatma")
+    public org.springframework.http.ResponseEntity<KhatmaResponse> khatma(Authentication auth) {
+        return khatmaService.active(userId(auth), com.sabeel.quran.service.KhatmaService.todayUtc())
+                .map(org.springframework.http.ResponseEntity::ok)
+                .orElseGet(() -> org.springframework.http.ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/khatma/progress")
+    @Operation(summary = "Set the last page read in my khatma")
+    public KhatmaResponse khatmaProgress(Authentication auth, @Valid @RequestBody KhatmaProgressRequest request) {
+        return khatmaService.progress(userId(auth), request.page(), com.sabeel.quran.service.KhatmaService.todayUtc());
+    }
+
+    @DeleteMapping("/khatma")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Abandon my active khatma")
+    public void abandonKhatma(Authentication auth) {
+        khatmaService.abandon(userId(auth));
     }
 
     private UUID userId(Authentication auth) {

@@ -29,6 +29,8 @@ public final class ErrorMessages {
             Map.entry("user not found", "المستخدم غير موجود"),
             Map.entry("Invalid surah or ayah", "رقم السورة أو الآية غير صحيح"),
             Map.entry("edition not found", "النسخة غير موجودة"),
+            Map.entry("a khatma is already in progress", "لديك ختمة قيد التنفيذ بالفعل"),
+            Map.entry("no khatma in progress", "لا توجد ختمة قيد التنفيذ"),
             Map.entry("endsAt must be after startsAt", "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء"),
             Map.entry("challenge not found", "التحدي غير موجود"),
             Map.entry("challenge is not active", "التحدي غير نشط"),

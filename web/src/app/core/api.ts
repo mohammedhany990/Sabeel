@@ -54,6 +54,10 @@ export class Api {
   bookmarks = () => this.get<M.Bookmark[]>('/quran/bookmarks');
   addBookmark = (ayahId: number, note?: string) => this.post<M.Bookmark>('/quran/bookmarks', { ayahId, note });
   removeBookmark = (id: string) => this.delete<void>(`/quran/bookmarks/${id}`);
+  khatma = () => this.get<M.Khatma | null>('/quran/khatma');
+  startKhatma = (days: number) => this.post<M.Khatma>('/quran/khatma', { days });
+  khatmaProgress = (page: number) => this.put<M.Khatma>('/quran/khatma/progress', { page });
+  abandonKhatma = () => this.delete<void>('/quran/khatma');
   readingState = () => this.get<M.ReadingState>('/quran/reading-state');
   saveReadingState = (lastAyahId: number) => this.put<M.ReadingState>('/quran/reading-state', { lastAyahId });
   readingHistory = (page = 0, size = 20) => this.get<M.Paged<M.ReadingHistory>>('/quran/reading-history', { page, size });

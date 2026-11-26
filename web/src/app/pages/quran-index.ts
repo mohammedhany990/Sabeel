@@ -6,10 +6,11 @@ import { Api } from '../core/api';
 import { Ayah, Paged, Surah } from '../core/models';
 import { errorMessage, toArabicDigits } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
+import { KhatmaCard } from './khatma';
 
 @Component({
   selector: 'app-quran-index',
-  imports: [T, Loc, Nm, FormsModule, RouterLink, PageHead, Spinner],
+  imports: [T, Loc, Nm, FormsModule, RouterLink, PageHead, Spinner, KhatmaCard],
   template: `
     <app-head [title]="'The Noble Quran' | t" [subtitle]="'Read, search and listen to every surah.' | t" />
     <div class="card" style="margin-bottom:18px">
@@ -19,6 +20,8 @@ import { PageHead, Spinner } from '../shared/ui';
         @if (results()) { <button class="btn btn-ghost" type="button" (click)="clearSearch()">{{ 'Clear' | t }}</button> }
       </form>
     </div>
+
+    <app-khatma />
 
     @if (error()) { <div class="error-box">{{ error() | t }}</div> }
 
