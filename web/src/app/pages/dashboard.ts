@@ -8,16 +8,18 @@ import { AzkarStreak, Badge, PrayerTimes, ReadingState, RevisionStats, Surah, Ta
 import { formatTime } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
 import { DailyAyahCard } from './daily-ayah';
+import { WeeklyCard } from './weekly';
 
 const ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 @Component({
   selector: 'app-dashboard',
-  imports: [T, Hj, RouterLink, PageHead, Spinner, DailyAyahCard],
+  imports: [T, Hj, RouterLink, PageHead, Spinner, DailyAyahCard, WeeklyCard],
   template: `
     <app-head [title]="greeting()" [subtitle]="'Here is your day at a glance.' | t" />
     @if (loading()) { <app-spinner /> } @else {
       <app-daily-ayah />
+      <app-weekly />
       <div class="grid grid-4">
         <div class="card gilded stat"><div class="num">{{ tasks().length }}</div><div class="lbl">{{ 'Memorization tasks today' | t }}</div></div>
         <div class="card gilded stat"><div class="num">{{ stats()?.dueNow ?? 0 }}</div><div class="lbl">{{ 'Revisions due now' | t }}</div></div>

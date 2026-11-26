@@ -123,6 +123,15 @@ await check('prayer countdown and tracker', async () => {
   if (!checked) throw new Error('tracker did not persist');
 });
 
+await check('weekly summary shows stats and a suggestion', async () => {
+  await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-testid=weekly-summary]', { timeout: 20000 });
+  const prayers = (await page.locator('[data-testid=weekly-prayers]').innerText()).trim();
+  if (!/^\d+\/35$/.test(prayers)) throw new Error('prayers ' + prayers);
+  const suggestion = (await page.locator('[data-testid=weekly-suggestion]').innerText()).trim();
+  if (suggestion.length < 10) throw new Error('suggestion ' + suggestion);
+});
+
 await check('light theme toggles, persists and keeps text readable', async () => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });
