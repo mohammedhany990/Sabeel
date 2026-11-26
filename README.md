@@ -55,6 +55,15 @@ Swagger UI per service at `http://localhost:<port>/swagger-ui.html`. Kafka UI at
 - Quran text mode: the full 6236-ayah text loads on first start. Set `QURAN_SEED_MODE=sample` for the old 27-ayah development sample. A database that holds only the sample is upgraded to the full text on the next start in full mode.
 - Reciter audio is streamed from third-party hosts (everyayah.com and quranicaudio.com) and is never copied or rehosted by this project. The reciter name is shown with each recitation. Rights for commercial use of these recordings are not established; see `docs/PRODUCTION-READINESS.md`.
 
+## Using your own reciter audio
+
+Audio links come from the quran-service API (`/reciters/{id}/ayahs/...` and the surah audio endpoint), and the web app plays whatever URL the API returns, so no web change is needed. By default the links use the public everyayah.com (per ayah) and quranicaudio.com (per surah) patterns. To serve your own copies, upload them to your own storage and set these variables for quran-service (in `platform/.env` for Compose):
+
+- `QURAN_AUDIO_AYAH_BASE_URL`, for example `https://audio.example.org/ayah`. The API then returns `https://audio.example.org/ayah/<reciter folder>/<surah 3 digits><ayah 3 digits>.mp3`, for example `.../Alafasy_128kbps/001001.mp3`.
+- `QURAN_AUDIO_SURAH_BASE_URL`, for example `https://audio.example.org/surah`, giving `.../<reciter folder>/<surah 3 digits>.mp3`.
+
+The `<reciter folder>` is the last segment of the reciter's default base URL (for example `Alafasy_128kbps` or `mishaari_raashid_al_3afaasee`), so keep those folder names. Leave both empty to keep the public hosts. The files must be reachable over public HTTPS from the user's browser; the recitation-service only accepts public http(s) audio URLs. This project does not host or copy any audio.
+
 ## Production readiness
 
 This is a development release, not production-ready. See `docs/PRODUCTION-READINESS.md` for the prioritized list of what is missing and what was and was not verified.

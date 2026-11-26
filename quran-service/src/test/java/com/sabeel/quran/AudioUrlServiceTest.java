@@ -25,4 +25,20 @@ class AudioUrlServiceTest {
         assertThat(service.surahAudioUrl("https://download.quranicaudio.com/quran/abdul_basit_murattal", 114))
                 .isEqualTo("https://download.quranicaudio.com/quran/abdul_basit_murattal/114.mp3");
     }
+
+    @Test
+    void overrideBaseKeepsTheReciterFolder() {
+        AudioUrlService own = new AudioUrlService("https://audio.example.org/ayah/", "https://audio.example.org/surah");
+        assertThat(own.ayahAudioUrl("https://everyayah.com/data/Alafasy_128kbps", 1, 1))
+                .isEqualTo("https://audio.example.org/ayah/Alafasy_128kbps/001001.mp3");
+        assertThat(own.surahAudioUrl("https://download.quranicaudio.com/quran/abdul_basit_murattal", 114))
+                .isEqualTo("https://audio.example.org/surah/abdul_basit_murattal/114.mp3");
+    }
+
+    @Test
+    void blankOverrideKeepsTheDefaultHosts() {
+        AudioUrlService blank = new AudioUrlService(" ", "");
+        assertThat(blank.ayahAudioUrl("https://everyayah.com/data/Husary_128kbps", 2, 255))
+                .isEqualTo("https://everyayah.com/data/Husary_128kbps/002255.mp3");
+    }
 }
