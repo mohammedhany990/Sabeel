@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { formatCountdown, nextPrayer } from './prayer-extras';
 
 describe('prayer extras', () => {

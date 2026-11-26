@@ -97,6 +97,15 @@ check "qibla bearing from Cairo" "true" \
 check "hijri conversion" "true" \
   "$(curl -s "$BASE/api/v1/prayer/hijri?date=2026-11-26" -H "$AUTH" | jq '.hijriYear >= 1447 and .hijriYear <= 1448')"
 
+TODAY=$(TZ=Africa/Cairo date +%F)
+curl -s -X PUT "$BASE/api/v1/prayer/log" -H "$AUTH" -H 'Content-Type: application/json' -d "{\"date\":\"$TODAY\",\"prayer\":\"FAJR\",\"prayed\":true}" > /dev/null
+check "prayer tracker records fajr" "1" \
+  "$(curl -s "$BASE/api/v1/prayer/log?from=$TODAY&to=$TODAY" -H "$AUTH" | jq -r '.prayedInRange')"
+check "tracker rejects sunrise" "400" \
+  "$(curl -s -o /dev/null -w '%{http_code}' -X PUT "$BASE/api/v1/prayer/log" -H "$AUTH" -H 'Content-Type: application/json' -d "{\"date\":\"$TODAY\",\"prayer\":\"SUNRISE\",\"prayed\":true}")"
+check "adhan catalog endpoint answers with a list" "array" \
+  "$(curl -s "$BASE/api/v1/prayer/adhans" -H "$AUTH" | jq -r 'type')"
+
 echo "== azkar =="
 check "azkar categories seeded" "MORNING" \
   "$(curl -s "$BASE/api/v1/azkar/categories" -H "$AUTH" | jq -r '.[0].code')"
