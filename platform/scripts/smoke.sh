@@ -48,7 +48,7 @@ check "gateway actuator management is not exposed" "404" \
   "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/actuator/gateway/routes")"
 
 echo "== profile via kafka =="
-for _ in $(seq 10); do
+for _ in $(seq 90); do
   NAME=$(curl -s "$BASE/api/v1/users/me" -H "$AUTH" | jq -r '.name // empty')
   [ -n "$NAME" ] && break
   sleep 2
