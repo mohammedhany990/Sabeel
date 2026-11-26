@@ -1,5 +1,6 @@
 import { T } from '../core/i18n';
 import { LangSwitch } from '../shared/lang-switch';
+import { ThemeSwitch } from '../shared/theme-switch';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../core/auth';
@@ -7,12 +8,13 @@ import { Logo } from '../shared/logo';
 
 @Component({
   selector: 'app-landing',
-  imports: [T, LangSwitch, RouterLink, Logo],
+  imports: [T, LangSwitch, ThemeSwitch, RouterLink, Logo],
   template: `
     <div class="page pattern">
       <header class="nav">
         <app-logo />
         <div class="row">
+          <app-theme />
           <app-lang />
           @if (auth.isLoggedIn()) {
             <a class="btn btn-gold" routerLink="/app/dashboard">{{ 'Open dashboard' | t }}</a>

@@ -121,6 +121,37 @@ await check('prayer countdown and tracker', async () => {
   if (!checked) throw new Error('tracker did not persist');
 });
 
+await check('light theme toggles, persists and keeps text readable', async () => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });
+  await page.click('[data-testid=theme-toggle]');
+  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  if (theme !== 'light') throw new Error('theme ' + theme);
+  await page.reload({ waitUntil: 'networkidle' });
+  const kept = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  if (kept !== 'light') throw new Error('theme not kept ' + kept);
+  const ratios = await page.evaluate(() => {
+    const css = getComputedStyle(document.documentElement);
+    const parse = (v) => {
+      const h = v.trim().replace('#', '');
+      return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+    };
+    const lum = ([r, g, b]) => [r, g, b].map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)).reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+    const ratio = (a, b) => { const x = lum(parse(a)), y = lum(parse(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const bg = css.getPropertyValue('--bg');
+    return { text: ratio(css.getPropertyValue('--text'), bg), muted: ratio(css.getPropertyValue('--muted'), bg), gold: ratio(css.getPropertyValue('--gold'), bg) };
+  });
+  if (ratios.text < 7 || ratios.muted < 4.5 || ratios.gold < 4.5) throw new Error('contrast ' + JSON.stringify(ratios));
+  await page.screenshot({ path: `${OUT}/light-dashboard.png`, fullPage: true });
+  await page.goto(BASE + '/app/quran/1', { waitUntil: 'networkidle' });
+  await page.waitForSelector('.ayah', { timeout: 20000 });
+  await page.screenshot({ path: `${OUT}/light-reader.png` });
+  await page.goto(BASE + '/app/prayer', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/light-prayer.png`, fullPage: true });
+  await page.evaluate(() => localStorage.removeItem('sabeel.theme'));
+});
+
 const overflowPages = ['/app/dashboard', '/app/quran', '/app/quran/1', '/app/memorization', '/app/revision', '/app/prayer', '/app/azkar', '/app/library', '/app/community', '/app/settings'];
 for (const [label, size] of [['phone', { width: 390, height: 844 }], ['tablet', { width: 820, height: 1180 }]]) {
   await check('no horizontal overflow on ' + label + ' in English and Arabic', async () => {

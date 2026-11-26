@@ -535,6 +535,8 @@ export const AR: Record<string, string> = {
   "Type at least 3 characters.": "اكتب ٣ أحرف على الأقل.",
   "No match in this edition.": "لا نتيجة في هذه النسخة.",
   "Could not search right now.": "تعذر البحث الآن.",
+  "Switch to light mode": "التبديل إلى الوضع الفاتح",
+  "Switch to dark mode": "التبديل إلى الوضع الداكن",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {

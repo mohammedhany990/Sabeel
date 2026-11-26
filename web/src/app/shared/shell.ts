@@ -1,5 +1,6 @@
 import { T } from '../core/i18n';
 import { LangSwitch } from './lang-switch';
+import { ThemeSwitch } from './theme-switch';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -11,7 +12,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
 
 @Component({
   selector: 'app-shell',
-  imports: [T, LangSwitch, RouterOutlet, RouterLink, RouterLinkActive, Logo],
+  imports: [T, LangSwitch, ThemeSwitch, RouterOutlet, RouterLink, RouterLinkActive, Logo],
   template: `
     <div class="layout pattern">
       <aside class="side" [class.open]="menuOpen()">
@@ -39,6 +40,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
         <header class="top">
           <button class="btn btn-ghost btn-icon burger" (click)="menuOpen.set(!menuOpen())" [attr.aria-label]="'Menu' | t">&#9776;</button>
           <div class="grow"></div>
+          <app-theme />
           <app-lang />
           <a routerLink="/app/notifications" class="bell" [attr.aria-label]="'Notifications' | t">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
