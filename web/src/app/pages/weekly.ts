@@ -15,6 +15,10 @@ export interface WeeklyInput {
 
 export interface Suggestion { key: 'revise' | 'khatma' | 'prayers' | 'steady'; link: string; n: number; }
 
+function safe<X>(o: Observable<X>): Observable<X | null> {
+  return o.pipe(catchError(() => of(null)));
+}
+
 export function sumValues(m: Record<string, number> | undefined): number {
   return Object.values(m ?? {}).reduce((a, b) => a + b, 0);
 }
@@ -67,13 +71,12 @@ export class WeeklyCard implements OnInit {
 
   ngOnInit(): void {
     const days = lastDays(7, new Date());
-    const none = <X>() => catchError((): Observable<X | null> => of(null));
     forkJoin({
-      prayers: this.api.prayerLog(days[days.length - 1], days[0]).pipe(none<PrayerTracker>()),
-      revision: this.api.revisionStats().pipe(none<RevisionStats>()),
-      khatma: this.api.khatma().pipe(none<Khatma>()),
-      tasbeeh: this.api.tasbeeh().pipe(none<TasbeehSummary>())
-    }).subscribe((v: WeeklyInput) => this.data.set(v));
+      prayers: safe(this.api.prayerLog(days[days.length - 1], days[0])),
+      revision: safe(this.api.revisionStats()),
+      khatma: safe(this.api.khatma()),
+      tasbeeh: safe(this.api.tasbeeh())
+    }).subscribe((v) => this.data.set(v));
   }
 
   protected s(): Suggestion {
