@@ -48,7 +48,10 @@ jobs:
       - name: Collect service logs on failure
         if: failure()
         working-directory: platform
-        run: docker compose logs --no-color --tail=200
+        run: |
+          docker compose ps
+          curl -si --max-time 5 http://localhost:8080/actuator/health | head -c 800 || true
+          docker compose logs --no-color --tail=200
 
       - name: Tear down
         if: always()

@@ -21,7 +21,9 @@ wait_http() {
     if curl -sf -o /dev/null "$url"; then return 0; fi
     sleep 2
   done
-  echo "TIMEOUT waiting for $url"
+  echo "TIMEOUT waiting for $url, last response:"
+  curl -si --max-time 5 "$url" | head -c 600 || true
+  echo
   return 1
 }
 
