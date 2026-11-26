@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { Observable, catchError, forkJoin, of } from 'rxjs';
 import { Api } from '../core/api';
 import { T } from '../core/i18n';
 import { Khatma, PrayerTracker, RevisionStats, TasbeehSummary } from '../core/models';
@@ -67,13 +67,13 @@ export class WeeklyCard implements OnInit {
 
   ngOnInit(): void {
     const days = lastDays(7, new Date());
-    const none = <X>() => catchError(() => of(null as X | null));
+    const none = <X>() => catchError((): Observable<X | null> => of(null));
     forkJoin({
       prayers: this.api.prayerLog(days[days.length - 1], days[0]).pipe(none<PrayerTracker>()),
       revision: this.api.revisionStats().pipe(none<RevisionStats>()),
       khatma: this.api.khatma().pipe(none<Khatma>()),
       tasbeeh: this.api.tasbeeh().pipe(none<TasbeehSummary>())
-    }).subscribe((v) => this.data.set(v));
+    }).subscribe((v: WeeklyInput) => this.data.set(v));
   }
 
   protected s(): Suggestion {
