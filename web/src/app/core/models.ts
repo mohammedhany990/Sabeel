@@ -59,3 +59,5 @@ export interface Mistake { type: string; expected: string; actual: string; posit
 export interface EditionInfo { key: string; kind: string; language: string; version: string; title: string; publisher: string; source: string; terms: string; retrieved: string; }
 export interface EditionEntry { fromAyah: number; toAyah: number; text: string; notes?: string | null; }
 export interface EditionAyah { edition: EditionInfo; surah: number; ayah: number; entries: EditionEntry[]; }
+export interface PrayerTracker { from: string; to: string; days: Record<string, string[]>; currentStreak: number; bestStreakInRange: number; prayedInRange: number; possibleInRange: number; }
+export interface Adhan { id: string; name: string; nameAr?: string | null; url: string; }

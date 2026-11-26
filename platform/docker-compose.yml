@@ -213,6 +213,9 @@ services:
       DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      PRAYER_ADHAN_FILE: ${PRAYER_ADHAN_FILE:-}
+    volumes:
+      - ./adhans:/app/adhans:ro
     ports:
       - "127.0.0.1:8087:8087"
     depends_on:

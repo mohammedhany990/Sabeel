@@ -77,6 +77,9 @@ export class Api {
   prayerMonth = (q: { year: number; month: number; lat?: number; lng?: number; method?: string }) => this.get<M.PrayerTimes[]>('/prayer/times/month', q);
   qibla = (lat: number, lng: number) => this.get<M.Qibla>('/prayer/qibla', { lat, lng });
   hijri = (date?: string) => this.get<M.Hijri>('/prayer/hijri', { date });
+  prayerLog = (from: string, to: string) => this.get<M.PrayerTracker>('/prayer/log', { from, to });
+  setPrayerLog = (date: string, prayer: string, prayed: boolean) => this.put<void>('/prayer/log', { date, prayer, prayed });
+  adhans = () => this.get<M.Adhan[]>('/prayer/adhans');
   prayerSettings = () => this.get<M.PrayerSettings>('/prayer/settings');
   savePrayerSettings = (b: { latitude: number; longitude: number; method: string; timezone: string; asrFactor: number }) => this.put<M.PrayerSettings>('/prayer/settings', b);
 

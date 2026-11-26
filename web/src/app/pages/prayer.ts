@@ -7,13 +7,14 @@ import { Hijri, PrayerSettings, PrayerTimes, Qibla } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage, formatTime, todayIso } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
+import { PrayerExtras } from './prayer-extras';
 
 const NAMES = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
 
 @Component({
   selector: 'app-prayer',
-  imports: [T, Loc, Hj, FormsModule, PageHead, Spinner],
+  imports: [T, Loc, Hj, FormsModule, PageHead, Spinner, PrayerExtras],
   template: `
     <app-head [title]="'Prayer and Qibla' | t" [subtitle]="'Calculated locally from your coordinates.' | t" />
     @if (loading()) { <app-spinner /> } @else {
@@ -54,6 +55,8 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
           }
         </div>
       </div>
+
+      <app-prayer-extras [times]="times()" [isToday]="date() === today" />
 
       <div class="card" style="margin-top:18px">
         <div class="card-title"><h3>{{ 'Location and method' | t }}</h3></div>

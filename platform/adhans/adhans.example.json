@@ -1,0 +1,10 @@
+{
+  "adhans": [
+    {
+      "id": "my-adhan",
+      "name": "My adhan",
+      "nameAr": "أذاني",
+      "url": "https://example.org/path/to/your-adhan.mp3"
+    }
+  ]
+}

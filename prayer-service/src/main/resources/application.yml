@@ -24,6 +24,8 @@ jwt:
   access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
 prayer:
   reminder-cron: ${PRAYER_REMINDER_CRON:0 0 * * * *}
+  adhan:
+    file: ${PRAYER_ADHAN_FILE:}
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

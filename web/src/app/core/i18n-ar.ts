@@ -492,6 +492,21 @@ export const AR: Record<string, string> = {
   "Could not load the tafsir.": "تعذّر تحميل التفسير.",
   "Quran text: Tanzil Project (CC BY 3.0, unmodified).": "نص القرآن: مشروع تنزيل (CC BY 3.0، دون تعديل).",
   "Notes": "الحواشي",
+  "in {t}": "بعد {t}",
+  "No more prayers today.": "لا توجد صلوات أخرى اليوم.",
+  "Prayer tracker": "متابعة الصلاة",
+  "Last 7 days": "آخر ٧ أيام",
+  "Streak (days)": "السلسلة (أيام)",
+  "Prayed": "صلّيت",
+  "Day": "اليوم",
+  "Could not save.": "تعذّر الحفظ.",
+  "Adhan": "الأذان",
+  "Adhan audio": "صوت الأذان",
+  "Preview": "استماع",
+  "Play the adhan at prayer time while this page is open": "تشغيل الأذان وقت الصلاة ما دامت هذه الصفحة مفتوحة",
+  "No adhan audio is configured. You can add your own files, see the README.": "لم يُضبط صوت أذان. يمكنك إضافة ملفاتك، راجع README.",
+  "None": "بدون",
+  "Could not play this audio.": "تعذّر تشغيل هذا الصوت.",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {
