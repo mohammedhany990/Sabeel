@@ -76,9 +76,13 @@ done
 check "today task generated" "yes" "$([ -n "$TASK_ID" ] && echo yes || echo no)"
 curl -s -X POST "$BASE/api/v1/memorization/tasks/$TASK_ID/complete" -H "$AUTH" -H 'Content-Type: application/json' \
   -d '{"accuracy":92}' > /dev/null
-sleep 6
-check "revision item created from task.completed event" "1" \
-  "$(curl -s "$BASE/api/v1/revision/upcoming?days=7" -H "$AUTH" | jq '[.[] | select(.surahId==1)] | length')"
+REVISION_COUNT=0
+for _ in $(seq 30); do
+  REVISION_COUNT=$(curl -s "$BASE/api/v1/revision/upcoming?days=7" -H "$AUTH" | jq '[.[] | select(.surahId==1)] | length' 2>/dev/null || echo 0)
+  [ "$REVISION_COUNT" = "1" ] && break
+  sleep 2
+done
+check "revision item created from task.completed event" "1" "$REVISION_COUNT"
 
 echo "== prayer =="
 curl -s -X PUT "$BASE/api/v1/prayer/settings" -H "$AUTH" -H 'Content-Type: application/json' \
