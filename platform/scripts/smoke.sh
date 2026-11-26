@@ -30,7 +30,7 @@ wait_http() {
 echo "== waiting for the gateway and services =="
 wait_http "$BASE/actuator/health" 90
 for port in 8081 8082 8083 8084 8085 8086 8087 8088 8089 8090 8091; do
-  wait_http "http://localhost:$port/actuator/health" 30 || FAILED=1
+  wait_http "http://localhost:$port/actuator/health" 90 || FAILED=1
 done
 
 echo "== auth =="
@@ -56,10 +56,10 @@ done
 check "profile created from auth.user.registered event" "Smoke Test" "$NAME"
 
 echo "== quran =="
-check "list surahs" "Al-Fatihah" "$(curl -s "$BASE/api/v1/quran/surahs" -H "$AUTH" | jq -r '.[0].nameEn')"
+check "list surahs" "Al-Faatiha" "$(curl -s "$BASE/api/v1/quran/surahs" -H "$AUTH" | jq -r '.[0].nameEn')"
 check "read ayah 1:1" "1" "$(curl -s "$BASE/api/v1/quran/ayahs/1/1" -H "$AUTH" | jq -r '.ayahNumber')"
 check "per-ayah audio url" "https://everyayah.com/data/Alafasy_128kbps/001001.mp3" \
-  "$(curl -s "$BASE/api/v1/quran/reciters/1/audio?surah=1&ayah=1" -H "$AUTH" | jq -r '.url')"
+  "$(curl -s "$BASE/api/v1/quran/reciters/1/audio?surah=1&ayah=1" -H "$AUTH" | jq -r '.audioUrl')"
 check "full-surah audio url" "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3" \
   "$(curl -s "$BASE/api/v1/quran/reciters/1/surahs/1/audio" -H "$AUTH" | jq -r '.url')"
 

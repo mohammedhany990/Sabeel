@@ -50,6 +50,7 @@ jobs:
         working-directory: platform
         run: |
           docker compose ps
+          ./scripts/diag.sh || true
           curl -si --max-time 5 http://localhost:8080/actuator/health | head -c 800 || true
           docker compose logs --no-color --tail=200
 
