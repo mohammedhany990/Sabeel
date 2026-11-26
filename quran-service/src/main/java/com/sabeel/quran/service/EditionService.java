@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class EditionService {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final String BASE = "/quran/editions/";
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -49,7 +49,7 @@ public class EditionService {
 
     public EditionInfo info(String key) {
         return editions.stream().filter(e -> e.key().equals(key)).findFirst()
-                .orElseThrow(() -> ApiException.notFound("Unknown edition: " + key));
+                .orElseThrow(() -> ApiException.notFound("edition not found"));
     }
 
     public EditionAyahResponse ayah(String key, int surah, int ayah) {

@@ -27,6 +27,8 @@ public final class ErrorMessages {
             Map.entry("invalid reset token", "رمز إعادة التعيين غير صالح"),
             Map.entry("reset token expired or already used", "رمز إعادة التعيين منتهي الصلاحية أو مستخدم من قبل"),
             Map.entry("user not found", "المستخدم غير موجود"),
+            Map.entry("Invalid surah or ayah", "رقم السورة أو الآية غير صحيح"),
+            Map.entry("edition not found", "النسخة غير موجودة"),
             Map.entry("endsAt must be after startsAt", "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء"),
             Map.entry("challenge not found", "التحدي غير موجود"),
             Map.entry("challenge is not active", "التحدي غير نشط"),
