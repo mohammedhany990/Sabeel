@@ -21,7 +21,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh",
             "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password", "/api/v1/auth/verify-email",
             "/api/v1/quran/surahs", "/api/v1/quran/ayahs", "/api/v1/quran/pages",
-            "/api/v1/quran/juz", "/api/v1/quran/search", "/api/v1/quran/reciters",
+            "/api/v1/quran/juz", "/api/v1/quran/search", "/api/v1/quran/reciters", "/api/v1/quran/editions",
             "/v3/api-docs", "/swagger-ui", "/actuator/health");
 
     private final JwtService jwtService;
