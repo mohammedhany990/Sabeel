@@ -57,6 +57,7 @@ jobs:
             platform/tools/teaser/teaser-out/sabeel-teaser.mp4
             platform/tools/teaser/teaser-out/failures.txt
             platform/tools/teaser/teaser-out/timeline.json
+            platform/tools/teaser/teaser-out/*.png
       - name: Logs on failure
         if: failure()
         working-directory: platform
