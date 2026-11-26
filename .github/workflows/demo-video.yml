@@ -36,6 +36,9 @@ jobs:
             sleep 5
           done
           sleep 30
+      - name: Seed demo data
+        working-directory: platform
+        run: bash tools/demo/seed.sh
       - name: Install Playwright
         working-directory: platform/tools/demo
         run: |

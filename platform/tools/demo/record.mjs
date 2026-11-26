@@ -86,7 +86,7 @@ await step('s02', 'Create an account', 'إنشاء حساب', async () => {
 await step('s03', 'Dashboard: your day at a glance', 'لوحة التحكم: ملخص يومك', null, 3000);
 await step('s04', 'All 114 surahs from the full Tanzil text', 'القرآن كاملاً: ١١٤ سورة', async () => { await nav('Read and listen'); }, 3000);
 await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
-  await clickText('a.surah', 'Al-Fatihah');
+  await clickText('a.surah', 'The Opening');
   await page.waitForSelector('.ayah', { timeout: 15000 });
 }, 3000);
 await step('s06', 'Bookmark an ayah, or mark where you stopped', 'علامة على آية أو موضع التوقف', async () => {
@@ -105,10 +105,12 @@ await step('s09', 'Complete today\'s task', 'إكمال مهمة اليوم', as
   await sleep(1500);
 }, 3000);
 await step('s10', 'Spaced-repetition revision: 1, 3, 7, 14, 30, 60 days', 'مراجعة متباعدة: ١ ٣ ٧ ١٤ ٣٠ ٦٠ يوماً', async () => {
-  await sleep(7000);
   await nav('Revision');
-  await sleep(1500);
-  await clickText('button', 'Submit review');
+  for (let i = 0; i < 25; i++) {
+    const has = await page.evaluate(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Submit review')));
+    if (has) { await clickText('button', 'Submit review'); break; }
+    await sleep(1000);
+  }
 }, 3000);
 await step('s11', 'Recitation: text comparison demo mode (not tajweed grading)', 'التلاوة: مقارنة نصية تجريبية وليست تقييم تجويد', async () => {
   await nav('Recitation');
