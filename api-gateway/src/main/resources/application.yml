@@ -15,7 +15,7 @@ spring:
             redis-rate-limiter.replenishRate: ${RATE_LIMIT_PER_SECOND:20}
             redis-rate-limiter.burstCapacity: ${RATE_LIMIT_BURST:40}
             redis-rate-limiter.requestedTokens: 1
-            key-resolver: '#{userKeyResolver}'
+            key-resolver: '#{@userKeyResolver}'
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
