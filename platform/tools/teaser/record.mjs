@@ -112,9 +112,11 @@ await step('t05', 'Recitation text check', '', async () => {
   await clickText('button.tab', 'Transcript');
   await page.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحمة'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await clickText('button', 'Evaluate recitation');
-  await sleep(5000);
+  await page.waitForFunction(() => !/Evaluating/.test(document.body.innerText), null, { timeout: 60000 }).catch(() => {});
+  await sleep(2500);
 }, H);
 await step('t06', 'Prayer times and next-prayer countdown', 'المواقيت والعدّ التنازلي للصلاة القادمة', async () => {
+  await page.evaluate(() => { const real = Date.now.bind(Date); Date.now = () => real() - 20 * 3600 * 1000; });
   await nav('Prayer');
   await page.waitForSelector('#countdown', { timeout: 30000 });
   await sleep(1500);
