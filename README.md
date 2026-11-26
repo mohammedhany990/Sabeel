@@ -33,6 +33,20 @@ The Compose stack starts PostgreSQL, MongoDB, Redis, Kafka, Mailhog, Kafka UI, P
 
 See `docs/LOCAL-RUN.md` for prerequisites, URLs, stopping and troubleshooting.
 
+## Features in the web app
+
+Quran reader with per-ayah tafsir and translation panels, search across the Quran text and across each bundled edition, ayah of the day, bookmarks and last-read position, khatma plan with a daily page target, memorization plans with spaced revision, recitation text comparison, prayer times with a next-prayer countdown and a seven-day prayer tracker, azkar with streaks, a tasbeeh counter with daily and lifetime totals, courses, community challenges and circles, English and Arabic with right-to-left layout, and a dark and light theme. The browser checks in `.github/workflows/browser-e2e.yml` exercise the main flows of these features in Chromium on the Compose stack.
+
+## Adding your own adhan
+
+No adhan audio is bundled. To offer an adhan in the prayer page, host the audio files you have the right to use and list them in a JSON file based on `platform/adhans/adhans.example.json`:
+
+1. Copy the example to `platform/adhans/adhans.json` and replace the entries. Each entry has `id`, `name`, `nameAr` and a `url` that the browser can play.
+2. Set `PRAYER_ADHAN_FILE=/app/adhans/adhans.json` in `platform/.env`. Compose mounts `platform/adhans` into the prayer service read-only.
+3. Restart the prayer service. The prayer page then shows an adhan selector with a preview button and an optional autoplay at prayer time. The choice is kept in the browser.
+
+With the setting empty, the selector is hidden and the page says that no adhan is configured.
+
 ## Open in an IDE
 
 The repository root has a Maven parent/aggregator `pom.xml` (`com.sabeel:sabeel-parent`) that lists the 12 services as modules. Open the root folder in IntelliJ IDEA (or any Maven-aware IDE) and import it as a Maven project to get all services in one workspace. Build everything with `mvn package` from the root, or one service with `mvn -pl auth-service -am package`. Each service keeps its own `pom.xml` with Spring Boot as its parent, so a service also builds alone from its folder and inside its own Docker image. The `web/` folder is a separate Angular project (`npm ci`, `npm start`).
