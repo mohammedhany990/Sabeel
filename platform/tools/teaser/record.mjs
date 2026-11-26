@@ -117,7 +117,9 @@ await step('t05', 'Recitation text check', '', async () => {
 await step('t06', 'Prayer times and next-prayer countdown', 'المواقيت والعدّ التنازلي للصلاة القادمة', async () => {
   await nav('Prayer');
   await page.waitForSelector('#countdown', { timeout: 30000 });
-  await sleep(1000);
+  await sleep(1500);
+  await page.evaluate(() => document.getElementById('countdown')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  await sleep(1500);
 }, H);
 await step('t07', 'English and Arabic, RTL ready', 'عربي وإنجليزي بالكامل', async () => {
   await clickText('button.lang', 'العربية');
