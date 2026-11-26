@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 
+let t0 = 0;
 const BASE = process.env.BASE_URL || 'http://localhost:4200';
 const OUT = process.env.OUT_DIR || 'demo-out';
 fs.mkdirSync(OUT, { recursive: true });
@@ -18,7 +19,6 @@ t0 = Date.now();
 const failures = [];
 const timeline = [];
 const durations = fs.existsSync('audio/durations.json') ? JSON.parse(fs.readFileSync('audio/durations.json', 'utf8')) : {};
-let t0 = 0;
 
 async function caption(en, ar) {
   await page.evaluate(([en, ar]) => {
