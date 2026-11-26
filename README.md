@@ -78,7 +78,7 @@ This is a development release, not production-ready. See `docs/PRODUCTION-READIN
 
 Works: full auth lifecycle, profile/preferences auto-created via Kafka, Quran sample data (27 ayahs) with verified reciter audio URLs, plan calculator (whole Quran in 24 months = 9 ayahs/day), nightly task generation, revision engine fed by events, notification pipeline with Mailhog email capture.
 
-Needs your configuration: strong `JWT_SECRET` outside dev, FCM service-account JSON (`FCM_ENABLED=true`, `FCM_CREDENTIALS_PATH`) for real push, a real SMTP provider for real email, and `quran-service/db/seed-full-quran.sh` for the full 6236-ayah text (verifies counts and page/juz metadata after import; source: quran.com API v4, free for non-commercial use per its terms).
+Needs your configuration: strong `JWT_SECRET` outside dev, FCM service-account JSON (`FCM_ENABLED=true`, `FCM_CREDENTIALS_PATH`) for real push, a real SMTP provider for real email. The full 6236-ayah Tanzil text is bundled and loads by default.
 
 ## Docs
 

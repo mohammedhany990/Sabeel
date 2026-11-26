@@ -91,7 +91,7 @@ What was not done:
 
 ## Known limitations
 
-- Mapping a bookmark or history ayah id to its surah assumes the full 6,236-ayah seed (ids are global). With the 27-ayah sample seed, links from the bookmarks page can open the wrong surah. Load the full text with `quran-service/db/seed-full-quran.sh`.
+- Mapping a bookmark or history ayah id to its surah assumes the full 6,236-ayah seed (ids are global). With the 27-ayah sample seed, links from the bookmarks page can open the wrong surah. The backend now loads the full text by default.
 - Draft courses are not listed in the public catalog. After creating a draft, the app opens it directly by slug; whether the backend returns drafts by slug to their owner depends on the learning service.
 - The recitation check is automated speech-to-text plus word alignment. It is not a tajweed assessment, and the UI says so. Audio must be a public http or https URL because the backend downloads it. Browser microphone recording is not implemented.
 - Tokens are kept in `localStorage`. For a production deployment, serve over HTTPS, set a strict content security policy, and consider moving refresh tokens to httpOnly cookies on the server side.

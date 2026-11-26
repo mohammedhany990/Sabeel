@@ -62,7 +62,7 @@ Profile (name, image, country, timezone, preferred reciter, preferred language),
 
 Quran reference data and the personal reading experience: surah/ayah lookup, mushaf pages, juz, full-text search, five reciters with per-ayah audio URLs (pattern verified live against the public CDN), bookmarks, reading state and reading history.
 
-Ships with a bundled sample seed (Al-Fatihah, Al-Baqarah 1-5, Al-Ikhlas, Al-Falaq, An-Nas — 27 ayahs, uthmani text) so the system runs immediately. The full 6236-ayah Tanzil text is bundled and loads by default; QURAN_SEED_MODE=sample switches back to the sample. Source caveat: the bundled seed is a sample for development, not a verified full mushaf — a production deployment should re-verify the full text against a certified source. Reciter audio URLs point at the public quranicaudio.com / everyayah.com CDNs (patterns verified reachable at build time); audio availability is a third-party dependency Sabeel does not control.
+Ships with the full 6236-ayah Tanzil Quran text (Uthmani and simple-clean) with surah, juz, hizb and page metadata from Tanzil, loaded on first start from bundled verbatim files that keep the Tanzil notice (license: Creative Commons Attribution 3.0; attribution and a tanzil.net link are required, and the text must not be changed). `QURAN_SEED_MODE=sample` loads a 27-ayah development sample instead. A database that holds only the sample is upgraded on the next start in full mode. The text should still be reviewed against a certified mushaf before public launch. Reciter audio URLs point at the public quranicaudio.com and everyayah.com hosts; audio is streamed and never rehosted, and its commercial-use rights are not established (see PRODUCTION-READINESS.md).
 
 ## memorization-service (8084)
 
@@ -295,7 +295,7 @@ Prometheus scrapes all eleven backend services at `http://localhost:9090` (gatew
 
 Continuous verification: `.github/workflows/integration-smoke.yml` builds all twelve services, runs `docker compose up -d --build`, then executes `platform/scripts/smoke.sh` — an assertion-based end-to-end suite (auth flow, header-stripping and actuator checks, profile-via-Kafka, Quran reads and both audio patterns, the memorization→revision event loop, prayer/qibla/hijri, azkar progress, the learning publish/enroll/progress loop, community badges and circles, the recitation evaluation worker flow, and Prometheus target health) that fails the pipeline on any mismatch. Status, honestly: the workflow is written and statically validated (YAML parsed, compose file parsed, script syntax-checked), but it has NOT been executed here — this environment has no Docker daemon. Its first run happens on GitHub Actions, which provides Docker.
 
-Configuration needed for real delivery: a strong `JWT_SECRET`, an FCM service-account JSON (`FCM_ENABLED=true`, `FCM_CREDENTIALS_PATH`), and a real SMTP provider. The full Quran text loads with `quran-service/db/seed-full-quran.sh`.
+Configuration needed for real delivery: a strong `JWT_SECRET`, an FCM service-account JSON (`FCM_ENABLED=true`, `FCM_CREDENTIALS_PATH`), and a real SMTP provider. The full 6236-ayah Tanzil text is bundled and loads by default (`QURAN_SEED_MODE=sample` selects the 27-ayah sample).
 
 # Testing
 
