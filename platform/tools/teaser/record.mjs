@@ -116,7 +116,7 @@ await step('t05', 'Recitation text check', '', async () => {
 }, H);
 await step('t06', 'Prayer times and next-prayer countdown', 'المواقيت والعدّ التنازلي للصلاة القادمة', async () => {
   await nav('Prayer');
-  await page.waitForSelector('[data-testid=countdown]', { timeout: 30000 });
+  await page.waitForSelector('#countdown', { timeout: 30000 });
   await sleep(1000);
 }, H);
 await step('t07', 'English and Arabic, RTL ready', 'عربي وإنجليزي بالكامل', async () => {

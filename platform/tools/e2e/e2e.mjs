@@ -92,9 +92,9 @@ await check('tasbeeh counts and saves a total', async () => {
 
 await check('prayer countdown and tracker', async () => {
   await page.goto(BASE + '/app/prayer', { waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-testid=countdown]', { timeout: 30000 });
-  const text = (await page.locator('[data-testid=countdown]').innerText()).trim();
-  if (!/\d/.test(text)) throw new Error('countdown ' + text);
+  await page.waitForSelector('#countdown', { timeout: 30000 });
+  const text = (await page.locator('#countdown').innerText()).trim();
+  if (!/\d\d:\d\d:\d\d/.test(text) && !/No more prayers today/.test(text)) throw new Error('countdown card ' + text);
   await page.waitForSelector('[data-testid^="log-"]', { timeout: 15000 });
   const box = page.locator('[data-testid^="log-"][data-testid$="-FAJR"]').first();
   await box.check({ timeout: 15000 });

@@ -18,6 +18,8 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: earliest
+      properties:
+        metadata.max.age.ms: 15000
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
