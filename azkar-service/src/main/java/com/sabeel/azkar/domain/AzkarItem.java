@@ -29,4 +29,9 @@ public class AzkarItem {
     private int sortOrder;
 
     private String reference;
+
+    @Column(columnDefinition = "text")
+    private String textEn;
+
+    private String referenceAr;
 }

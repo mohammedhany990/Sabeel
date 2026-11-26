@@ -65,7 +65,8 @@ public class AuthService {
 
         outboxService.record(KafkaTopics.TOPIC_USER_REGISTERED, user.getId().toString(),
                 Map.of("userId", user.getId().toString(), "email", user.getEmail(),
-                        "name", user.getName(), "verificationToken", verificationToken));
+                        "name", user.getName(), "verificationToken", verificationToken,
+                        "language", "ar".equals(request.language()) ? "ar" : "en"));
 
         return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name(), user.isEmailVerified());
     }

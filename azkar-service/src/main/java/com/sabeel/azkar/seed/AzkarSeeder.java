@@ -23,6 +23,7 @@ public class AzkarSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (categoryRepository.count() > 0) {
+            backfillTranslations();
             return;
         }
         log.info("seeding azkar content");
@@ -61,7 +62,33 @@ public class AzkarSeeder implements CommandLineRunner {
                 item(sleep, 3, "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", 1, "Bukhari"),
                 item(sleep, 4, "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ", 3, "Abu Dawud, Tirmidhi"),
                 item(sleep, 5, "سُبْحَانَ اللَّهِ (33) وَالْحَمْدُ لِلَّهِ (33) وَاللَّهُ أَكْبَرُ (34)", 33, "Bukhari, Muslim")));
+        backfillTranslations();
         log.info("seeded {} azkar items in {} categories", itemRepository.count(), categoryRepository.count());
+    }
+
+    void backfillTranslations() {
+        List<AzkarItem> changed = new java.util.ArrayList<>();
+        for (AzkarItem item : itemRepository.findAll()) {
+            boolean dirty = false;
+            if (item.getTextEn() == null) {
+                String en = AzkarTranslations.textEn(item.getCategory().getCode(), item.getSortOrder());
+                if (en != null) {
+                    item.setTextEn(en);
+                    dirty = true;
+                }
+            }
+            if (item.getReferenceAr() == null) {
+                String ar = AzkarTranslations.referenceAr(item.getReference());
+                if (ar != null) {
+                    item.setReferenceAr(ar);
+                    dirty = true;
+                }
+            }
+            if (dirty) {
+                changed.add(item);
+            }
+        }
+        itemRepository.saveAll(changed);
     }
 
     private AzkarCategory category(String code, String en, String ar, int order) {

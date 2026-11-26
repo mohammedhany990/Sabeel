@@ -44,8 +44,11 @@ public class PrayerService {
         }
         Map<String, ZonedDateTime> named = new LinkedHashMap<>();
         times.forEach((k, v) -> named.put(k.name().toLowerCase(), v));
+        Map<String, String> namesAr = new LinkedHashMap<>();
+        times.keySet().forEach(k -> namesAr.put(k.name().toLowerCase(), arabicName(k)));
+        HijriCalendar.HijriDate hijriDate = hijriCalendar.toHijri(date);
         return new PrayerTimesResponse(date.toString(), location.method().name(), zone.getId(), named,
-                hijriCalendar.toHijri(date).formatted());
+                hijriDate.formatted(), hijriDate.formattedAr(), namesAr);
     }
 
     public List<PrayerTimesResponse> month(UUID userId, int year, int month, Double lat, Double lng, String methodName) {
@@ -65,7 +68,20 @@ public class PrayerService {
     public HijriResponse hijri(LocalDate date) {
         HijriCalendar.HijriDate h = hijriCalendar.toHijri(date);
         return new HijriResponse(date.toString(), h.formatted(), h.year(), h.month(), h.day(), h.monthName(),
-                "Tabular Islamic (civil) calendar; may differ by a day from local moon-sighting calendars");
+                "Tabular Islamic (civil) calendar; may differ by a day from local moon-sighting calendars",
+                h.formattedAr(), h.monthNameAr(),
+                "التقويم الهجري الحسابي (المدني)، وقد يختلف بيوم عن التقويم المعتمد على رؤية الهلال في بلدك");
+    }
+
+    static String arabicName(PrayerName name) {
+        return switch (name) {
+            case FAJR -> "الفجر";
+            case SUNRISE -> "الشروق";
+            case DHUHR -> "الظهر";
+            case ASR -> "العصر";
+            case MAGHRIB -> "المغرب";
+            case ISHA -> "العشاء";
+        };
     }
 
     @Transactional

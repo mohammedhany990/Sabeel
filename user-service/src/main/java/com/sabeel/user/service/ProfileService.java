@@ -31,10 +31,16 @@ public class ProfileService {
 
     @Transactional
     public void createFromRegistration(UUID userId, String name) {
+        createFromRegistration(userId, name, null);
+    }
+
+    @Transactional
+    public void createFromRegistration(UUID userId, String name, String language) {
         profileRepository.findById(userId).orElseGet(() -> profileRepository.save(Profile.builder()
                 .userId(userId)
                 .name(name)
                 .timezone("Africa/Cairo")
+                .preferredLanguage(normalizeLanguage(language))
                 .build()));
         NotificationPreference prefs = preferenceRepository.findById(userId).orElseGet(() -> preferenceRepository.save(NotificationPreference.builder()
                 .userId(userId)
@@ -43,7 +49,7 @@ public class ProfileService {
                 .prayerReminders(true)
                 .azkarReminders(true)
                 .build()));
-        publishPreferences(prefs, profileRepository.findById(userId).map(p2 -> p2.getTimezone()).orElse("Africa/Cairo"));
+        publishPreferences(prefs, profileRepository.findById(userId).orElse(null));
     }
 
     @Transactional(readOnly = true)
@@ -59,9 +65,22 @@ public class ProfileService {
         if (request.name() != null) profile.setName(request.name());
         if (request.profileImageUrl() != null) profile.setProfileImageUrl(request.profileImageUrl());
         if (request.country() != null) profile.setCountry(request.country());
-        if (request.timezone() != null) profile.setTimezone(request.timezone());
+        boolean reminderContextChanged = false;
+        if (request.timezone() != null && !request.timezone().equals(profile.getTimezone())) {
+            profile.setTimezone(request.timezone());
+            reminderContextChanged = true;
+        }
         if (request.preferredReciterId() != null) profile.setPreferredReciterId(request.preferredReciterId());
-        return toResponse(profileRepository.save(profile));
+        if (request.preferredLanguage() != null
+                && !normalizeLanguage(request.preferredLanguage()).equals(normalizeLanguage(profile.getPreferredLanguage()))) {
+            profile.setPreferredLanguage(normalizeLanguage(request.preferredLanguage()));
+            reminderContextChanged = true;
+        }
+        Profile saved = profileRepository.save(profile);
+        if (reminderContextChanged) {
+            preferenceRepository.findById(userId).ifPresent(prefs -> publishPreferences(prefs, saved));
+        }
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -81,11 +100,17 @@ public class ProfileService {
         if (request.prayerReminders() != null) prefs.setPrayerReminders(request.prayerReminders());
         if (request.azkarReminders() != null) prefs.setAzkarReminders(request.azkarReminders());
         NotificationPreference saved = preferenceRepository.save(prefs);
-        publishPreferences(saved, profileRepository.findById(userId).map(p2 -> p2.getTimezone()).orElse("Africa/Cairo"));
+        publishPreferences(saved, profileRepository.findById(userId).orElse(null));
         return toPreferencesResponse(saved);
     }
 
-    private void publishPreferences(NotificationPreference prefs, String timezone) {
+    static String normalizeLanguage(String language) {
+        return language != null && language.toLowerCase().startsWith("ar") ? "ar" : "en";
+    }
+
+    private void publishPreferences(NotificationPreference prefs, Profile profile) {
+        String timezone = profile == null ? "Africa/Cairo" : profile.getTimezone();
+        String language = profile == null ? "en" : normalizeLanguage(profile.getPreferredLanguage());
         java.util.Map<String, Object> payload = new java.util.HashMap<>();
         payload.put("userId", prefs.getUserId().toString());
         payload.put("pushEnabled", prefs.isPushEnabled());
@@ -93,6 +118,7 @@ public class ProfileService {
         payload.put("memorizationReminderTime", prefs.getMemorizationReminderTime() == null ? "" : prefs.getMemorizationReminderTime().toString());
         payload.put("revisionReminderTime", prefs.getRevisionReminderTime() == null ? "" : prefs.getRevisionReminderTime().toString());
         payload.put("timezone", timezone);
+        payload.put("language", language);
         payload.put("prayerReminders", prefs.isPrayerReminders());
         payload.put("azkarReminders", prefs.isAzkarReminders());
         outboxService.record(TOPIC_PREFERENCES_UPDATED, prefs.getUserId().toString(), payload);
@@ -127,7 +153,8 @@ public class ProfileService {
 
     private ProfileResponse toResponse(Profile p) {
         return new ProfileResponse(p.getUserId(), p.getName(), p.getProfileImageUrl(), p.getCountry(),
-                p.getTimezone(), p.getPreferredReciterId(), p.getCreatedAt(), p.getUpdatedAt());
+                p.getTimezone(), p.getPreferredReciterId(), p.getCreatedAt(), p.getUpdatedAt(),
+                normalizeLanguage(p.getPreferredLanguage()));
     }
 
     private PreferencesResponse toPreferencesResponse(NotificationPreference p) {

@@ -48,6 +48,7 @@ public class NotificationService {
                 .userId(userId).type(type).title(title).body(body)
                 .channel(channel).status(Notification.Status.PENDING)
                 .scheduledFor(scheduledFor).createdAt(Instant.now())
+                .language(languageOf(userId))
                 .build());
     }
 
@@ -57,6 +58,7 @@ public class NotificationService {
                 .userId(userId).type(type).title(title).body(body)
                 .channel(channel).status(Notification.Status.PENDING)
                 .scheduledFor(Instant.now()).createdAt(Instant.now())
+                .language(languageOf(userId))
                 .build());
         deliver(notification);
     }
@@ -106,14 +108,29 @@ public class NotificationService {
         notificationRepository.save(n);
     }
 
+    @Transactional(readOnly = true)
+    public String languageOf(UUID userId) {
+        return userMirrorRepository.findById(userId)
+                .map(m -> NotificationTemplates.normalize(m.getLanguage()))
+                .orElse(NotificationTemplates.EN);
+    }
+
     @Transactional
     public void upsertUserMirror(UUID userId, String email, String name) {
+        upsertUserMirror(userId, email, name, null);
+    }
+
+    @Transactional
+    public void upsertUserMirror(UUID userId, String email, String name, String language) {
         UserMirror mirror = userMirrorRepository.findById(userId).orElse(UserMirror.builder()
                 .userId(userId).pushEnabled(true).emailEnabled(true)
                 .prayerRemindersEnabled(true).azkarRemindersEnabled(true)
                 .timezone("Africa/Cairo").build());
         mirror.setEmail(email);
         mirror.setName(name);
+        if (language != null || mirror.getLanguage() == null) {
+            mirror.setLanguage(NotificationTemplates.normalize(language));
+        }
         userMirrorRepository.save(mirror);
     }
 
@@ -121,6 +138,14 @@ public class NotificationService {
     public void applyPreferences(UUID userId, boolean pushEnabled, boolean emailEnabled,
                                  String memorizationReminderTime, String revisionReminderTime, String timezone,
                                  boolean prayerRemindersEnabled, boolean azkarRemindersEnabled) {
+        applyPreferences(userId, pushEnabled, emailEnabled, memorizationReminderTime, revisionReminderTime,
+                timezone, prayerRemindersEnabled, azkarRemindersEnabled, null);
+    }
+
+    @Transactional
+    public void applyPreferences(UUID userId, boolean pushEnabled, boolean emailEnabled,
+                                 String memorizationReminderTime, String revisionReminderTime, String timezone,
+                                 boolean prayerRemindersEnabled, boolean azkarRemindersEnabled, String language) {
         UserMirror mirror = userMirrorRepository.findById(userId).orElse(UserMirror.builder()
                 .userId(userId).email("").name("")
                 .prayerRemindersEnabled(true).azkarRemindersEnabled(true).build());
@@ -131,6 +156,9 @@ public class NotificationService {
         mirror.setTimezone(timezone == null || timezone.isBlank() ? "Africa/Cairo" : timezone);
         mirror.setPrayerRemindersEnabled(prayerRemindersEnabled);
         mirror.setAzkarRemindersEnabled(azkarRemindersEnabled);
+        if (language != null || mirror.getLanguage() == null) {
+            mirror.setLanguage(NotificationTemplates.normalize(language));
+        }
         userMirrorRepository.save(mirror);
         if (!prayerRemindersEnabled) {
             cancelPending(userId, "PRAYER_REMINDER");
@@ -191,7 +219,8 @@ public class NotificationService {
     public List<NotificationResponse> myNotifications(UUID userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(n -> new NotificationResponse(n.getId(), n.getType(), n.getTitle(), n.getBody(),
-                        n.getChannel().name(), n.getStatus().name(), n.getCreatedAt(), n.getReadAt()))
+                        n.getChannel().name(), n.getStatus().name(), n.getCreatedAt(), n.getReadAt(),
+                        n.getLanguage() == null ? NotificationTemplates.EN : n.getLanguage()))
                 .toList();
     }
 

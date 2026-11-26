@@ -40,4 +40,7 @@ public class UserMirror {
 
     @Column(nullable = false)
     private String timezone;
+
+    @Column(length = 5, columnDefinition = "varchar(5) default 'en'")
+    private String language;
 }

@@ -13,9 +13,22 @@ public class HijriCalendar {
             "Jumada al-Ula", "Jumada al-Akhirah", "Rajab", "Sha'ban",
             "Ramadan", "Shawwal", "Dhul-Qa'dah", "Dhul-Hijjah");
 
+    private static final List<String> MONTH_NAMES_AR = List.of(
+            "محرم", "صفر", "ربيع الأول", "ربيع الآخر",
+            "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
+            "رمضان", "شوال", "ذو القعدة", "ذو الحجة");
+
     public record HijriDate(int year, int month, int day, String monthName) {
         public String formatted() {
             return day + " " + monthName + " " + year + " AH";
+        }
+
+        public String monthNameAr() {
+            return MONTH_NAMES_AR.get(month - 1);
+        }
+
+        public String formattedAr() {
+            return day + " " + monthNameAr() + " " + year + " هـ";
         }
     }
 

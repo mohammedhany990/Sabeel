@@ -58,7 +58,8 @@ public class QuranService {
     @Transactional(readOnly = true)
     public List<ReciterResponse> reciters() {
         return reciterRepository.findAll().stream()
-                .map(r -> new ReciterResponse(r.getId(), r.getNameAr(), r.getNameEn(), r.getCountry(), r.getStyle()))
+                .map(r -> new ReciterResponse(r.getId(), r.getNameAr(), r.getNameEn(), r.getCountry(), r.getStyle(),
+                        ArabicLabels.country(r.getCountry()), ArabicLabels.style(r.getStyle())))
                 .toList();
     }
 
@@ -138,7 +139,8 @@ public class QuranService {
 
     private SurahResponse toSurahResponse(Surah s) {
         return new SurahResponse(s.getId(), s.getNameAr(), s.getNameEn(), s.getTransliteration(),
-                s.getRevelationType(), s.getAyahCount(), s.getStartPage(), s.getStartJuz());
+                s.getRevelationType(), s.getAyahCount(), s.getStartPage(), s.getStartJuz(),
+                ArabicLabels.revelationType(s.getRevelationType()));
     }
 
     private AyahResponse toAyahResponse(Ayah a) {

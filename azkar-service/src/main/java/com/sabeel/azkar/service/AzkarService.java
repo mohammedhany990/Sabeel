@@ -119,6 +119,6 @@ public class AzkarService {
     private ItemResponse toItemResponse(AzkarItem i, Map<Integer, Integer> todayCounts) {
         int count = todayCounts.getOrDefault(i.getId(), 0);
         return new ItemResponse(i.getId(), i.getTextAr(), i.getRepeatTarget(), i.getReference(),
-                count, count >= i.getRepeatTarget());
+                count, count >= i.getRepeatTarget(), i.getTextEn(), i.getReferenceAr());
     }
 }

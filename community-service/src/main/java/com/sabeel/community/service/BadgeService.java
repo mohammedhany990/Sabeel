@@ -61,7 +61,8 @@ public class BadgeService {
                 userBadgeRepository.save(UserBadge.builder().id(UUID.randomUUID()).userId(userId)
                         .badgeCode(badge.getCode()).awardedAt(Instant.now()).build());
                 outboxService.record(TOPIC_BADGE_AWARDED, userId.toString(), Map.of(
-                        "userId", userId.toString(), "badgeCode", badge.getCode(), "title", badge.getTitle()));
+                        "userId", userId.toString(), "badgeCode", badge.getCode(), "title", badge.getTitle(),
+                        "titleAr", badge.getTitleAr() == null ? badge.getTitle() : badge.getTitleAr()));
             }
         }
         Instant now = Instant.now();

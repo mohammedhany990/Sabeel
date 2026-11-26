@@ -52,4 +52,7 @@ public class Notification {
     private Instant createdAt;
 
     private Instant readAt;
+
+    @Column(length = 5, columnDefinition = "varchar(5) default 'en'")
+    private String language;
 }

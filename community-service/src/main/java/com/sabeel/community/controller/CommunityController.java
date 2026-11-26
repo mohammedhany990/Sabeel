@@ -90,8 +90,12 @@ public class CommunityController {
     public List<BadgeResponse> myBadges(@AuthenticationPrincipal String userId) {
         Map<String, String> titles = badgeService.definitions().stream().collect(
                 Collectors.toMap(b -> b.getCode(), b -> b.getTitle()));
+        Map<String, String> titlesAr = badgeService.definitions().stream()
+                .filter(b -> b.getTitleAr() != null)
+                .collect(Collectors.toMap(b -> b.getCode(), b -> b.getTitleAr()));
         return badgeService.myBadges(UUID.fromString(userId)).stream()
-                .map(b -> BadgeResponse.earned(b, titles.getOrDefault(b.getBadgeCode(), b.getBadgeCode())))
+                .map(b -> BadgeResponse.earned(b, titles.getOrDefault(b.getBadgeCode(), b.getBadgeCode()),
+                        titlesAr.get(b.getBadgeCode())))
                 .toList();
     }
 }

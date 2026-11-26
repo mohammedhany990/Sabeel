@@ -30,9 +30,17 @@ docker compose up --build
 ./scripts/demo.sh
 ```
 
-Each service ZIP extracts to its own top-level directory; the platform ZIP adds `platform/`, `docs/` and `README.md`. Status: 126 unit tests green across all 12 services; the full Compose stack has not been run end-to-end here (no Docker daemon in the build environment). `.github/workflows/integration-smoke.yml` gives that check a reproducible path: it builds everything, starts the Compose stack and runs `platform/scripts/smoke.sh` (auth, security header checks, the memorization→revision event loop, prayer/qibla/hijri, azkar, learning/community/recitation flows, Prometheus health) on every push — its first execution happens on GitHub Actions, which provides Docker.
+Each service ZIP extracts to its own top-level directory; the platform ZIP adds `platform/`, `docs/` and `README.md`. Status: 230 unit tests green (rerun on JDK 17 after the English/Arabic changes) across all 12 services; the full Compose stack has not been run end-to-end here (no Docker daemon in the build environment). `.github/workflows/integration-smoke.yml` gives that check a reproducible path: it builds everything, starts the Compose stack and runs `platform/scripts/smoke.sh` (auth, security header checks, the memorization→revision event loop, prayer/qibla/hijri, azkar, learning/community/recitation flows, Prometheus health) on every push — its first execution happens on GitHub Actions, which provides Docker.
 
 Swagger UI per service at `http://localhost:<port>/swagger-ui.html`. Kafka UI at `http://localhost:8180`. Mailhog at `http://localhost:8025`. Prometheus at `http://localhost:9090`, Grafana at `http://localhost:3000` (admin/admin).
+
+## Languages (English and Arabic)
+
+- Users have a `preferredLanguage` (`en` or `ar`) on their profile (`PUT /api/v1/users/me`); registration accepts an optional `language`.
+- Send `Accept-Language: ar` (or `en`) and every service returns its error `detail`/`title` in that language, with a `Content-Language` response header.
+- Notifications (push and email) are rendered in the user's stored language; the language travels in the `auth.user.registered` and `user.preferences.updated` events.
+- Azkar items have `textEn` and `referenceAr`, badges have `titleAr`/`descriptionAr`, prayer and Hijri responses have Arabic names, surahs and reciters have Arabic labels.
+- The Arabic strings were written for this project and need a native-speaker review before a public release. See "Languages" in `docs/Sabeel-Documentation.md`.
 
 ## Reliability design
 

@@ -24,7 +24,8 @@ public class RegistrationConsumer {
         JsonNode envelope = objectMapper.readTree(message);
         JsonNode payload = envelope.get("payload");
         UUID userId = UUID.fromString(payload.get("userId").asText());
-        profileService.createFromRegistration(userId, payload.get("name").asText());
+        profileService.createFromRegistration(userId, payload.get("name").asText(),
+                payload.has("language") ? payload.get("language").asText() : null);
         log.info("profile ensured for user {}", userId);
     }
 }

@@ -6,6 +6,7 @@ import com.sabeel.notification.domain.Notification;
 import com.sabeel.notification.domain.UserMirror;
 import com.sabeel.notification.repository.UserMirrorRepository;
 import com.sabeel.notification.service.NotificationService;
+import com.sabeel.notification.service.NotificationTemplates;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,6 +22,7 @@ import static com.sabeel.notification.config.KafkaConfig.*;
 @Slf4j
 public class NotificationConsumers {
     private final NotificationService notificationService;
+    private final NotificationTemplates templates;
     private final UserMirrorRepository userMirrorRepository;
     private final ObjectMapper objectMapper;
 
@@ -31,13 +33,11 @@ public class NotificationConsumers {
         JsonNode p = envelope.get("payload");
         notificationService.processEvent(eventId, TOPIC_USER_REGISTERED, () -> {
             UUID userId = UUID.fromString(p.get("userId").asText());
-            notificationService.upsertUserMirror(userId, p.get("email").asText(), p.get("name").asText());
-            String token = p.get("verificationToken").asText();
-            notificationService.sendNow(userId, "EMAIL_VERIFICATION",
-                    "Verify your Sabeel account",
-                    "Assalamu alaikum " + p.get("name").asText()
-                            + ",\n\nWelcome to Sabeel. Verify your email with this token:\n\n" + token
-                            + "\n\nThe token expires in 24 hours.",
+            String language = p.has("language") ? p.get("language").asText() : null;
+            notificationService.upsertUserMirror(userId, p.get("email").asText(), p.get("name").asText(), language);
+            var content = templates.emailVerification(notificationService.languageOf(userId),
+                    p.get("name").asText(), p.get("verificationToken").asText());
+            notificationService.sendNow(userId, "EMAIL_VERIFICATION", content.title(), content.body(),
                     Notification.Channel.EMAIL);
         });
     }
@@ -47,11 +47,12 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_PASSWORD_RESET, () ->
-                notificationService.sendNow(UUID.fromString(p.get("userId").asText()), "PASSWORD_RESET",
-                        "Reset your Sabeel password",
-                        "Use this token to reset your password (valid 30 minutes):\n\n" + p.get("resetToken").asText(),
-                        Notification.Channel.EMAIL));
+        notificationService.processEvent(eventId, TOPIC_PASSWORD_RESET, () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.passwordReset(notificationService.languageOf(userId), p.get("resetToken").asText());
+            notificationService.sendNow(userId, "PASSWORD_RESET", content.title(), content.body(),
+                    Notification.Channel.EMAIL);
+        });
     }
 
     @KafkaListener(topics = TOPIC_DEVICE_TOKEN, groupId = "notification-service")
@@ -78,7 +79,8 @@ public class NotificationConsumers {
                         p.get("revisionReminderTime").asText(""),
                         p.get("timezone").asText(""),
                         p.has("prayerReminders") ? p.get("prayerReminders").asBoolean() : true,
-                        p.has("azkarReminders") ? p.get("azkarReminders").asBoolean() : true));
+                        p.has("azkarReminders") ? p.get("azkarReminders").asBoolean() : true,
+                        p.has("language") ? p.get("language").asText() : null));
     }
 
     @KafkaListener(topics = TOPIC_TASK_CREATED, groupId = "notification-service")
@@ -93,10 +95,9 @@ public class NotificationConsumers {
                     p.get("date").asText(),
                     mirror.map(UserMirror::getMemorizationReminderTime).orElse(null),
                     mirror.map(UserMirror::getTimezone).orElse(null));
-            notificationService.schedule(userId, "MEMORIZATION_TASK",
-                    "Today's memorization is ready",
-                    "Task for " + p.get("date").asText() + ": surah " + p.get("surahId").asInt()
-                            + ", ayahs " + p.get("fromAyah").asInt() + "-" + p.get("toAyah").asInt() + ".",
+            var content = templates.memorizationTask(notificationService.languageOf(userId), p.get("date").asText(),
+                    p.get("surahId").asInt(), p.get("fromAyah").asInt(), p.get("toAyah").asInt());
+            notificationService.schedule(userId, "MEMORIZATION_TASK", content.title(), content.body(),
                     Notification.Channel.PUSH, scheduledFor);
         });
     }
@@ -113,9 +114,8 @@ public class NotificationConsumers {
                     p.get("date").asText(),
                     mirror.map(UserMirror::getRevisionReminderTime).orElse(null),
                     mirror.map(UserMirror::getTimezone).orElse(null));
-            notificationService.schedule(userId, "REVISION_DUE",
-                    "Revision is due",
-                    "You have " + p.get("itemCount").asInt() + " memorized range(s) due for revision today.",
+            var content = templates.revisionDue(notificationService.languageOf(userId), p.get("itemCount").asInt());
+            notificationService.schedule(userId, "REVISION_DUE", content.title(), content.body(),
                     Notification.Channel.PUSH, scheduledFor);
         });
     }
@@ -132,9 +132,8 @@ public class NotificationConsumers {
             }
             String prayer = p.get("prayer").asText();
             Instant at = Instant.parse(p.get("time").asText());
-            notificationService.scheduleDeduped(userId, "PRAYER_REMINDER",
-                    "Time for " + prayer,
-                    "It's " + prayer + " time. May Allah accept your prayer.",
+            var content = templates.prayerReminder(notificationService.languageOf(userId), prayer);
+            notificationService.scheduleDeduped(userId, "PRAYER_REMINDER", content.title(), content.body(),
                     Notification.Channel.PUSH, at);
         });
     }
@@ -155,10 +154,8 @@ public class NotificationConsumers {
             java.time.LocalTime defaultTime = "EVENING".equals(category)
                     ? java.time.LocalTime.of(17, 0) : java.time.LocalTime.of(6, 0);
             Instant scheduledFor = notificationService.reminderInstant(p.get("date").asText(), defaultTime, timezone);
-            String label = "EVENING".equals(category) ? "evening" : "morning";
-            notificationService.scheduleDeduped(userId, "AZKAR_REMINDER",
-                    "Your " + label + " azkar",
-                    "Don't forget your " + label + " azkar today.",
+            var content = templates.azkarReminder(notificationService.languageOf(userId), category);
+            notificationService.scheduleDeduped(userId, "AZKAR_REMINDER", content.title(), content.body(),
                     Notification.Channel.PUSH, scheduledFor);
         });
     }
@@ -177,12 +174,13 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_STREAK_MILESTONE, () ->
-                notificationService.schedule(UUID.fromString(p.get("userId").asText()), "STREAK_MILESTONE",
-                        "MashaAllah, " + p.get("streakDays").asInt() + " days in a row",
-                        "You kept your " + p.get("categoryCode").asText().toLowerCase().replace('_', ' ')
-                                + " azkar for " + p.get("streakDays").asInt() + " days straight. Keep going!",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, TOPIC_STREAK_MILESTONE, () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.streakMilestone(notificationService.languageOf(userId),
+                    p.get("streakDays").asInt(), p.get("categoryCode").asText());
+            notificationService.schedule(userId, "STREAK_MILESTONE", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 
     @KafkaListener(topics = {TOPIC_PLAN_COMPLETED, TOPIC_ITEM_MASTERED}, groupId = "notification-service")
@@ -190,11 +188,12 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, envelope.get("eventType").asText(), () ->
-                notificationService.schedule(UUID.fromString(p.get("userId").asText()), "ACHIEVEMENT",
-                        "MashaAllah, milestone reached",
-                        "You completed a memorization milestone. Keep going!",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, envelope.get("eventType").asText(), () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.achievement(notificationService.languageOf(userId));
+            notificationService.schedule(userId, "ACHIEVEMENT", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 
     @KafkaListener(topics = TOPIC_COURSE_PUBLISHED, groupId = "notification-service")
@@ -202,11 +201,12 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_COURSE_PUBLISHED, () ->
-                notificationService.schedule(UUID.fromString(p.get("teacherId").asText()), "COURSE_PUBLISHED",
-                        "Your course is live",
-                        "\"" + p.get("title").asText() + "\" is now published and visible to students.",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, TOPIC_COURSE_PUBLISHED, () -> {
+            UUID teacherId = UUID.fromString(p.get("teacherId").asText());
+            var content = templates.coursePublished(notificationService.languageOf(teacherId), p.get("title").asText());
+            notificationService.schedule(teacherId, "COURSE_PUBLISHED", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 
     @KafkaListener(topics = TOPIC_ENROLLMENT_CREATED, groupId = "notification-service")
@@ -214,11 +214,12 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_ENROLLMENT_CREATED, () ->
-                notificationService.schedule(UUID.fromString(p.get("userId").asText()), "ENROLLMENT",
-                        "Enrolled in a new course",
-                        "You joined \"" + p.get("title").asText() + "\". Bismillah, happy learning!",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, TOPIC_ENROLLMENT_CREATED, () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.enrollment(notificationService.languageOf(userId), p.get("title").asText());
+            notificationService.schedule(userId, "ENROLLMENT", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 
     @KafkaListener(topics = TOPIC_EVALUATION_COMPLETED, groupId = "notification-service")
@@ -226,12 +227,13 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_EVALUATION_COMPLETED, () ->
-                notificationService.schedule(UUID.fromString(p.get("userId").asText()), "RECITATION_RESULT",
-                        "Recitation evaluation ready",
-                        "Your recitation scored " + p.get("accuracy").asDouble() + "% accuracy with "
-                                + p.get("mistakeCount").asInt() + " mistake(s). Tap to review the details.",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, TOPIC_EVALUATION_COMPLETED, () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.recitationResult(notificationService.languageOf(userId),
+                    p.get("accuracy").asDouble(), p.get("mistakeCount").asInt());
+            notificationService.schedule(userId, "RECITATION_RESULT", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 
     @KafkaListener(topics = TOPIC_BADGE_AWARDED, groupId = "notification-service")
@@ -239,10 +241,12 @@ public class NotificationConsumers {
         JsonNode envelope = objectMapper.readTree(message);
         String eventId = envelope.get("eventId").asText();
         JsonNode p = envelope.get("payload");
-        notificationService.processEvent(eventId, TOPIC_BADGE_AWARDED, () ->
-                notificationService.schedule(UUID.fromString(p.get("userId").asText()), "BADGE_AWARDED",
-                        "New badge: " + p.get("title").asText(),
-                        "MashaAllah, you earned the \"" + p.get("title").asText() + "\" badge.",
-                        Notification.Channel.PUSH, Instant.now()));
+        notificationService.processEvent(eventId, TOPIC_BADGE_AWARDED, () -> {
+            UUID userId = UUID.fromString(p.get("userId").asText());
+            var content = templates.badgeAwarded(notificationService.languageOf(userId), p.get("title").asText(),
+                    p.has("titleAr") ? p.get("titleAr").asText() : null);
+            notificationService.schedule(userId, "BADGE_AWARDED", content.title(), content.body(),
+                    Notification.Channel.PUSH, Instant.now());
+        });
     }
 }

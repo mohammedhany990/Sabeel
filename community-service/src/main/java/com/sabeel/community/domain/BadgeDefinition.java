@@ -23,6 +23,12 @@ public class BadgeDefinition {
     @Column(length = 500)
     private String description;
 
+    @Column(length = 120)
+    private String titleAr;
+
+    @Column(length = 500)
+    private String descriptionAr;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private Trigger triggerType;

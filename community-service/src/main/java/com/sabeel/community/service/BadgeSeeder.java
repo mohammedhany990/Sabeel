@@ -15,22 +15,38 @@ public class BadgeSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        List<BadgeDefinition> defaults = List.of(
-                badge("first-task", "First Step", "Complete your first memorization task", BadgeDefinition.Trigger.TASKS_COMPLETED, 1),
-                badge("ten-tasks", "Consistent", "Complete 10 memorization tasks", BadgeDefinition.Trigger.TASKS_COMPLETED, 10),
-                badge("hundred-tasks", "Hafiz Journey", "Complete 100 memorization tasks", BadgeDefinition.Trigger.TASKS_COMPLETED, 100),
-                badge("first-plan", "Plan Complete", "Finish a full memorization plan", BadgeDefinition.Trigger.PLANS_COMPLETED, 1),
-                badge("streak-7", "Week of Worship", "Reach a 7-day azkar streak", BadgeDefinition.Trigger.STREAK_DAYS, 7),
-                badge("streak-30", "Month of Devotion", "Reach a 30-day azkar streak", BadgeDefinition.Trigger.STREAK_DAYS, 30));
-        for (BadgeDefinition b : defaults) {
-            if (!repository.existsById(b.getCode())) {
-                repository.save(b);
+        for (BadgeDefinition wanted : defaults()) {
+            BadgeDefinition existing = repository.findById(wanted.getCode()).orElse(null);
+            if (existing == null) {
+                repository.save(wanted);
+            } else if (existing.getTitleAr() == null || existing.getDescriptionAr() == null) {
+                existing.setTitleAr(wanted.getTitleAr());
+                existing.setDescriptionAr(wanted.getDescriptionAr());
+                repository.save(existing);
             }
         }
     }
 
-    private BadgeDefinition badge(String code, String title, String description, BadgeDefinition.Trigger trigger, int threshold) {
-        return BadgeDefinition.builder().code(code).title(title).description(description)
+    static List<BadgeDefinition> defaults() {
+        return List.of(
+                badge("first-task", "First Step", "الخطوة الأولى", "Complete your first memorization task",
+                        "أكمل أول مهمة حفظ لك", BadgeDefinition.Trigger.TASKS_COMPLETED, 1),
+                badge("ten-tasks", "Consistent", "المواظب", "Complete 10 memorization tasks",
+                        "أكمل 10 مهام حفظ", BadgeDefinition.Trigger.TASKS_COMPLETED, 10),
+                badge("hundred-tasks", "Hafiz Journey", "رحلة الحفظ", "Complete 100 memorization tasks",
+                        "أكمل 100 مهمة حفظ", BadgeDefinition.Trigger.TASKS_COMPLETED, 100),
+                badge("first-plan", "Plan Complete", "خطة مكتملة", "Finish a full memorization plan",
+                        "أنهِ خطة حفظ كاملة", BadgeDefinition.Trigger.PLANS_COMPLETED, 1),
+                badge("streak-7", "Week of Worship", "أسبوع من العبادة", "Reach a 7-day azkar streak",
+                        "حافظ على الأذكار 7 أيام متتالية", BadgeDefinition.Trigger.STREAK_DAYS, 7),
+                badge("streak-30", "Month of Devotion", "شهر من المداومة", "Reach a 30-day azkar streak",
+                        "حافظ على الأذكار 30 يوماً متتالية", BadgeDefinition.Trigger.STREAK_DAYS, 30));
+    }
+
+    private static BadgeDefinition badge(String code, String title, String titleAr, String description,
+                                         String descriptionAr, BadgeDefinition.Trigger trigger, int threshold) {
+        return BadgeDefinition.builder().code(code).title(title).titleAr(titleAr)
+                .description(description).descriptionAr(descriptionAr)
                 .triggerType(trigger).threshold(threshold).build();
     }
 }

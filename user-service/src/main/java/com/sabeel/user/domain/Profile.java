@@ -30,6 +30,9 @@ public class Profile {
 
     private Integer preferredReciterId;
 
+    @Column(nullable = false, length = 5, columnDefinition = "varchar(5) default 'en'")
+    private String preferredLanguage;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

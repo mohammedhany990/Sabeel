@@ -1,5 +1,6 @@
 package com.sabeel.user.dto;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateProfileRequest(
@@ -7,5 +8,6 @@ public record UpdateProfileRequest(
         @Size(max = 500) String profileImageUrl,
         @Size(max = 2) String country,
         @Size(max = 50) String timezone,
-        Integer preferredReciterId) {
+        Integer preferredReciterId,
+        @Pattern(regexp = "en|ar") String preferredLanguage) {
 }

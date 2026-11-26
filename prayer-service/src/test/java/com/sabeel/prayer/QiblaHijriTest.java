@@ -40,4 +40,22 @@ class QiblaHijriTest {
         assertTrue(ramadan1.isAfter(LocalDate.of(2026, 2, 14)) && ramadan1.isBefore(LocalDate.of(2026, 2, 23)),
                 "1 Ramadan 1447 tabular date was " + ramadan1);
     }
+
+    @Test
+    void arabicMonthNamesMatchTheEnglishOnesForAllTwelveMonths() {
+        String[] expected = {"محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة",
+                "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"};
+        for (int month = 1; month <= 12; month++) {
+            HijriCalendar.HijriDate h = new HijriCalendar.HijriDate(1448, month, 1, "x");
+            assertEquals(expected[month - 1], h.monthNameAr());
+            assertEquals("1 " + expected[month - 1] + " 1448 هـ", h.formattedAr());
+        }
+    }
+
+    @Test
+    void arabicFormattedDateIsProducedForARealDate() {
+        HijriCalendar.HijriDate h = hijri.toHijri(LocalDate.of(2026, 2, 18));
+        assertTrue(h.formattedAr().endsWith("هـ"));
+        assertTrue(h.formattedAr().contains(h.monthNameAr()));
+    }
 }

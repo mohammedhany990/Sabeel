@@ -41,7 +41,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         }
         String header = exchange.getRequest().getHeaders().getFirst("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            return unauthorized(exchange, "missing bearer token");
+            return unauthorized(exchange, localized(exchange, "missing bearer token", "رمز الدخول مفقود"));
         }
         try {
             Claims claims = jwtService.parse(header.substring(7));
@@ -51,7 +51,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
                     .build()).build();
             return chain.filter(mutated);
         } catch (Exception e) {
-            return unauthorized(exchange, "invalid or expired token");
+            return unauthorized(exchange, localized(exchange, "invalid or expired token", "الرمز غير صالح أو منتهي الصلاحية"));
         }
     }
 
@@ -59,9 +59,32 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         var response = exchange.getResponse();
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
-        String body = "{\"type\":\"https://sabeel.app/errors/401\",\"title\":\"Unauthorized\",\"status\":401,\"detail\":\""
-                + detail + "\"}";
+        boolean arabic = isArabic(exchange);
+        response.getHeaders().set("Content-Language", arabic ? "ar" : "en");
+        String body = "{\"type\":\"https://sabeel.app/errors/401\",\"title\":\"" + (arabic ? "غير مصرّح" : "Unauthorized")
+                + "\",\"status\":401,\"detail\":\"" + detail + "\"}";
         return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8))));
+    }
+
+    private static boolean isArabic(ServerWebExchange exchange) {
+        String header = exchange.getRequest().getHeaders().getFirst("Accept-Language");
+        if (header == null) {
+            return false;
+        }
+        for (String part : header.split(",")) {
+            String tag = part.split(";")[0].trim().toLowerCase();
+            if (tag.startsWith("ar")) {
+                return true;
+            }
+            if (tag.startsWith("en")) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private static String localized(ServerWebExchange exchange, String english, String arabic) {
+        return isArabic(exchange) ? arabic : english;
     }
 
     @Override

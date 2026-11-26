@@ -338,7 +338,7 @@ One Kafka cluster (3 brokers in production, 1 in dev). Topic naming: `<domain>.<
 
 | Topic | Producer | Consumers | Key payload |
 |---|---|---|---|
-| `auth.user.registered` | auth | user, notification | userId, email, name |
+| `auth.user.registered` | auth | user, notification | userId, email, name, verificationToken, language (`en`/`ar`) |
 | `auth.password.reset-requested` | auth | notification | userId, email, resetToken |
 | `memorization.task.created` | memorization (nightly job) | notification | userId, taskId, date, surahId, fromAyah, toAyah |
 | `memorization.task.completed` | memorization | revision, notification | userId, taskId, surahId, fromAyah, toAyah, accuracy, completedAt |
@@ -393,6 +393,7 @@ memorization-service (nightly job) → generates tomorrow's DailyTask
 - **Centralized config:** per-service `application.yml` with Spring profiles (`dev`, `docker`, `prod`); shared values via Compose env file. Spring Cloud Config Server is optional and not required at this scale.
 - **Observability:** Spring Actuator + Micrometer on every service; Prometheus scrape endpoints; Grafana dashboard in Phase 2. Structured JSON logs with a `traceId` propagated via Micrometer Tracing (OpenTelemetry) across REST and Kafka.
 - **Resilience:** Resilience4j circuit breakers + timeouts on any synchronous cross-service call (keep these rare; prefer events).
+- **Internationalisation:** two languages, `en` (default) and `ar`. The user's `preferredLanguage` lives on the user-service profile and reaches notification-service through `auth.user.registered` and `user.preferences.updated` (both carry `language`). API errors are translated per request from `Accept-Language` by a per-service `ErrorMessages` catalog (exact messages plus parameterised patterns, English fallback) and returned with `Content-Language`; the gateway does the same for its 401s. Notification templates exist for both languages. Reference content gained Arabic or English counterparts (azkar `textEn`/`referenceAr`, badge `titleAr`/`descriptionAr`, prayer and Hijri Arabic names, surah and reciter Arabic labels). The design records strings in code catalogs rather than message bundles to keep services independent; the cost is that a new error message needs an entry in each service that can raise it, which a unit test enforces for literal messages.
 - **Migrations:** Flyway per service, versioned per database. MongoDB uses Mongock.
 
 ---

@@ -56,7 +56,7 @@ Registration, login, logout, email verification, password reset, and token manag
 
 ## user-service (8082)
 
-Profile (name, image, country, timezone, preferred reciter), notification preferences, and FCM device tokens. The profile row is created automatically by consuming `auth.user.registered`, so registration never depends on two services being up at once. Registering a device token publishes `user.device-token.registered`.
+Profile (name, image, country, timezone, preferred reciter, preferred language), notification preferences, and FCM device tokens. The profile row is created automatically by consuming `auth.user.registered`, so registration never depends on two services being up at once. Registering a device token publishes `user.device-token.registered`.
 
 ## quran-service (8083)
 
@@ -166,12 +166,12 @@ Quran text lives in Postgres because it is small (a few MB), highly relational, 
 
 # API Summary
 
-All traffic goes through the gateway at `http://localhost:8080/api/v1/**`. Errors use RFC 7807 `application/problem+json`. Each service exposes Swagger UI at `http://localhost:<port>/swagger-ui.html`.
+All traffic goes through the gateway at `http://localhost:8080/api/v1/**`. Errors use RFC 7807 `application/problem+json`, localised in English or Arabic from the `Accept-Language` header (see Languages). Each service exposes Swagger UI at `http://localhost:<port>/swagger-ui.html`.
 
 | Area | Endpoints |
 |---|---|
 | auth | POST /auth/register, /auth/login, /auth/refresh, /auth/logout, /auth/forgot-password, /auth/reset-password, GET /auth/verify-email, GET /auth/me |
-| users | GET/PUT /users/me, GET/PUT /users/me/preferences, POST/DELETE /users/me/device-tokens |
+| users | GET/PUT /users/me (includes `preferredLanguage`), GET/PUT /users/me/preferences, POST/DELETE /users/me/device-tokens |
 | quran | GET /quran/surahs, /quran/surahs/{id}, /quran/ayahs/{s}/{n}, /quran/pages/{p}, /quran/juz/{j}, /quran/search, /quran/reciters, /quran/reciters/{id}/audio + bookmarks and reading-state/history (authenticated) |
 | memorization | POST /memorization/plans, GET /plans/me, PATCH /plans/{id}, GET /tasks/today, POST /tasks/{id}/complete, GET /plans/{id}/progress |
 | revision | GET /revision/due, /revision/upcoming, POST /revision/items/{id}/review, GET /revision/stats |
@@ -206,6 +206,29 @@ Envelope: `{ eventId, eventType, eventVersion, occurredAt, payload }`. Topic key
 | recitation.evaluation.requested | recitation | recitation (worker group) | async evaluation execution |
 | recitation.evaluation.completed | recitation | notification | push: accuracy score ready |
 | community.badge.awarded | community | notification | push: badge earned |
+
+# Languages: English and Arabic
+
+The backend supports two languages, `en` (default) and `ar`, end to end. The Arabic text covers API error messages, notification content and the reference content that the services seed. Quran text, azkar text and surah names were already Arabic. Translations in this section were written for this project and have not been reviewed by a native-speaking editor or a religious scholar. The Arabic azkar meanings in particular are plain English renderings of Arabic source text, and the Arabic UI strings should be reviewed before any public release.
+
+**Preferred language.** user-service stores `preferredLanguage` (`en` or `ar`) on the profile. `GET /users/me` returns it. `PUT /users/me` accepts it and rejects any other value with a 400. A profile created before this change reads as `en`. Registration accepts an optional `language` field, which seeds the profile through the `auth.user.registered` event.
+
+**Events.** `auth.user.registered` and `user.preferences.updated` carry a `language` field. `user.preferences.updated` is now also published when the timezone or the language changes on the profile, not only when preferences change. Consumers treat a missing `language` as `en` (or as "keep the current value" for preference updates), so old events still work.
+
+**API error messages.** Every service resolves the request language from the standard `Accept-Language` header. `ar`, `ar-EG`, `ar-SA` and similar all mean Arabic; anything else, or no header, means English. The `detail` and `title` of the RFC 7807 problem body are translated, and the response carries `Content-Language: ar` or `en`. Field-level validation messages come from Hibernate Validator in the same locale. The gateway's own 401 responses are localised the same way. A message with no Arabic translation falls back to English and never fails. The header always wins over the stored preference, so clients should send `Accept-Language` from their language switch.
+
+**Notifications.** notification-service keeps the user's language in its user mirror, updated by the two events above. Every notification (email verification, password reset, memorization task, revision due, prayer and azkar reminders, streak milestones, achievements, course and enrollment messages, recitation result, badge awards) is rendered in that language when it is created, using templates for `en` and `ar`. The stored notification keeps its own `language`, and `GET /notifications/me` returns it. Memorization task notifications name the surah in the chosen language. Emails are sent as UTF-8.
+
+**Reference content.**
+
+| Area | Added |
+|---|---|
+| azkar | `textEn` (English meaning) and `referenceAr` (Arabic source name) on every item; categories already had `nameEn` and `nameAr` |
+| community badges | `titleAr` and `descriptionAr` on definitions, `titleAr` on earned badges; the badge award event carries `titleAr` |
+| prayer | `namesAr` and `hijriDateAr` on prayer times; `hijriAr`, `monthNameAr` and `noteAr` on the Hijri endpoint |
+| quran | `revelationTypeAr` on surahs; `countryAr` and `styleAr` on reciters; surahs and reciters already had Arabic names |
+
+Existing databases are upgraded on startup: Hibernate adds the new columns (`ddl-auto: update`; language columns default to `en`), and the azkar and badge seeders fill in missing translations for rows that already exist. User-created content (courses, challenges, circles) is stored as written and is not translated.
 
 # Design Decisions
 
@@ -276,7 +299,7 @@ Configuration needed for real delivery: a strong `JWT_SECRET`, an FCM service-ac
 
 # Testing
 
-**Status, stated plainly: every service compiles and its unit tests pass (`mvn package`, JDK 21 toolchain, bytecode targeting Java 17) — 126 tests, all green. On 2026-11-26 a bounded live chain was executed without Docker: real PostgreSQL 16.4 (two databases), real Kafka 3.8.0 in KRaft mode, and the recitation-service and notification-service jars, all running as plain processes in a resource-constrained sandbox. A POST to `/api/v1/recitation/evaluations` with a hand-minted HS256 JWT (dev secret) returned a PENDING job; the Kafka `recitation.evaluation.requested` event was consumed by the worker, the passthrough engine compared the transcript to the expected text, and a follow-up GET showed the job COMPLETED with accuracy 100.0 and `evaluationMode: TRANSCRIPT_COMPARISON_DEMO` (the honest demo label). The worker's `recitation.evaluation.completed` event was then consumed by notification-service, which wrote a `RECITATION_RESULT` notification row (status SENT) to its own database. This verifies the recitation evaluation chain end to end - HTTP auth, persistence, Kafka produce/consume both directions, and cross-service notification - but it is the recitation chain subset with the passthrough engine, NOT the full twelve-service Docker Compose stack, which has still not been executed (no Docker daemon here; the CI smoke workflow remains the sanctioned full-stack path). Two distinct pieces of evidence, not to be conflated: (1) the whisper ASR adapter was verified at the CLI level on two real Al-Fatiha ayah recordings, and then through the application chain once (see next paragraph); (2) the application chain above ran the transcript passthrough demo engine, which exercises everything except ASR itself. Also note the notification row's SENT status means the local dispatch pipeline completed: in this run FCM was disabled, the test user had no device tokens and no user-mirror email, so no external push or email was actually delivered (the push sender logs and skips when disabled or tokenless).**
+**Status, stated plainly: every service compiles and its unit tests pass (`mvn package`, JDK 21 toolchain, bytecode targeting Java 17) — 230 tests, all green (126 before the English/Arabic work, plus 104 for it, all rerun together on 2026-11-26 on JDK 17). On 2026-11-26 a bounded live chain was executed without Docker: real PostgreSQL 16.4 (two databases), real Kafka 3.8.0 in KRaft mode, and the recitation-service and notification-service jars, all running as plain processes in a resource-constrained sandbox. A POST to `/api/v1/recitation/evaluations` with a hand-minted HS256 JWT (dev secret) returned a PENDING job; the Kafka `recitation.evaluation.requested` event was consumed by the worker, the passthrough engine compared the transcript to the expected text, and a follow-up GET showed the job COMPLETED with accuracy 100.0 and `evaluationMode: TRANSCRIPT_COMPARISON_DEMO` (the honest demo label). The worker's `recitation.evaluation.completed` event was then consumed by notification-service, which wrote a `RECITATION_RESULT` notification row (status SENT) to its own database. This verifies the recitation evaluation chain end to end - HTTP auth, persistence, Kafka produce/consume both directions, and cross-service notification - but it is the recitation chain subset with the passthrough engine, NOT the full twelve-service Docker Compose stack, which has still not been executed (no Docker daemon here; the CI smoke workflow remains the sanctioned full-stack path). Two distinct pieces of evidence, not to be conflated: (1) the whisper ASR adapter was verified at the CLI level on two real Al-Fatiha ayah recordings, and then through the application chain once (see next paragraph); (2) the application chain above ran the transcript passthrough demo engine, which exercises everything except ASR itself. Also note the notification row's SENT status means the local dispatch pipeline completed: in this run FCM was disabled, the test user had no device tokens and no user-mirror email, so no external push or email was actually delivered (the push sender logs and skips when disabled or tokenless).**
 
 **Real-ASR chain run (2026-11-26, one clip).** with `RECITATION_ENGINE=whispercpp` (whisper.cpp pinned commit, `ggml-base.bin` verified against the pinned SHA-256) and the public audio URL `https://everyayah.com/data/Alafasy_128kbps/001001.mp3` (Al-Fatiha 1, the basmalah, expected text given as plain Arabic), the job went PENDING to COMPLETED with `evaluationMode: WHISPER_CPP_LOCAL_ASR`, accuracy 100.0 and no mistakes, in about 67 seconds on a 1-CPU sandbox with one whisper thread. This run exposed a real defect in the earlier release: the process runner merged the child's stderr into stdout, so whisper's model-load log numbers entered the transcript and the first run scored 0.0 with 91 false ADDITION mistakes. The fix discards stderr, and a regression test (`stderrIsNotMergedIntoStdout`) now guards it. The notification status for the real-ASR run was not confirmed. Limits: one clip, one reciter, plain-text expected text; this is not a tajweed assessment and not a broad accuracy benchmark, and the full twelve-service Compose stack remains unexecuted.
 
@@ -292,6 +315,8 @@ Configuration needed for real delivery: a strong `JWT_SECRET`, an FCM service-ac
 - learning: slug uniqueness suffixing, publish rules (needs a lesson, draft-only, owner-only), enrollment idempotency with exactly one enrollment event, 95% lesson completion threshold with duration capping, rating average recomputation and the enrollment-required rule.
 - community: badge award at threshold, no double award, below-threshold no-op, streak keeps the best value, challenge progress advances only joined active unfinished participants and stamps completion, completed challenges never advance again; join idempotency for challenges and circles, expired-challenge rejection, backwards-window rejection, owner auto-membership, unknown invite codes, member-only member listing.
 - recitation: normalization (harakat, tatweel, alef variants, taa marbuta, alef maqsura, punctuation), alignment scoring (perfect match, substitution, omission, addition, empty inputs), job lifecycle (pending to completed with event, engine failure marks FAILED with the reason and never emits a score, completed jobs never re-execute), and owner-only reads.
+
+- languages: every service has an `ErrorMessagesTest` (English passthrough, Arabic locale variants, parameterised messages, English fallback, handler output with `Content-Language`, and a source scan asserting that every literal `ApiException` message has an Arabic translation). user-service also has HTTP-level tests with MockMvc proving `Accept-Language: ar` yields an Arabic problem body with Arabic field messages and that no or unsupported headers yield English, plus profile language update/publish rules. auth-service tests the registration event language and validation. notification-service tests every template in both languages, language selection per user, and language updates from events. The gateway tests localised 401 bodies. azkar, community, prayer and quran have tests for the added translations and the startup backfill. Not covered by tests: the Arabic wording itself (no native-speaker review), and any run against a real database, Kafka or the Compose stack.
 
 # Roadmap
 
