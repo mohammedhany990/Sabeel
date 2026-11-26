@@ -78,7 +78,7 @@ export class LoginPage {
   styles: [SHARED_STYLES],
   template: `${SHELL_OPEN}
     <form (ngSubmit)="submit()">
-      <div><h1>{{ 'Begin your path' | t }}</h1><p class="sub">{{ 'Create your free Sabeel account.' | t }}</p></div>
+      <div><h1>{{ 'Begin your path' | t }}</h1><p class="sub">{{ 'Create your Sabeel account.' | t }}</p></div>
       @if (error()) { <div class="error-box">{{ error() | t }}</div> }
       @if (done()) { <div class="ok-box">{{ 'Account created. We sent a verification email. You can sign in now.' | t }}</div> }
       <label class="field">{{ 'Full name' | t }}<input name="name" [(ngModel)]="name" required minlength="2" maxlength="120" autocomplete="name"></label>

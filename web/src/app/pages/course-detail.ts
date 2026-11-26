@@ -24,7 +24,7 @@ import { Spinner } from '../shared/ui';
             <div class="gold">&#9733; {{ c.ratingAvg.toFixed(1) }} <span class="muted">{{ '({r} ratings) · {l} lessons' | t: { r: c.ratingCount, l: c.lessons.length } }}</span></div>
           </div>
           <div class="stack">
-            @if (!enrollment() && c.status === 'PUBLISHED') { <button class="btn btn-gold" (click)="enroll()">{{ 'Enroll for free' | t }}</button> }
+            @if (!enrollment() && c.status === 'PUBLISHED') { <button class="btn btn-gold" (click)="enroll()">{{ 'Enroll' | t }}</button> }
             @if (enrollment(); as e) { <span class="badge badge-ok">{{ 'Enrolled · {a}/{b} lessons' | t: { a: e.lessonsCompleted, b: e.lessonsTotal } }}</span> }
             @if (isOwner() && c.status === 'DRAFT') { <button class="btn btn-gold" (click)="publish()">{{ 'Publish course' | t }}</button> }
           </div>

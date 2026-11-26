@@ -72,7 +72,7 @@ const type = async (sel, v) => { await page.click(sel); await page.keyboard.type
 const email = 'demo' + Date.now() + '@example.com';
 
 await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-await step('s01', 'Sabeel: free, non-commercial. Quran, memorization, prayer and azkar in one place', 'سبيل: منصة مجانية للقرآن والحفظ والصلاة والأذكار', null, 4000);
+await step('s01', 'Sabeel brings the Quran, memorization, revision, prayer times and azkar together in one place. Let\'s see it running.', 'سبيل تجمع القرآن والحفظ والمراجعة ومواقيت الصلاة والأذكار في مكان واحد', null, 4000);
 
 await page.goto(BASE + '/register', { waitUntil: 'networkidle' });
 await step('s02', 'Create an account', 'إنشاء حساب', async () => {

@@ -28,7 +28,7 @@ import { Logo } from '../shared/logo';
         <h1>{{ 'Your complete companion for a life with the Quran' | t }}</h1>
         <p class="lead">{{ 'Plan your hifz, revise with spaced repetition, check your recitation, keep your prayers and azkar, learn from teachers and grow with a community. One calm, beautiful place.' | t }}</p>
         <div class="row cta">
-          <a class="btn btn-gold" routerLink="/register">{{ 'Start for free' | t }}</a>
+          <a class="btn btn-gold" routerLink="/register">{{ 'Get started' | t }}</a>
           <a class="btn" routerLink="/login">{{ 'I already have an account' | t }}</a>
         </div>
         <div class="verse ar">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
