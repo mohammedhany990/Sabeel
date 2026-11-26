@@ -94,7 +94,7 @@ import { Spinner } from '../shared/ui';
     .ayah:last-child { border-bottom: 0; }
     .ayah.playing { background: linear-gradient(90deg, transparent, rgba(47, 191, 148, 0.1), transparent); }
     .ayah.target { box-shadow: inset 0 0 0 1px var(--gold); border-radius: 12px; padding-left: 14px; padding-right: 14px; }
-    .tools { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; opacity: 0.55; transition: opacity 0.2s; }
+    .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; opacity: 0.55; transition: opacity 0.2s; }
     .ayah:hover .tools, .ayah.playing .tools { opacity: 1; }
     .no { min-width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 0.82rem; }
     .line { font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 2.3; text-align: right; }
