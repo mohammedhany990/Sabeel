@@ -3,12 +3,18 @@ set -euo pipefail
 BASE="${BASE:-http://localhost:8080}"
 PW='P@ssw0rd!23'
 J='Content-Type: application/json'
+for port in 8081 8083 8088 8089 8090; do
+  for _ in $(seq 60); do curl -sf -o /dev/null "http://localhost:$port/actuator/health" && break; sleep 3; done
+done
 login() { curl -s -X POST "$BASE/api/v1/auth/login" -H "$J" -d "{\"email\":\"$1\",\"password\":\"$PW\"}" | jq -r '.accessToken'; }
 for who in "demo-teacher@sabeel.dev:TEACHER:Demo Teacher" "demo-admin@sabeel.dev:ADMIN:Demo Admin"; do
   email="${who%%:*}"; rest="${who#*:}"; role="${rest%%:*}"; name="${rest#*:}"
   curl -s -X POST "$BASE/api/v1/auth/register" -H "$J" -d "{\"email\":\"$email\",\"password\":\"$PW\",\"name\":\"$name\"}" > /dev/null
   sleep 1
-  docker compose exec -T postgres psql -U "${POSTGRES_USER:-sabeel}" -d sabeel_auth -c "UPDATE users SET role='$role' WHERE email='$email';" > /dev/null
+  for _ in $(seq 30); do
+    docker compose exec -T postgres psql -U "${POSTGRES_USER:-sabeel}" -d sabeel_auth -c "UPDATE users SET role='$role' WHERE email='$email';" > /dev/null 2>&1 && break
+    sleep 3
+  done
 done
 TEACHER="Authorization: Bearer $(login demo-teacher@sabeel.dev)"
 ADMIN="Authorization: Bearer $(login demo-admin@sabeel.dev)"
