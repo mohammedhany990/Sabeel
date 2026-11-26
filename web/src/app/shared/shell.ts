@@ -46,7 +46,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
           </a>
         </header>
         <main class="content"><router-outlet /></main>
-        <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a></footer>
+        <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a> · <a routerLink="/app/sources">{{ 'Sources' | t }}</a></footer>
       </div>
     </div>
   `,

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Api } from '../core/api';
-import { Ayah, AyahTiming, Bookmark, Reciter, Surah } from '../core/models';
+import { Ayah, AyahTiming, Bookmark, EditionAyah, EditionInfo, Reciter, Surah } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage, toArabicDigits } from '../core/util';
 import { Spinner } from '../shared/ui';
@@ -48,8 +48,36 @@ import { Spinner } from '../shared/ui';
               @if (canPlayAyahs()) { <button class="btn btn-sm btn-ghost" (click)="playFrom(a)" [title]="'Play from this ayah' | t">{{ 'Play' | t }}</button> }
               <button class="btn btn-sm btn-ghost" (click)="toggleBookmark(a)">{{ (bookmarkFor(a.id) ? 'Bookmarked' : 'Bookmark') | t }}</button>
               <button class="btn btn-sm btn-ghost" (click)="markRead(a)">{{ 'Stopped here' | t }}</button>
+              <button class="btn btn-sm btn-ghost" (click)="toggleDetail(a)">{{ 'Tafsir and translation' | t }}</button>
             </div>
-            <div class="ar line">{{ a.textUthmani }} <span class="end">&#64831;{{ toAr(a.ayahNumber) }}&#64830;</span></div>
+            <div class="ar line" (click)="toggleDetail(a)">{{ a.textUthmani }} <span class="end">&#64831;{{ toAr(a.ayahNumber) }}&#64830;</span></div>
+            @if (detailId() === a.id) {
+              <div class="detail">
+                <div class="row">
+                  <label class="field grow">{{ 'Tafsir' | t }}
+                    <select [ngModel]="tafsirKey()" (ngModelChange)="pick('tafsir', $event, a)" name="tafsirKey">
+                      @for (e of tafsirEditions(); track e.key) { <option [value]="e.key">{{ e.title }} ({{ e.version }})</option> }
+                    </select>
+                  </label>
+                  <label class="field grow">{{ 'Translation' | t }}
+                    <select [ngModel]="translationKey()" (ngModelChange)="pick('translation', $event, a)" name="translationKey">
+                      @for (e of translationEditions(); track e.key) { <option [value]="e.key">{{ e.title }} ({{ e.version }})</option> }
+                    </select>
+                  </label>
+                </div>
+                @for (d of detail(); track d.edition.key) {
+                  <div class="ed-block">
+                    <div class="ed-title" dir="auto">{{ d.edition.title }} · {{ 'Version' | t }} {{ d.edition.version }} · QuranEnc.com</div>
+                    @for (en of d.entries; track en.fromAyah) {
+                      <p class="ed-text" [attr.dir]="d.edition.language === 'ar' ? 'rtl' : 'ltr'">{{ en.text }}</p>
+                      @if (en.notes) { <p class="ed-notes" dir="auto">{{ en.notes }}</p> }
+                    } @empty { <p class="muted">{{ 'No text for this ayah in this edition.' | t }}</p> }
+                  </div>
+                }
+                @if (detailError()) { <div class="error-box">{{ 'Could not load the tafsir.' | t }}</div> }
+                <button class="btn btn-sm btn-ghost" (click)="detailId.set(null)">{{ 'Close' | t }}</button>
+              </div>
+            }
           </div>
         }
       </div>
@@ -71,6 +99,12 @@ import { Spinner } from '../shared/ui';
     .no { min-width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 0.82rem; }
     .line { font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 2.3; text-align: right; }
     .end { color: var(--gold); font-size: 0.7em; }
+    .line { cursor: pointer; }
+    .detail { margin-top: 10px; padding: 14px; border: 1px solid var(--line-soft); border-radius: 12px; }
+    .ed-block { margin: 12px 0; }
+    .ed-title { font-size: 0.78rem; color: var(--gold); }
+    .ed-text { line-height: 1.9; white-space: pre-wrap; margin: 6px 0; }
+    .ed-notes { font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
   `]
 })
 export class QuranReader implements OnDestroy {
@@ -100,6 +134,14 @@ export class QuranReader implements OnDestroy {
   protected readonly busyAudio = signal(false);
   protected readonly focusId = signal<number | null>(null);
   protected readonly toAr = toArabicDigits;
+  protected readonly detailId = signal<number | null>(null);
+  protected readonly detail = signal<EditionAyah[]>([]);
+  protected readonly detailError = signal(false);
+  protected readonly editions = signal<EditionInfo[]>([]);
+  protected readonly tafsirKey = signal(localStorage.getItem('sabeel.tafsir') || 'arabic_moyassar');
+  protected readonly translationKey = signal(localStorage.getItem('sabeel.translation') || 'english_rwwad');
+  protected readonly tafsirEditions = computed(() => this.editions().filter((e) => e.kind !== 'translation'));
+  protected readonly translationEditions = computed(() => this.editions().filter((e) => e.kind === 'translation'));
 
   constructor() {
     effect(() => {
@@ -139,6 +181,32 @@ export class QuranReader implements OnDestroy {
 
   protected bookmarkFor(ayahId: number): Bookmark | undefined {
     return this.bookmarks().find((b) => b.ayahId === ayahId);
+  }
+
+  protected toggleDetail(a: Ayah): void {
+    if (this.detailId() === a.id) { this.detailId.set(null); return; }
+    this.detailId.set(a.id);
+    if (!this.editions().length) {
+      this.api.editions().subscribe({ next: (e) => this.editions.set(e), error: () => this.detailError.set(true) });
+    }
+    this.loadDetail(a);
+  }
+
+  protected pick(kind: 'tafsir' | 'translation', key: string, a: Ayah): void {
+    if (kind === 'tafsir') { this.tafsirKey.set(key); localStorage.setItem('sabeel.tafsir', key); }
+    else { this.translationKey.set(key); localStorage.setItem('sabeel.translation', key); }
+    this.loadDetail(a);
+  }
+
+  private loadDetail(a: Ayah): void {
+    this.detailError.set(false);
+    forkJoin([
+      this.api.editionAyah(this.tafsirKey(), a.surahId, a.ayahNumber),
+      this.api.editionAyah(this.translationKey(), a.surahId, a.ayahNumber)
+    ]).subscribe({
+      next: (r) => { if (this.detailId() === a.id) this.detail.set(r); },
+      error: () => this.detailError.set(true)
+    });
   }
 
   protected toggleBookmark(a: Ayah): void {

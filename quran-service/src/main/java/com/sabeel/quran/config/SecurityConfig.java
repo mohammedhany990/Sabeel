@@ -30,7 +30,8 @@ public class SecurityConfig {
                                 "/api/v1/quran/surahs", "/api/v1/quran/surahs/**",
                                 "/api/v1/quran/ayahs/**", "/api/v1/quran/pages/**",
                                 "/api/v1/quran/juz/**", "/api/v1/quran/search",
-                                "/api/v1/quran/reciters", "/api/v1/quran/reciters/**").permitAll()
+                                "/api/v1/quran/reciters", "/api/v1/quran/reciters/**",
+                                "/api/v1/quran/editions", "/api/v1/quran/editions/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

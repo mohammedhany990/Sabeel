@@ -55,3 +55,7 @@ export interface Badge { code: string; title: string; titleAr?: string | null; d
 export interface Evaluation { id: string; surahId: number; fromAyah: number; toAyah: number; status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED'; evaluationMode: string | null; mistakeCount: number | null; accuracy: number | null; mistakes: string | null; error: string | null; createdAt: string; completedAt: string | null; }
 export interface EvaluationRequest { surahId: number; fromAyah: number; toAyah: number; audioUrl?: string; transcript?: string; expectedText: string; }
 export interface Mistake { type: string; expected: string; actual: string; position: number; }
+
+export interface EditionInfo { key: string; kind: string; language: string; version: string; title: string; publisher: string; source: string; terms: string; retrieved: string; }
+export interface EditionEntry { fromAyah: number; toAyah: number; text: string; notes?: string | null; }
+export interface EditionAyah { edition: EditionInfo; surah: number; ayah: number; entries: EditionEntry[]; }

@@ -66,6 +66,8 @@ Audio links come from the quran-service API (`/reciters/{id}/ayahs/...` and the 
 
 The `<reciter folder>` is the last segment of the reciter's default base URL (for example `Alafasy_128kbps` or `mishaari_raashid_al_3afaasee`), so keep those folder names. Leave both empty to keep the public hosts. The override applies only to the built-in reciters. Reciters you add yourself (next section) use their own URLs. The files must be reachable over public HTTPS from the user's browser; the recitation-service only accepts public http(s) audio URLs. This project does not host or copy any audio.
 
+See [docs/SOURCES.md](docs/SOURCES.md) for the text sources, their versions and license terms (Tanzil text, QuranEnc tafsir and translation).
+
 ## Adding your own reciters
 
 Reciters come from one JSON file. The built-in list is `quran-service/src/main/resources/quran/reciters.json`. To add your own, copy `platform/reciters/reciters.example.json` to `platform/reciters/reciters.json`, edit it, set `QURAN_RECITERS_FILE=/app/reciters/reciters.json` in `platform/.env`, and restart quran-service (`docker compose up -d quran-service`). The file is read at every start and each reciter is inserted or updated by its `key`, so editing an entry and restarting changes it. A reciter cannot be removed by deleting its entry; delete the row in the `reciters` table of `sabeel_quran` for that.

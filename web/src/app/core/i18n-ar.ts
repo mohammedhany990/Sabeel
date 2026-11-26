@@ -475,6 +475,23 @@ export const AR: Record<string, string> = {
   "SW": "ج غ",
   "NW": "ش غ",
   "Interface language": "لغة الواجهة",
+  "Tafsir and translation": "التفسير والترجمة",
+  "Tafsir": "التفسير",
+  "Translation": "الترجمة",
+  "Word meanings": "معاني الكلمات",
+  "Close": "إغلاق",
+  "No text for this ayah in this edition.": "لا يوجد نص لهذه الآية في هذه النسخة.",
+  "Sources": "المصادر",
+  "Quran text, tafsir and translations": "نص القرآن والتفسير والترجمات",
+  "Version": "الإصدار",
+  "Retrieved": "تاريخ الجلب",
+  "Publisher": "الناشر",
+  "Source page": "صفحة المصدر",
+  "Terms": "الشروط",
+  "Texts are shown unmodified, with their source and version. Tafsir and translation texts come from QuranEnc.com.": "تُعرض النصوص دون تعديل، مع مصدرها وإصدارها. نصوص التفسير والترجمة من موقع QuranEnc.com.",
+  "Could not load the tafsir.": "تعذّر تحميل التفسير.",
+  "Quran text: Tanzil Project (CC BY 3.0, unmodified).": "نص القرآن: مشروع تنزيل (CC BY 3.0، دون تعديل).",
+  "Notes": "الحواشي",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {

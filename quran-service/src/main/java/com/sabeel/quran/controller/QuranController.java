@@ -1,6 +1,7 @@
 package com.sabeel.quran.controller;
 
 import com.sabeel.quran.dto.*;
+import com.sabeel.quran.service.EditionService;
 import com.sabeel.quran.service.QuranService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import java.util.List;
 @Tag(name = "Quran")
 public class QuranController {
     private final QuranService quranService;
+    private final EditionService editionService;
 
     @GetMapping("/surahs")
     @Operation(summary = "List all surahs")
@@ -76,5 +78,17 @@ public class QuranController {
     @Operation(summary = "Get the full-surah recitation audio URL for a reciter")
     public SurahAudioResponse surahAudio(@PathVariable int id, @PathVariable int surahId) {
         return quranService.surahAudio(id, surahId);
+    }
+
+    @GetMapping("/editions")
+    @Operation(summary = "List bundled tafsir and translation editions with source and version")
+    public List<EditionInfo> editions() {
+        return editionService.editions();
+    }
+
+    @GetMapping("/editions/{key}/{surah}/{ayah}")
+    @Operation(summary = "Get the tafsir, translation or word meanings of one ayah from an edition")
+    public EditionAyahResponse editionAyah(@PathVariable String key, @PathVariable int surah, @PathVariable int ayah) {
+        return editionService.ayah(key, surah, ayah);
     }
 }

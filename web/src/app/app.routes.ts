@@ -27,6 +27,7 @@ export const routes: Routes = [
       { path: 'courses/:slug', loadComponent: () => import('./pages/course-detail').then((m) => m.CourseDetail) },
       { path: 'community', loadComponent: () => import('./pages/community').then((m) => m.Community) },
       { path: 'notifications', loadComponent: () => import('./pages/notifications').then((m) => m.Notifications) },
+      { path: 'sources', loadComponent: () => import('./pages/sources').then((m) => m.Sources) },
       { path: 'settings', loadComponent: () => import('./pages/settings').then((m) => m.Settings) }
     ]
   },
