@@ -318,6 +318,7 @@ export const AR: Record<string, string> = {
   "Push notifications": "الإشعارات الفورية",
   "Email notifications": "إشعارات البريد",
   "Prayer reminders": "تذكير الصلاة",
+  "Revision reminders": "تذكير المراجعة",
   "Azkar reminders": "تذكير الأذكار",
   "Memorization reminder": "تذكير الحفظ",
   "Revision reminder": "تذكير المراجعة",

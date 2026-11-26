@@ -46,7 +46,7 @@ class ProfileServiceTest {
                 .pushEnabled(true).emailEnabled(true).prayerReminders(true).azkarReminders(true).build();
         when(preferenceRepository.findById(userId)).thenReturn(Optional.of(prefs));
         when(preferenceRepository.save(any(NotificationPreference.class))).thenAnswer(inv -> inv.getArgument(0));
-        service.updatePreferences(userId, new PreferencesRequest(null, null, null, null, false, false));
+        service.updatePreferences(userId, new PreferencesRequest(null, null, null, null, false, false, null));
         verify(outboxService).record(eq("user.preferences.updated"), eq(userId.toString()), argThat(p -> {
             Map<?, ?> map = (Map<?, ?>) p;
             return Boolean.FALSE.equals(map.get("prayerReminders")) && Boolean.FALSE.equals(map.get("azkarReminders"));
@@ -59,10 +59,24 @@ class ProfileServiceTest {
                 .pushEnabled(true).emailEnabled(true).prayerReminders(true).azkarReminders(true).build();
         when(preferenceRepository.findById(userId)).thenReturn(Optional.of(prefs));
         when(preferenceRepository.save(any(NotificationPreference.class))).thenAnswer(inv -> inv.getArgument(0));
-        service.updatePreferences(userId, new PreferencesRequest(null, null, null, null, null, null));
+        service.updatePreferences(userId, new PreferencesRequest(null, null, null, null, null, null, null));
         verify(outboxService).record(eq("user.preferences.updated"), eq(userId.toString()), argThat(p -> {
             Map<?, ?> map = (Map<?, ?>) p;
             return Boolean.TRUE.equals(map.get("prayerReminders")) && Boolean.TRUE.equals(map.get("azkarReminders"));
+        }));
+    }
+
+    @Test
+    void revisionReminderToggleIsPublished() {
+        NotificationPreference prefs = NotificationPreference.builder().userId(userId)
+                .pushEnabled(true).emailEnabled(true).prayerReminders(true).azkarReminders(true)
+                .revisionReminders(true).build();
+        when(preferenceRepository.findById(userId)).thenReturn(Optional.of(prefs));
+        when(preferenceRepository.save(any(NotificationPreference.class))).thenAnswer(inv -> inv.getArgument(0));
+        service.updatePreferences(userId, new PreferencesRequest(null, null, null, null, null, null, false));
+        verify(outboxService).record(eq("user.preferences.updated"), eq(userId.toString()), argThat(p -> {
+            Map<?, ?> map = (Map<?, ?>) p;
+            return Boolean.FALSE.equals(map.get("revisionReminders")) && Boolean.TRUE.equals(map.get("prayerReminders"));
         }));
     }
 

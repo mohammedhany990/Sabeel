@@ -82,10 +82,27 @@ class PreferenceToggleTest {
     }
 
     @Test
+    void revisionToggleIsPropagatedAndCancelsQueuedRevisionNotifications() {
+        UserMirror existing = mirror(true, true);
+        existing.setRevisionRemindersEnabled(true);
+        when(userMirrorRepository.findById(userId)).thenReturn(Optional.of(existing));
+        Notification queued = Notification.builder().userId(userId).type("REVISION_DUE")
+                .title("t").body("b").channel(Notification.Channel.PUSH)
+                .status(Notification.Status.PENDING).scheduledFor(Instant.now().plusSeconds(3600))
+                .createdAt(Instant.now()).build();
+        when(notificationRepository.findByUserIdAndTypeAndStatus(userId, "REVISION_DUE", Notification.Status.PENDING))
+                .thenReturn(List.of(queued));
+        service.applyPreferences(userId, true, true, "", "", "Africa/Cairo", true, true, null, false);
+        assertFalse(existing.isRevisionRemindersEnabled());
+        assertEquals(Notification.Status.CANCELLED, queued.getStatus());
+    }
+
+    @Test
     void enabledChecksDefaultToTrueWithoutAMirror() {
         when(userMirrorRepository.findById(userId)).thenReturn(Optional.empty());
         assertTrue(service.prayerRemindersEnabled(userId));
         assertTrue(service.azkarRemindersEnabled(userId));
+        assertTrue(service.revisionRemindersEnabled(userId));
     }
 
     @Test

@@ -38,6 +38,9 @@ public class UserMirror {
     @Column(nullable = false)
     private boolean azkarRemindersEnabled;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean revisionRemindersEnabled;
+
     @Column(nullable = false)
     private String timezone;
 

@@ -40,6 +40,7 @@ import { PageHead, Spinner } from '../shared/ui';
             <label class="row"><input type="checkbox" name="ee" [(ngModel)]="pr.emailEnabled"> {{ 'Email notifications' | t }}</label>
             <label class="row"><input type="checkbox" name="pr" [(ngModel)]="pr.prayerReminders"> {{ 'Prayer reminders' | t }}</label>
             <label class="row"><input type="checkbox" name="ar" [(ngModel)]="pr.azkarReminders"> {{ 'Azkar reminders' | t }}</label>
+            <label class="row"><input type="checkbox" name="rv" data-testid="revision-reminders-toggle" [(ngModel)]="pr.revisionReminders"> {{ 'Revision reminders' | t }}</label>
             <div class="grid grid-2">
               <label class="field">{{ 'Memorization reminder' | t }}<input type="time" name="mt" [(ngModel)]="pr.memorizationReminderTime"></label>
               <label class="field">{{ 'Revision reminder' | t }}<input type="time" name="rt" [(ngModel)]="pr.revisionReminderTime"></label>
@@ -74,7 +75,7 @@ export class Settings implements OnInit {
   protected readonly profile = signal<ProfileResponse | null>(null);
   protected readonly reciters = signal<Reciter[]>([]);
   protected pf = { name: '', profileImageUrl: '', country: '', timezone: '', preferredReciterId: null as number | null, preferredLanguage: 'en' };
-  protected pr: PreferencesResponse = { pushEnabled: true, emailEnabled: true, memorizationReminderTime: null, revisionReminderTime: null, prayerReminders: true, azkarReminders: true };
+  protected pr: PreferencesResponse = { pushEnabled: true, emailEnabled: true, memorizationReminderTime: null, revisionReminderTime: null, prayerReminders: true, azkarReminders: true, revisionReminders: true };
   protected token = '';
 
   ngOnInit(): void {

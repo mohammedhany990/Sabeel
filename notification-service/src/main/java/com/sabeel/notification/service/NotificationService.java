@@ -124,7 +124,7 @@ public class NotificationService {
     public void upsertUserMirror(UUID userId, String email, String name, String language) {
         UserMirror mirror = userMirrorRepository.findById(userId).orElse(UserMirror.builder()
                 .userId(userId).pushEnabled(true).emailEnabled(true)
-                .prayerRemindersEnabled(true).azkarRemindersEnabled(true)
+                .prayerRemindersEnabled(true).azkarRemindersEnabled(true).revisionRemindersEnabled(true)
                 .timezone("Africa/Cairo").build());
         mirror.setEmail(email);
         mirror.setName(name);
@@ -146,9 +146,18 @@ public class NotificationService {
     public void applyPreferences(UUID userId, boolean pushEnabled, boolean emailEnabled,
                                  String memorizationReminderTime, String revisionReminderTime, String timezone,
                                  boolean prayerRemindersEnabled, boolean azkarRemindersEnabled, String language) {
+        applyPreferences(userId, pushEnabled, emailEnabled, memorizationReminderTime, revisionReminderTime,
+                timezone, prayerRemindersEnabled, azkarRemindersEnabled, language, true);
+    }
+
+    @Transactional
+    public void applyPreferences(UUID userId, boolean pushEnabled, boolean emailEnabled,
+                                 String memorizationReminderTime, String revisionReminderTime, String timezone,
+                                 boolean prayerRemindersEnabled, boolean azkarRemindersEnabled, String language,
+                                 boolean revisionRemindersEnabled) {
         UserMirror mirror = userMirrorRepository.findById(userId).orElse(UserMirror.builder()
                 .userId(userId).email("").name("")
-                .prayerRemindersEnabled(true).azkarRemindersEnabled(true).build());
+                .prayerRemindersEnabled(true).azkarRemindersEnabled(true).revisionRemindersEnabled(true).build());
         mirror.setPushEnabled(pushEnabled);
         mirror.setEmailEnabled(emailEnabled);
         mirror.setMemorizationReminderTime(parseTime(memorizationReminderTime));
@@ -156,6 +165,7 @@ public class NotificationService {
         mirror.setTimezone(timezone == null || timezone.isBlank() ? "Africa/Cairo" : timezone);
         mirror.setPrayerRemindersEnabled(prayerRemindersEnabled);
         mirror.setAzkarRemindersEnabled(azkarRemindersEnabled);
+        mirror.setRevisionRemindersEnabled(revisionRemindersEnabled);
         if (language != null || mirror.getLanguage() == null) {
             mirror.setLanguage(NotificationTemplates.normalize(language));
         }
@@ -165,6 +175,9 @@ public class NotificationService {
         }
         if (!azkarRemindersEnabled) {
             cancelPending(userId, "AZKAR_REMINDER");
+        }
+        if (!revisionRemindersEnabled) {
+            cancelPending(userId, "REVISION_DUE");
         }
     }
 
@@ -200,6 +213,11 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public boolean azkarRemindersEnabled(UUID userId) {
         return userMirrorRepository.findById(userId).map(UserMirror::isAzkarRemindersEnabled).orElse(true);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean revisionRemindersEnabled(UUID userId) {
+        return userMirrorRepository.findById(userId).map(UserMirror::isRevisionRemindersEnabled).orElse(true);
     }
 
     private LocalTime parseTime(String value) {

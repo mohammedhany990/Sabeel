@@ -31,4 +31,7 @@ public class NotificationPreference {
 
     @Column(nullable = false)
     private boolean azkarReminders;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean revisionReminders;
 }

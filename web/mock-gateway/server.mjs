@@ -99,7 +99,7 @@ route('POST', '/auth/register', async ({ body }) => {
   const u = { id: uid(), name: body.name, email: body.email.toLowerCase(), password: body.password, role, emailVerified: false };
   db.users.push(u);
   db.profiles.set(u.id, { userId: u.id, name: u.name, profileImageUrl: null, country: null, timezone: null, preferredReciterId: null, preferredLanguage: body.language === 'ar' ? 'ar' : 'en', createdAt: now(), updatedAt: now() });
-  db.prefs.set(u.id, { pushEnabled: true, emailEnabled: true, memorizationReminderTime: '06:00:00', revisionReminderTime: '20:00:00', prayerReminders: true, azkarReminders: true });
+  db.prefs.set(u.id, { pushEnabled: true, emailEnabled: true, memorizationReminderTime: '06:00:00', revisionReminderTime: '20:00:00', prayerReminders: true, azkarReminders: true, revisionReminders: true });
   notify(u.id, 'WELCOME', 'Welcome to Sabeel', 'Your account is ready. Create a memorization plan to begin.', { title: 'مرحبًا بك في سبيل', body: 'حسابك جاهز. أنشئ خطة حفظ لتبدأ.' });
   return [201, { id: u.id, name: u.name, email: u.email, role: u.role, emailVerified: false }];
 }, true);

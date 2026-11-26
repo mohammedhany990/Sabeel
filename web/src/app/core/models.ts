@@ -4,7 +4,7 @@ export interface MessageResponse { message: string; }
 
 export interface ProfileResponse { userId: string; name: string; profileImageUrl: string | null; country: string | null; timezone: string | null; preferredReciterId: number | null; preferredLanguage?: string | null; createdAt: string; updatedAt: string; }
 export interface UpdateProfileRequest { name?: string; profileImageUrl?: string; country?: string; timezone?: string; preferredReciterId?: number | null; preferredLanguage?: string; }
-export interface PreferencesResponse { pushEnabled: boolean; emailEnabled: boolean; memorizationReminderTime: string | null; revisionReminderTime: string | null; prayerReminders: boolean; azkarReminders: boolean; }
+export interface PreferencesResponse { pushEnabled: boolean; emailEnabled: boolean; memorizationReminderTime: string | null; revisionReminderTime: string | null; prayerReminders: boolean; azkarReminders: boolean; revisionReminders: boolean; }
 export type PreferencesRequest = Partial<PreferencesResponse>;
 
 export interface Surah { id: number; nameAr: string; nameEn: string; transliteration: string; revelationType: string; revelationTypeAr?: string | null; ayahCount: number; startPage: number | null; startJuz: number | null; }

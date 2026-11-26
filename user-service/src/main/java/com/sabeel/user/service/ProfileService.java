@@ -48,6 +48,7 @@ public class ProfileService {
                 .emailEnabled(true)
                 .prayerReminders(true)
                 .azkarReminders(true)
+                .revisionReminders(true)
                 .build()));
         publishPreferences(prefs, profileRepository.findById(userId).orElse(null));
     }
@@ -99,6 +100,7 @@ public class ProfileService {
         if (request.revisionReminderTime() != null) prefs.setRevisionReminderTime(request.revisionReminderTime());
         if (request.prayerReminders() != null) prefs.setPrayerReminders(request.prayerReminders());
         if (request.azkarReminders() != null) prefs.setAzkarReminders(request.azkarReminders());
+        if (request.revisionReminders() != null) prefs.setRevisionReminders(request.revisionReminders());
         NotificationPreference saved = preferenceRepository.save(prefs);
         publishPreferences(saved, profileRepository.findById(userId).orElse(null));
         return toPreferencesResponse(saved);
@@ -121,6 +123,7 @@ public class ProfileService {
         payload.put("language", language);
         payload.put("prayerReminders", prefs.isPrayerReminders());
         payload.put("azkarReminders", prefs.isAzkarReminders());
+        payload.put("revisionReminders", prefs.isRevisionReminders());
         outboxService.record(TOPIC_PREFERENCES_UPDATED, prefs.getUserId().toString(), payload);
     }
 
@@ -159,6 +162,6 @@ public class ProfileService {
 
     private PreferencesResponse toPreferencesResponse(NotificationPreference p) {
         return new PreferencesResponse(p.isPushEnabled(), p.isEmailEnabled(), p.getMemorizationReminderTime(),
-                p.getRevisionReminderTime(), p.isPrayerReminders(), p.isAzkarReminders());
+                p.getRevisionReminderTime(), p.isPrayerReminders(), p.isAzkarReminders(), p.isRevisionReminders());
     }
 }

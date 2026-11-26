@@ -132,6 +132,21 @@ await check('weekly summary shows stats and a suggestion', async () => {
   if (suggestion.length < 10) throw new Error('suggestion ' + suggestion);
 });
 
+await check('revision reminder toggle saves and persists', async () => {
+  await page.goto(BASE + '/app/settings', { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-testid=revision-reminders-toggle]', { timeout: 20000 });
+  const toggle = page.locator('[data-testid=revision-reminders-toggle]');
+  if (!(await toggle.isChecked())) throw new Error('should default to on');
+  await toggle.uncheck();
+  const saved = page.waitForResponse((r) => r.url().includes('/users/me/preferences') && r.request().method() === 'PUT', { timeout: 15000 });
+  await page.getByRole('button', { name: /Save preferences/ }).click();
+  const resp = await saved;
+  if (!resp.ok()) throw new Error('save status ' + resp.status());
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-testid=revision-reminders-toggle]', { timeout: 20000 });
+  if (await page.locator('[data-testid=revision-reminders-toggle]').isChecked()) throw new Error('toggle did not persist');
+});
+
 await check('light theme toggles, persists and keeps text readable', async () => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });

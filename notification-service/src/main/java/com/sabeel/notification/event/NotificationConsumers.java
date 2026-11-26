@@ -80,7 +80,8 @@ public class NotificationConsumers {
                         p.get("timezone").asText(""),
                         p.has("prayerReminders") ? p.get("prayerReminders").asBoolean() : true,
                         p.has("azkarReminders") ? p.get("azkarReminders").asBoolean() : true,
-                        p.has("language") ? p.get("language").asText() : null));
+                        p.has("language") ? p.get("language").asText() : null,
+                        p.has("revisionReminders") ? p.get("revisionReminders").asBoolean() : true));
     }
 
     @KafkaListener(topics = TOPIC_TASK_CREATED, groupId = "notification-service")
@@ -109,6 +110,9 @@ public class NotificationConsumers {
         JsonNode p = envelope.get("payload");
         notificationService.processEvent(eventId, TOPIC_REVISION_DUE, () -> {
             UUID userId = UUID.fromString(p.get("userId").asText());
+            if (!notificationService.revisionRemindersEnabled(userId)) {
+                return;
+            }
             var mirror = userMirrorRepository.findById(userId);
             Instant scheduledFor = notificationService.reminderInstant(
                     p.get("date").asText(),

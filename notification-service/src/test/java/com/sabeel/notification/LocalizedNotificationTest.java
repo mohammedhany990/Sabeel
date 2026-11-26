@@ -88,6 +88,26 @@ class LocalizedNotificationTest {
     }
 
     @Test
+    void revisionDueIsSkippedWhenTheUserTurnedRevisionRemindersOff() throws Exception {
+        UserMirror mirror = UserMirror.builder().userId(userId).email("a@b.c").name("Omar").pushEnabled(true)
+                .emailEnabled(true).prayerRemindersEnabled(true).azkarRemindersEnabled(true)
+                .revisionRemindersEnabled(false).timezone("Africa/Cairo").language("en").build();
+        when(userMirrorRepository.findById(userId)).thenReturn(Optional.of(mirror));
+        consumers.onRevisionDue(event("{\"userId\":\"" + userId + "\",\"date\":\"2026-11-26\",\"itemCount\":3}"));
+        verify(notificationRepository, never()).save(any(Notification.class));
+    }
+
+    @Test
+    void revisionDueIsScheduledWhenEnabled() throws Exception {
+        UserMirror mirror = UserMirror.builder().userId(userId).email("a@b.c").name("Omar").pushEnabled(true)
+                .emailEnabled(true).prayerRemindersEnabled(true).azkarRemindersEnabled(true)
+                .revisionRemindersEnabled(true).timezone("Africa/Cairo").language("ar").build();
+        when(userMirrorRepository.findById(userId)).thenReturn(Optional.of(mirror));
+        consumers.onRevisionDue(event("{\"userId\":\"" + userId + "\",\"date\":\"2026-11-26\",\"itemCount\":3}"));
+        assertEquals("ar", lastSaved().getLanguage());
+    }
+
+    @Test
     void registrationEmailUsesTheLanguageFromTheEvent() throws Exception {
         when(userMirrorRepository.findById(userId)).thenReturn(Optional.empty());
         consumers.onUserRegistered(event("{\"userId\":\"" + userId
