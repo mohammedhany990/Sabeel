@@ -176,9 +176,13 @@ echo "== recitation =="
 EVAL=$(curl -s -X POST "$BASE/api/v1/recitation/evaluations" -H "$AUTH" -H 'Content-Type: application/json' \
   -d '{"surahId":1,"fromAyah":1,"toAyah":4,"transcript":"بسم الله الرحمن الرحيم","expectedText":"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}')
 EVAL_ID=$(echo "$EVAL" | jq -r '.id')
-sleep 6
-check "recitation evaluation completes via worker" "COMPLETED" \
-  "$(curl -s "$BASE/api/v1/recitation/evaluations/$EVAL_ID" -H "$AUTH" | jq -r '.status')"
+EVAL_STATUS=""
+for i in $(seq 1 30); do
+  EVAL_STATUS=$(curl -s "$BASE/api/v1/recitation/evaluations/$EVAL_ID" -H "$AUTH" | jq -r '.status')
+  [ "$EVAL_STATUS" = "COMPLETED" ] && break
+  sleep 2
+done
+check "recitation evaluation completes via worker" "COMPLETED" "$EVAL_STATUS"
 
 echo "== web =="
 check "web frontend serves the app shell" "200" \

@@ -21,7 +21,7 @@ await prePage.goto(BASE + '/app/recitation', { waitUntil: 'networkidle' });
 await prePage.click('button.tab:has-text("Transcript")');
 await prePage.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحيم'; el.dispatchEvent(new Event('input', { bubbles: true })); });
 await prePage.click('button:has-text("Evaluate recitation")');
-await prePage.waitForFunction(() => !/Evaluating/.test(document.body.innerText), null, { timeout: 90000 }).catch(() => {});
+await prePage.waitForSelector('.badge-ok', { timeout: 90000 }).catch(() => {});
 const state = await pre.storageState();
 await pre.close();
 const context = await browser.newContext({
@@ -118,7 +118,7 @@ await step('t05', 'Recitation text check', '', async () => {
   await clickText('button.tab', 'Transcript');
   await page.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحمة'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await clickText('button', 'Evaluate recitation');
-  await page.waitForFunction(() => !/Evaluating/.test(document.body.innerText), null, { timeout: 60000 }).catch(() => {});
+  await page.waitForSelector('.badge-ok', { timeout: 60000 }).catch(() => {});
   await sleep(2500);
 }, H);
 await step('t06', 'Prayer times and next-prayer countdown', 'المواقيت والعدّ التنازلي للصلاة القادمة', async () => {
