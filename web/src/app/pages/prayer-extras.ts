@@ -8,6 +8,16 @@ import { Toast } from '../core/toast';
 const DAILY = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
+export function lastDays(count: number, from: Date): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(from);
+    d.setDate(d.getDate() - i);
+    out.push(isoDay(d));
+  }
+  return out;
+}
+
 function isoDay(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -117,7 +127,7 @@ export class PrayerExtras implements OnInit, OnDestroy {
     const n = this.next();
     return n ? formatCountdown(n.at - this.now()) : '';
   });
-  protected readonly dayKeys = computed(() => Object.keys(this.tracker()?.days ?? {}).sort().reverse());
+  protected readonly dayKeys = computed(() => (this.tracker() ? lastDays(7, new Date()) : []));
   private timer: ReturnType<typeof setInterval> | null = null;
   private lastPlayed = '';
 

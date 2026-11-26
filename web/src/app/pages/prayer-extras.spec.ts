@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCountdown, nextPrayer } from './prayer-extras';
+import { formatCountdown, lastDays, nextPrayer } from './prayer-extras';
 
 describe('prayer extras', () => {
   const times = {
@@ -23,5 +23,10 @@ describe('prayer extras', () => {
   it('formats a countdown as hh:mm:ss', () => {
     expect(formatCountdown(3 * 3600000 + 5 * 60000 + 9000)).toBe('03:05:09');
     expect(formatCountdown(-5)).toBe('00:00:00');
+  });
+
+  it('lists the last days newest first', () => {
+    const days = lastDays(3, new Date(2026, 10, 26));
+    expect(days).toEqual(['2026-11-26', '2026-11-25', '2026-11-24']);
   });
 });

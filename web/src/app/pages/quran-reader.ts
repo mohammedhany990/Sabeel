@@ -2,7 +2,7 @@ import { I18n, Loc, Nm, T } from '../core/i18n';
 import { Component, ElementRef, OnDestroy, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { Api } from '../core/api';
 import { Ayah, AyahTiming, Bookmark, EditionAyah, EditionInfo, Reciter, Surah } from '../core/models';
 import { Toast } from '../core/toast';
@@ -158,13 +158,13 @@ export class QuranReader implements OnDestroy {
       surahs: this.api.surahs(),
       ayahs: this.api.surah(sid),
       reciters: this.api.reciters(),
-      profile: this.api.profile()
+      profile: this.api.profile().pipe(catchError(() => of(null)))
     }).subscribe({
       next: (r) => {
         this.surah.set(r.surahs.find((s) => s.id === sid) ?? null);
         this.ayahs.set(r.ayahs);
         this.reciters.set(r.reciters);
-        const pref = r.profile.preferredReciterId;
+        const pref = r.profile?.preferredReciterId;
         this.reciterId.set(pref && r.reciters.some((x) => x.id === pref) ? pref : (r.reciters[0]?.id ?? 1));
         this.loading.set(false);
         localStorage.setItem('sabeel.lastSurah', String(sid));
