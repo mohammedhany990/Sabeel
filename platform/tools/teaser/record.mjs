@@ -118,7 +118,7 @@ await step('t05', 'Recitation text check', '', async () => {
   await clickText('button.tab', 'Transcript');
   await page.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحمة'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await clickText('button', 'Evaluate recitation');
-  await page.waitForSelector('.badge-ok', { timeout: 60000 }).catch(() => {});
+  await page.waitForFunction(() => [...document.querySelectorAll('.card-title')].some((t) => /Latest result/.test(t.innerText) && t.querySelector('.badge-ok')), null, { timeout: 60000 });
   await sleep(2500);
 }, H);
 await step('t06', 'Prayer times and next-prayer countdown', 'المواقيت والعدّ التنازلي للصلاة القادمة', async () => {
