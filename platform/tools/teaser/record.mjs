@@ -95,7 +95,7 @@ await step('t03', 'Tafsir and translation, with versions', 'تفسير وترج�
   await page.waitForSelector('.ed-block .ed-text', { timeout: 20000 });
   await page.locator('.ed-block').first().scrollIntoViewIfNeeded();
   await sleep(1500);
-  await page.locator('select[name=translationKey]').selectOption({ index: 1 });
+  await page.locator('select[name=tafsirKey]').selectOption({ index: 1 });
   await sleep(2000);
 }, H);
 await step('t04', 'Memorize and review on schedule', 'احفظ وراجع في مواعيدك', async () => {

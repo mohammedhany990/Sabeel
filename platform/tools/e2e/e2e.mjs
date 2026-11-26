@@ -13,6 +13,8 @@ const context = await browser.newContext({
   permissions: ['geolocation']
 });
 const page = await context.newPage();
+page.on('response', (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.request().method(), r.url()); });
+page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
 
 async function check(name, fn) {
   try {
@@ -22,7 +24,7 @@ async function check(name, fn) {
   } catch (e) {
     results.push({ name, ok: false, error: e.message.split('\n')[0] });
     console.log('FAIL', name, e.message.split('\n')[0]);
-    await page.screenshot({ path: `${OUT}/fail-${results.length}.png` }).catch(() => undefined);
+    await page.screenshot({ path: `${OUT}/fail-${results.length}.png`, fullPage: true }).catch(() => undefined);
   }
 }
 
@@ -51,10 +53,10 @@ await check('tafsir panel shows the edition text with its version and source', a
   if (text.length < 5) throw new Error('empty edition text');
 });
 
-await check('switching the translation edition loads another text', async () => {
-  const sel = page.locator('select[name=translationKey]');
+await check('switching the tafsir edition loads another text', async () => {
+  const sel = page.locator('select[name=tafsirKey]');
   const options = await sel.locator('option').count();
-  if (options < 2) throw new Error('only ' + options + ' translation editions');
+  if (options < 2) throw new Error('only ' + options + ' tafsir editions');
   await sel.selectOption({ index: 1 });
   await page.waitForSelector('.ed-block', { timeout: 15000 });
 });
@@ -92,11 +94,12 @@ await check('prayer countdown and tracker', async () => {
   await page.waitForSelector('[data-testid=countdown]', { timeout: 30000 });
   const text = (await page.locator('[data-testid=countdown]').innerText()).trim();
   if (!/\d/.test(text)) throw new Error('countdown ' + text);
-  const box = page.locator('[data-testid^="log-"][data-testid$="-FAJR"]').last();
-  await box.check();
+  await page.waitForSelector('[data-testid^="log-"]', { timeout: 15000 });
+  const box = page.locator('[data-testid^="log-"][data-testid$="-FAJR"]').first();
+  await box.check({ timeout: 15000 });
   await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-testid=countdown]', { timeout: 30000 });
-  const checked = await page.locator('[data-testid^="log-"][data-testid$="-FAJR"]').last().isChecked();
+  await page.waitForSelector('[data-testid^="log-"]', { timeout: 15000 });
+  const checked = await page.locator('[data-testid^="log-"][data-testid$="-FAJR"]').first().isChecked();
   if (!checked) throw new Error('tracker did not persist');
 });
 
