@@ -106,7 +106,7 @@ await step('s09', 'Complete today\'s task', 'إكمال مهمة اليوم', as
 }, 3000);
 await step('s10', 'Spaced-repetition revision: 1, 3, 7, 14, 30, 60 days', 'مراجعة متباعدة: ١ ٣ ٧ ١٤ ٣٠ ٦٠ يوماً', async () => {
   await nav('Revision');
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 3; i++) {
     const has = await page.evaluate(() => [...document.querySelectorAll('button')].some((b) => b.innerText.includes('Submit review')));
     if (has) { await clickText('button', 'Submit review'); break; }
     await sleep(1000);
