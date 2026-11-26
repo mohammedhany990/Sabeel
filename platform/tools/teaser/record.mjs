@@ -17,6 +17,11 @@ await prePage.fill('input[name=email]', email);
 await prePage.fill('input[name=password]', 'Passw0rd!demo');
 await prePage.click('button[type=submit]');
 await prePage.waitForURL('**/app/dashboard', { timeout: 30000 });
+await prePage.goto(BASE + '/app/recitation', { waitUntil: 'networkidle' });
+await prePage.click('button.tab:has-text("Transcript")');
+await prePage.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحيم'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+await prePage.click('button:has-text("Evaluate recitation")');
+await prePage.waitForFunction(() => !/Evaluating/.test(document.body.innerText), null, { timeout: 90000 }).catch(() => {});
 const state = await pre.storageState();
 await pre.close();
 const context = await browser.newContext({
@@ -105,7 +110,8 @@ await step('t04', 'Memorize and review on schedule', 'احفظ وراجع في �
   await clickText('button', 'Complete');
   await sleep(1500);
   await nav('Revision');
-  await sleep(1000);
+  await page.waitForFunction(() => !/Loading/.test(document.body.innerText), null, { timeout: 20000 }).catch(() => {});
+  await sleep(1500);
 }, H);
 await step('t05', 'Recitation text check', '', async () => {
   await nav('Recitation');

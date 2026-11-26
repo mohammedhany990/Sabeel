@@ -114,7 +114,9 @@ await check('prayer countdown and tracker', async () => {
   if (!/\d\d:\d\d:\d\d/.test(text) && !/No more prayers today/.test(text)) throw new Error('countdown card ' + text);
   await page.waitForSelector('[data-testid^="log-"]', { timeout: 15000 });
   const box = page.locator('[data-testid^="log-"][data-testid$="-fajr"]').first();
+  const saved = page.waitForResponse((r) => r.url().includes('/prayer/log') && r.request().method() === 'PUT', { timeout: 15000 });
   await box.check({ timeout: 15000 });
+  await saved;
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForSelector('[data-testid^="log-"]', { timeout: 15000 });
   const checked = await page.locator('[data-testid^="log-"][data-testid$="-fajr"]').first().isChecked();
