@@ -7,10 +7,11 @@ import { Ayah, Paged, Surah } from '../core/models';
 import { errorMessage, toArabicDigits } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
 import { KhatmaCard } from './khatma';
+import { TafsirSearch } from './tafsir-search';
 
 @Component({
   selector: 'app-quran-index',
-  imports: [T, Loc, Nm, FormsModule, RouterLink, PageHead, Spinner, KhatmaCard],
+  imports: [T, Loc, Nm, FormsModule, RouterLink, PageHead, Spinner, KhatmaCard, TafsirSearch],
   template: `
     <app-head [title]="'The Noble Quran' | t" [subtitle]="'Read, search and listen to every surah.' | t" />
     <div class="card" style="margin-bottom:18px">
@@ -21,6 +22,7 @@ import { KhatmaCard } from './khatma';
       </form>
     </div>
 
+    <app-tafsir-search />
     <app-khatma />
 
     @if (error()) { <div class="error-box">{{ error() | t }}</div> }

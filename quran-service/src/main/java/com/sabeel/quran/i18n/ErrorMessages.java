@@ -28,6 +28,7 @@ public final class ErrorMessages {
             Map.entry("reset token expired or already used", "رمز إعادة التعيين منتهي الصلاحية أو مستخدم من قبل"),
             Map.entry("user not found", "المستخدم غير موجود"),
             Map.entry("Invalid surah or ayah", "رقم السورة أو الآية غير صحيح"),
+            Map.entry("Search text must be at least 3 characters", "نص البحث لا يقل عن ٣ أحرف"),
             Map.entry("edition not found", "النسخة غير موجودة"),
             Map.entry("a khatma is already in progress", "لديك ختمة قيد التنفيذ بالفعل"),
             Map.entry("no khatma in progress", "لا توجد ختمة قيد التنفيذ"),

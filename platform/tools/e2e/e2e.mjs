@@ -67,6 +67,23 @@ await check('sources page lists the editions', async () => {
   if (!/QuranEnc/i.test(body) || !/Tanzil/i.test(body)) throw new Error('sources missing');
 });
 
+await check('dashboard shows the ayah of the day', async () => {
+  await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-testid=daily-ayah] .txt', { timeout: 20000 });
+  const text = (await page.locator('[data-testid=daily-ayah] .txt').innerText()).trim();
+  if (text.length < 5) throw new Error('empty daily ayah');
+});
+
+await check('tafsir search returns linked results', async () => {
+  await page.goto(BASE + '/app/quran', { waitUntil: 'networkidle' });
+  await page.selectOption('[data-testid=ts-edition]', 'english_rwwad');
+  await page.fill('[data-testid=ts-query]', 'merciful');
+  await page.click('[data-testid=ts-run]');
+  await page.waitForSelector('[data-testid=ts-hit]', { timeout: 20000 });
+  await page.locator('[data-testid=ts-hit]').first().click();
+  await page.waitForSelector('.ayah', { timeout: 20000 });
+});
+
 await check('khatma plan starts and saves progress', async () => {
   await page.goto(BASE + '/app/quran', { waitUntil: 'networkidle' });
   await page.fill('[data-testid=khatma-days]', '30');
@@ -103,6 +120,27 @@ await check('prayer countdown and tracker', async () => {
   const checked = await page.locator('[data-testid^="log-"][data-testid$="-fajr"]').first().isChecked();
   if (!checked) throw new Error('tracker did not persist');
 });
+
+const overflowPages = ['/app/dashboard', '/app/quran', '/app/quran/1', '/app/memorization', '/app/revision', '/app/prayer', '/app/azkar', '/app/library', '/app/community', '/app/settings'];
+for (const [label, size] of [['phone', { width: 390, height: 844 }], ['tablet', { width: 820, height: 1180 }]]) {
+  await check('no horizontal overflow on ' + label + ' in English and Arabic', async () => {
+    await page.setViewportSize(size);
+    const bad = [];
+    for (const lang of ['en', 'ar']) {
+      await page.evaluate((l) => localStorage.setItem('sabeel.lang', l), lang);
+      for (const path of overflowPages) {
+        await page.goto(BASE + path, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(600);
+        const width = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth);
+        if (width > 2) bad.push(lang + ' ' + path + ' +' + width + 'px');
+        if (path === '/app/dashboard') await page.screenshot({ path: `${OUT}/${label}-${lang}-dashboard.png` });
+        if (path === '/app/quran/1') await page.screenshot({ path: `${OUT}/${label}-${lang}-reader.png` });
+      }
+    }
+    await page.evaluate(() => localStorage.setItem('sabeel.lang', 'en'));
+    if (bad.length) throw new Error(bad.join('; '));
+  });
+}
 
 await browser.close();
 fs.writeFileSync(`${OUT}/results.json`, JSON.stringify(results, null, 2));

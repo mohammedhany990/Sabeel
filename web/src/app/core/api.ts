@@ -49,6 +49,8 @@ export class Api {
   ayahAudio = (reciter: number, surah: number, ayah: number) => this.get<M.AyahAudio>(`/quran/reciters/${reciter}/audio`, { surah, ayah });
   surahTimings = (reciter: number, surah: number) => this.get<M.SurahTimings>(`/quran/reciters/${reciter}/surahs/${surah}/timings`);
   surahAudio = (reciter: number, surah: number) => this.get<M.SurahAudio>(`/quran/reciters/${reciter}/surahs/${surah}/audio`);
+  searchEdition = (key: string, q: string, limit = 20) => this.get<M.EditionHit[]>(`/quran/editions/${key}/search`, { q, limit });
+  dailyAyah = () => this.get<M.DailyAyah>('/quran/daily');
   editions = () => this.get<M.EditionInfo[]>('/quran/editions');
   editionAyah = (key: string, surah: number, ayah: number) => this.get<M.EditionAyah>(`/quran/editions/${key}/${surah}/${ayah}`);
   bookmarks = () => this.get<M.Bookmark[]>('/quran/bookmarks');

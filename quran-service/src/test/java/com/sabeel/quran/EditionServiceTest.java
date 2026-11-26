@@ -45,4 +45,28 @@ class EditionServiceTest {
     void unknownEditionIsNotFound() {
         assertThrows(ApiException.class, () -> service.ayah("nope", 1, 1));
     }
+
+    @Test
+    void searchFindsArabicTafsirText() {
+        var hits = service.search("arabic_moyassar", "الرحمن", 10);
+        assertFalse(hits.isEmpty());
+        assertTrue(hits.size() <= 10);
+        hits.forEach(h -> assertTrue(h.snippet().contains("الرحمن")));
+    }
+
+    @Test
+    void searchFindsEnglishTranslationIgnoringCase() {
+        var hits = service.search("english_rwwad", "MERCIFUL", 5);
+        assertFalse(hits.isEmpty());
+    }
+
+    @Test
+    void shortSearchTextIsRejected() {
+        assertThrows(ApiException.class, () -> service.search("arabic_moyassar", "ab", 5));
+    }
+
+    @Test
+    void unknownEditionIsRejectedForSearch() {
+        assertThrows(ApiException.class, () -> service.search("nope", "mercy", 5));
+    }
 }

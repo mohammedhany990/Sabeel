@@ -527,6 +527,14 @@ export const AR: Record<string, string> = {
   "On track": "على المسار",
   "Behind schedule": "متأخر عن الخطة",
   "Khatma complete. May Allah accept it.": "تمت الختمة. تقبل الله منك.",
+  "Ayah of the day": "آية اليوم",
+  "Open in reader": "افتح في المصحف",
+  "Search in tafsir and translation": "البحث في التفسير والترجمة",
+  "Edition": "النسخة",
+  "Search the selected edition": "ابحث في النسخة المختارة",
+  "Type at least 3 characters.": "اكتب ٣ أحرف على الأقل.",
+  "No match in this edition.": "لا نتيجة في هذه النسخة.",
+  "Could not search right now.": "تعذر البحث الآن.",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {

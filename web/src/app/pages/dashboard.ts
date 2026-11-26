@@ -7,15 +7,17 @@ import { Auth } from '../core/auth';
 import { AzkarStreak, Badge, PrayerTimes, ReadingState, RevisionStats, Surah, Task } from '../core/models';
 import { formatTime } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
+import { DailyAyahCard } from './daily-ayah';
 
 const ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 @Component({
   selector: 'app-dashboard',
-  imports: [T, Hj, RouterLink, PageHead, Spinner],
+  imports: [T, Hj, RouterLink, PageHead, Spinner, DailyAyahCard],
   template: `
     <app-head [title]="greeting()" [subtitle]="'Here is your day at a glance.' | t" />
     @if (loading()) { <app-spinner /> } @else {
+      <app-daily-ayah />
       <div class="grid grid-4">
         <div class="card gilded stat"><div class="num">{{ tasks().length }}</div><div class="lbl">{{ 'Memorization tasks today' | t }}</div></div>
         <div class="card gilded stat"><div class="num">{{ stats()?.dueNow ?? 0 }}</div><div class="lbl">{{ 'Revisions due now' | t }}</div></div>

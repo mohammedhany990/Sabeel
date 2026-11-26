@@ -91,4 +91,17 @@ public class QuranController {
     public EditionAyahResponse editionAyah(@PathVariable String key, @PathVariable int surah, @PathVariable int ayah) {
         return editionService.ayah(key, surah, ayah);
     }
+
+    @GetMapping("/editions/{key}/search")
+    @Operation(summary = "Search the text of one edition")
+    public List<EditionHit> searchEdition(@PathVariable String key, @RequestParam String q,
+                                          @RequestParam(defaultValue = "20") int limit) {
+        return editionService.search(key, q, limit);
+    }
+
+    @GetMapping("/daily")
+    @Operation(summary = "The ayah of the day, the same for everyone on a given date")
+    public DailyAyahResponse daily(@RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        return quranService.daily(date == null ? java.time.LocalDate.now(java.time.ZoneOffset.UTC) : date);
+    }
 }

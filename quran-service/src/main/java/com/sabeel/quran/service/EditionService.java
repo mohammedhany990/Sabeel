@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sabeel.quran.dto.EditionAyahResponse;
 import com.sabeel.quran.dto.EditionEntry;
+import com.sabeel.quran.dto.EditionHit;
 import com.sabeel.quran.dto.EditionInfo;
 import com.sabeel.quran.exception.ApiException;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,40 @@ public class EditionService {
             }
         }
         return new EditionAyahResponse(info, surah, ayah, out);
+    }
+
+    public List<EditionHit> search(String key, String query, int limit) {
+        EditionInfo info = info(key);
+        String q = query == null ? "" : query.strip();
+        if (q.codePointCount(0, q.length()) < 3) {
+            throw ApiException.badRequest("Search text must be at least 3 characters");
+        }
+        int max = Math.max(1, Math.min(limit, 50));
+        String needle = q.toLowerCase();
+        List<EditionHit> hits = new ArrayList<>();
+        Map<Integer, List<Row>> bySurah = load(info.key());
+        for (int surah = 1; surah <= 114 && hits.size() < max; surah++) {
+            for (Row r : bySurah.getOrDefault(surah, List.of())) {
+                if (r.text() == null) {
+                    continue;
+                }
+                int at = r.text().toLowerCase().indexOf(needle);
+                if (at >= 0) {
+                    hits.add(new EditionHit(surah, r.from(), snippet(r.text(), at, needle.length())));
+                    if (hits.size() >= max) {
+                        break;
+                    }
+                }
+            }
+        }
+        return hits;
+    }
+
+    static String snippet(String text, int at, int length) {
+        int from = Math.max(0, at - 60);
+        int to = Math.min(text.length(), at + length + 120);
+        String body = text.substring(from, to).replaceAll("\\s+", " ").strip();
+        return (from > 0 ? "..." : "") + body + (to < text.length() ? "..." : "");
     }
 
     private Map<Integer, List<Row>> load(String key) {

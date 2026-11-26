@@ -119,6 +119,16 @@ check "tasbeeh total after saving 33" "33" \
 check "tasbeeh rejects an unknown phrase" "400" \
   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/v1/azkar/tasbeeh" -H "$AUTH" -H 'Content-Type: application/json' -d '{"phrase":"NOPE","count":1}')"
 
+echo "== daily ayah and edition search =="
+check "daily ayah has text" "true" \
+  "$(curl -s "$BASE/api/v1/quran/daily" -H "$AUTH" | jq -r '.ayah.textUthmani | length > 0')"
+check "daily ayah is stable for a date" "true" \
+  "$(A=$(curl -s "$BASE/api/v1/quran/daily?date=2026-03-01" -H "$AUTH" | jq -r '.ayah.id'); B=$(curl -s "$BASE/api/v1/quran/daily?date=2026-03-01" -H "$AUTH" | jq -r '.ayah.id'); [ "$A" = "$B" ] && echo true || echo false)"
+check "edition search finds a tafsir hit" "true" \
+  "$(curl -s -G "$BASE/api/v1/quran/editions/english_rwwad/search" --data-urlencode 'q=merciful' --data-urlencode 'limit=5' | jq -r 'length > 0')"
+check "edition search rejects short text" "400" \
+  "$(curl -s -o /dev/null -w '%{http_code}' -G "$BASE/api/v1/quran/editions/english_rwwad/search" --data-urlencode 'q=ab')"
+
 echo "== khatma =="
 check "khatma starts with a daily target" "21" \
   "$(curl -s -X POST "$BASE/api/v1/quran/khatma" -H "$AUTH" -H 'Content-Type: application/json' -d '{"days":30}' | jq -r '.pagesPerDay')"

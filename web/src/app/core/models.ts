@@ -63,3 +63,5 @@ export interface PrayerTracker { from: string; to: string; days: Record<string, 
 export interface Adhan { id: string; name: string; nameAr?: string | null; url: string; }
 export interface TasbeehSummary { date: string; today: Record<string, number>; lifetime: Record<string, number>; }
 export interface Khatma { id: string; startDate: string; targetDate: string; currentPage: number; totalPages: number; percent: number; daysLeft: number; pagesPerDay: number; onTrack: boolean; completed: boolean; completedOn: string | null; }
+export interface EditionHit { surah: number; ayah: number; snippet: string; }
+export interface DailyAyah { date: string; ayah: Ayah; }

@@ -41,6 +41,18 @@ public class QuranService {
                 .orElseThrow(() -> ApiException.notFound("ayah not found")));
     }
 
+    public static int dailyAyahId(java.time.LocalDate date) {
+        long day = date.toEpochDay();
+        long mixed = (day * 2654435761L) ^ (day >>> 3);
+        return (int) Math.floorMod(mixed, 6236L) + 1;
+    }
+
+    @Transactional(readOnly = true)
+    public DailyAyahResponse daily(java.time.LocalDate date) {
+        Ayah ayah = ayahRepository.findById(dailyAyahId(date)).orElseThrow(() -> ApiException.notFound("ayah not found"));
+        return new DailyAyahResponse(date.toString(), toAyahResponse(ayah));
+    }
+
     @Transactional(readOnly = true)
     public List<AyahResponse> page(int page) {
         return ayahRepository.findByPageOrderById(page).stream().map(this::toAyahResponse).toList();
