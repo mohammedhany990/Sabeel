@@ -31,6 +31,8 @@ docker compose up --build
 
 The Compose stack starts PostgreSQL, MongoDB, Redis, Kafka, Mailhog, Kafka UI, Prometheus, Grafana, the 12 backend services and the Angular web app. Every service has its own multi-stage `Dockerfile` (Maven build, then a JRE 21 image); the web app builds with Node and is served by nginx. The web app is at `http://localhost:4200` and talks to the gateway at `http://localhost:8080/api/v1` (edit `web/public/config.js` to change that).
 
+See `docs/LOCAL-RUN.md` for prerequisites, URLs, stopping and troubleshooting.
+
 ## Open in an IDE
 
 The repository root has a Maven parent/aggregator `pom.xml` (`com.sabeel:sabeel-parent`) that lists the 12 services as modules. Open the root folder in IntelliJ IDEA (or any Maven-aware IDE) and import it as a Maven project to get all services in one workspace. Build everything with `mvn package` from the root, or one service with `mvn -pl auth-service -am package`. Each service keeps its own `pom.xml` with Spring Boot as its parent, so a service also builds alone from its folder and inside its own Docker image. The `web/` folder is a separate Angular project (`npm ci`, `npm start`).
@@ -156,7 +158,7 @@ This is a development release, not production-ready. See `docs/PRODUCTION-READIN
 
 ## What works out of the box / what needs configuration
 
-Works: full auth lifecycle, profile/preferences auto-created via Kafka, Quran sample data (27 ayahs) with verified reciter audio URLs, plan calculator (whole Quran in 24 months = 9 ayahs/day), nightly task generation, revision engine fed by events, notification pipeline with Mailhog email capture.
+Works: full auth lifecycle, profile/preferences auto-created via Kafka, the full 6236-ayah Quran text with reciter audio URLs that point at third-party hosts, plan calculator (whole Quran in 24 months = 9 ayahs/day), nightly task generation, revision engine fed by events, notification pipeline with Mailhog email capture.
 
 Needs your configuration: strong `JWT_SECRET` outside dev, FCM service-account JSON (`FCM_ENABLED=true`, `FCM_CREDENTIALS_PATH`) for real push, a real SMTP provider for real email. The full 6236-ayah Tanzil text is bundled and loads by default.
 
