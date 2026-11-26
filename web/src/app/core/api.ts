@@ -47,6 +47,7 @@ export class Api {
   search = (q: string, page = 0, size = 20) => this.get<M.Paged<M.Ayah>>('/quran/search', { q, page, size });
   reciters = () => this.get<M.Reciter[]>('/quran/reciters');
   ayahAudio = (reciter: number, surah: number, ayah: number) => this.get<M.AyahAudio>(`/quran/reciters/${reciter}/audio`, { surah, ayah });
+  surahTimings = (reciter: number, surah: number) => this.get<M.SurahTimings>(`/quran/reciters/${reciter}/surahs/${surah}/timings`);
   surahAudio = (reciter: number, surah: number) => this.get<M.SurahAudio>(`/quran/reciters/${reciter}/surahs/${surah}/audio`);
   bookmarks = () => this.get<M.Bookmark[]>('/quran/bookmarks');
   addBookmark = (ayahId: number, note?: string) => this.post<M.Bookmark>('/quran/bookmarks', { ayahId, note });

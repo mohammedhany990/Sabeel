@@ -27,6 +27,10 @@ jobs:
       - name: Build all services
         run: mvn -B -q package
 
+      - name: Test the timings tool
+        working-directory: platform/tools
+        run: python3 -m unittest
+
       - name: Start the full stack
         working-directory: platform
         run: |

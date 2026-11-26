@@ -147,7 +147,7 @@ export class Recitation implements OnInit, OnDestroy {
   }
 
   protected useReciterAudio(): void {
-    const reciter = this.reciters()[0];
+    const reciter = this.reciters().find((x) => x.hasAyahAudio !== false);
     if (!reciter) return;
     this.api.ayahAudio(reciter.id, this.surahId(), this.from).subscribe({
       next: (r) => { this.audioUrl = r.audioUrl; this.mode.set('audio'); },

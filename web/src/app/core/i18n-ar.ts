@@ -265,6 +265,7 @@ export const AR: Record<string, string> = {
   "Saved. You will resume at ayah {n}.": "تم الحفظ. ستستأنف من الآية {n}.",
   "Bookmark removed": "تمت إزالة العلامة",
   "The browser blocked audio playback or the audio file is unavailable.": "منع المتصفح تشغيل الصوت أو أن الملف الصوتي غير متاح.",
+  "Ayah timings are not available for this surah, playing the full surah.": "أوقات الآيات غير متاحة لهذه السورة، سيتم تشغيل السورة كاملة.",
   "Audio could not start.": "تعذّر بدء الصوت.",
   "Audio unavailable for this selection. The audio CDN is a third-party service.": "الصوت غير متاح لهذا الاختيار. مصدر الصوت خدمة خارجية.",
   "Compare your recitation with the expected text, word by word.": "قارن تلاوتك بالنص المتوقع كلمة بكلمة.",

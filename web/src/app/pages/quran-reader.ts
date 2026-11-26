@@ -1,10 +1,10 @@
 import { I18n, Loc, Nm, T } from '../core/i18n';
-import { Component, ElementRef, OnDestroy, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Api } from '../core/api';
-import { Ayah, Bookmark, Reciter, Surah } from '../core/models';
+import { Ayah, AyahTiming, Bookmark, Reciter, Surah } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage, toArabicDigits } from '../core/util';
 import { Spinner } from '../shared/ui';
@@ -31,12 +31,12 @@ import { Spinner } from '../shared/ui';
             @for (r of reciters(); track r.id) { <option [value]="r.id">{{ r | nm: 'sub' }} ({{ r | loc: 'style' }})</option> }
           </select>
         </label>
-        <button class="btn btn-gold" (click)="playFrom(ayahs()[0])" [disabled]="busyAudio()">{{ 'Play from start' | t }}</button>
-        <button class="btn" (click)="playWholeSurah()">{{ 'Play full surah' | t }}</button>
+        @if (canPlayAyahs()) { <button class="btn btn-gold" (click)="playFrom(ayahs()[0])" [disabled]="busyAudio()">{{ 'Play from start' | t }}</button> }
+        @if (hasSurahAudio()) { <button class="btn" [class.btn-gold]="!canPlayAyahs()" (click)="playWholeSurah()">{{ 'Play full surah' | t }}</button> }
         @if (playingId() !== null || surahMode()) { <button class="btn btn-ghost" (click)="stop()">{{ 'Stop' | t }}</button> }
       </div>
 
-      <audio #player (ended)="onEnded()" (error)="onAudioError()" controls style="width:100%;margin:14px 0" [class.hidden]="playingId() === null && !surahMode()"></audio>
+      <audio #player (ended)="onEnded()" (error)="onAudioError()" (timeupdate)="onTime()" controls style="width:100%;margin:14px 0" [class.hidden]="playingId() === null && !surahMode()"></audio>
 
       @if (s.id !== 1 && s.id !== 9) { <div class="ar bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div> }
 
@@ -45,7 +45,7 @@ import { Spinner } from '../shared/ui';
           <div class="ayah" [id]="'a' + a.id" [class.playing]="playingId() === a.id" [class.target]="focusId() === a.id">
             <div class="tools">
               <span class="no">{{ a.ayahNumber }}</span>
-              <button class="btn btn-sm btn-ghost" (click)="playFrom(a)" [title]="'Play from this ayah' | t">{{ 'Play' | t }}</button>
+              @if (canPlayAyahs()) { <button class="btn btn-sm btn-ghost" (click)="playFrom(a)" [title]="'Play from this ayah' | t">{{ 'Play' | t }}</button> }
               <button class="btn btn-sm btn-ghost" (click)="toggleBookmark(a)">{{ (bookmarkFor(a.id) ? 'Bookmarked' : 'Bookmark') | t }}</button>
               <button class="btn btn-sm btn-ghost" (click)="markRead(a)">{{ 'Stopped here' | t }}</button>
             </div>
@@ -90,6 +90,13 @@ export class QuranReader implements OnDestroy {
   protected readonly bookmarks = signal<Bookmark[]>([]);
   protected readonly playingId = signal<number | null>(null);
   protected readonly surahMode = signal(false);
+  protected readonly hasAyahAudio = computed(() => this.reciters().find((x) => x.id === this.reciterId())?.hasAyahAudio !== false);
+  protected readonly hasSurahAudio = computed(() => this.reciters().find((x) => x.id === this.reciterId())?.hasSurahAudio !== false);
+  protected readonly canPlayAyahs = computed(() => {
+    const r = this.reciters().find((x) => x.id === this.reciterId());
+    return r?.hasAyahAudio !== false || r?.hasTimings === true;
+  });
+  private timed: AyahTiming[] | null = null;
   protected readonly busyAudio = signal(false);
   protected readonly focusId = signal<number | null>(null);
   protected readonly toAr = toArabicDigits;
@@ -159,6 +166,11 @@ export class QuranReader implements OnDestroy {
   protected playFrom(a: Ayah | undefined): void {
     if (!a) return;
     this.surahMode.set(false);
+    this.timed = null;
+    if (!this.hasAyahAudio()) {
+      this.playTimed(a);
+      return;
+    }
     this.busyAudio.set(true);
     this.api.ayahAudio(this.reciterId(), a.surahId, a.ayahNumber).subscribe({
       next: (r) => {
@@ -175,6 +187,40 @@ export class QuranReader implements OnDestroy {
     });
   }
 
+  private playTimed(a: Ayah): void {
+    this.busyAudio.set(true);
+    forkJoin({ audio: this.api.surahAudio(this.reciterId(), a.surahId), timings: this.api.surahTimings(this.reciterId(), a.surahId) }).subscribe({
+      next: ({ audio, timings }) => {
+        this.busyAudio.set(false);
+        const el = this.player()?.nativeElement;
+        const t = timings.ayahs.find((x) => x.ayah === a.ayahNumber);
+        if (!el || !t) { this.playWholeSurah(); return; }
+        this.timed = timings.ayahs;
+        this.playingId.set(a.id);
+        const begin = () => { el.currentTime = t.start; el.play().catch(() => this.toast.error('The browser blocked audio playback or the audio file is unavailable.')); };
+        if (el.src === audio.url && el.readyState >= 1) begin();
+        else { el.addEventListener('loadedmetadata', begin, { once: true }); el.src = audio.url; el.load(); }
+        document.getElementById('a' + a.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        this.api.saveReadingState(a.id).subscribe({ error: () => undefined });
+      },
+      error: () => { this.busyAudio.set(false); this.toast.show(this.i18n.t('Ayah timings are not available for this surah, playing the full surah.')); this.timed = null; this.playWholeSurah(); }
+    });
+  }
+
+  protected onTime(): void {
+    const timings = this.timed;
+    const el = this.player()?.nativeElement;
+    if (!timings || !el) return;
+    const t = el.currentTime;
+    const hit = timings.find((x) => t >= x.start && t < x.end);
+    if (!hit) return;
+    const ayah = this.ayahs().find((x) => x.ayahNumber === hit.ayah);
+    if (ayah && ayah.id !== this.playingId()) {
+      this.playingId.set(ayah.id);
+      document.getElementById('a' + ayah.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   protected playWholeSurah(): void {
     const s = this.surah();
     if (!s) return;
@@ -183,6 +229,7 @@ export class QuranReader implements OnDestroy {
         const el = this.player()?.nativeElement;
         if (!el) return;
         this.playingId.set(null);
+        this.timed = null;
         this.surahMode.set(true);
         el.src = r.url;
         el.play().catch(() => this.toast.error('Audio could not start.'));
@@ -194,6 +241,7 @@ export class QuranReader implements OnDestroy {
   protected onEnded(): void {
     const current = this.playingId();
     if (current === null) return;
+    if (this.timed) { this.stop(); return; }
     const list = this.ayahs();
     const idx = list.findIndex((a) => a.id === current);
     if (idx >= 0 && idx + 1 < list.length) this.playFrom(list[idx + 1]);
@@ -209,6 +257,7 @@ export class QuranReader implements OnDestroy {
     if (el) { el.pause(); el.removeAttribute('src'); }
     this.playingId.set(null);
     this.surahMode.set(false);
+    this.timed = null;
   }
 
   ngOnDestroy(): void {

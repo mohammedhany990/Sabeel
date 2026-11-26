@@ -79,14 +79,22 @@ public class ReciterCatalog {
         require(e.key(), "key");
         require(e.nameAr(), "nameAr");
         require(e.nameEn(), "nameEn");
-        require(e.ayahBaseUrl(), "ayahBaseUrl");
+        if (blank(e.ayahBaseUrl()) && blank(e.surahBaseUrl())) {
+            throw new IllegalArgumentException("reciter " + e.key() + " needs ayahBaseUrl, surahBaseUrl or both");
+        }
         if (!e.key().matches("[a-z0-9][a-z0-9_-]*")) {
             throw new IllegalArgumentException("reciter key must be lowercase letters, digits, - or _: " + e.key());
         }
-        checkUrl(e.key(), e.ayahBaseUrl());
-        if (e.surahBaseUrl() != null && !e.surahBaseUrl().isBlank()) {
+        if (!blank(e.ayahBaseUrl())) {
+            checkUrl(e.key(), e.ayahBaseUrl());
+        }
+        if (!blank(e.surahBaseUrl())) {
             checkUrl(e.key(), e.surahBaseUrl());
         }
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private static void require(String value, String field) {
@@ -110,8 +118,8 @@ public class ReciterCatalog {
         reciter.setNameEn(e.nameEn());
         reciter.setCountry(e.country());
         reciter.setStyle(e.style());
-        reciter.setAudioBaseUrl(e.ayahBaseUrl());
-        reciter.setFullAudioBaseUrl(e.surahBaseUrl() == null || e.surahBaseUrl().isBlank() ? null : e.surahBaseUrl());
+        reciter.setAudioBaseUrl(blank(e.ayahBaseUrl()) ? "" : e.ayahBaseUrl());
+        reciter.setFullAudioBaseUrl(blank(e.surahBaseUrl()) ? null : e.surahBaseUrl());
         reciterRepository.save(reciter);
     }
 }

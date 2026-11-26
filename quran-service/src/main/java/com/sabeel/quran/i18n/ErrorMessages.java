@@ -81,6 +81,8 @@ public final class ErrorMessages {
             new Rule("^unknown method '(.*)'; one of (.*)$", "الطريقة '$1' غير معروفة، القيم المتاحة: $2"),
             new Rule("^unknown reciter (.*)$", "القارئ غير معروف: $1"),
             new Rule("^unknown surah (.*)$", "السورة غير معروفة: $1"),
+            new Rule("^no ayah timings for reciter (.*) surah (.*)$", "لا توجد أوقات الآيات للقارئ $1 في السورة $2"),
+            new Rule("^no ayah audio for reciter (.*)$", "لا يوجد تسجيل للآيات للقارئ $1"),
             new Rule("^no full-surah audio for reciter (.*)$", "لا يوجد تسجيل كامل للسورة للقارئ $1"),
             new Rule("^audio download returned HTTP (.*)$", "رد تحميل الصوت برمز HTTP $1"),
             new Rule("^audio exceeds the (.*) byte limit$", "حجم الصوت يتجاوز الحد المسموح ($1 بايت)"),

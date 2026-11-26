@@ -86,7 +86,7 @@ Example entry:
 }
 ```
 
-Fields: `key` (lowercase letters, digits, `-` or `_`, unique and permanent), `nameAr`, `nameEn`, `country` and `style` (shown in the app), `ayahBaseUrl` (required, folder with one file per ayah), `surahBaseUrl` (optional, folder with one file per surah; without it the full-surah audio endpoint answers not found for that reciter).
+Fields: `key` (lowercase letters, digits, `-` or `_`, unique and permanent), `nameAr`, `nameEn`, `country` and `style` (shown in the app), `ayahBaseUrl` (folder with one file per ayah) and `surahBaseUrl` (folder with one file per surah). Give at least one. A surah-only reciter such as `husary_own` in the example file works: the app plays whole surahs for it, and shows per-ayah Play buttons only when ayah timings exist (next subsection); the ayah audio endpoint answers not found for it. Recitation check with reciter audio picks the first reciter that has per-ayah files.
 
 Folder layout for your mp3 files (the surah and ayah numbers are zero-padded to 3 digits):
 
@@ -98,7 +98,42 @@ surah/my-sheikh/001.mp3      Al-Fatihah, whole surah
 surah/my-sheikh/114.mp3
 ```
 
+Surah-only layout (files named 001.mp3 to 114.mp3 in one folder):
+
+```
+surah/husary_own/001.mp3
+surah/husary_own/114.mp3
+```
+
 Serve the `ayah` and `surah` folders from any static HTTPS host (an object storage bucket, or nginx with `root /srv/audio;` and `autoindex off;`). Browsers play the files directly from the URLs the API returns, so the host must allow plain GET and, if it is on another domain than the web app, send `Access-Control-Allow-Origin: *` for audio if you also want the web app to read them as media (plain `<audio>` playback works without it). The web app needs no change: it lists reciters from the API and plays the returned URLs, so a new reciter appears after the restart. The recitation-service only accepts public http(s) audio URLs for evaluation. This project does not host or copy any audio; check that you may use the recordings you host.
+
+### Per-ayah playback for surah-only reciters
+
+A reciter with only `surahBaseUrl` plays whole surahs. To also play single ayahs, give the app the start and end second of each ayah inside the surah file. Put one JSON file per surah in a timings folder:
+
+```
+platform/reciters/timings/husary_own/001.json
+platform/reciters/timings/husary_own/002.json
+```
+
+```json
+{"surah": 1, "ayahs": [{"ayah": 1, "start": 0.0, "end": 5.4}, {"ayah": 2, "start": 5.4, "end": 9.8}]}
+```
+
+Set `QURAN_TIMINGS_DIR=/app/reciters/timings` in `platform/.env` and restart quran-service. The folder name is the reciter `key`. The API serves the file at `GET /api/v1/quran/reciters/{id}/surahs/{surah}/timings`, and the reciter list reports `hasTimings`. The web app then shows the per-ayah Play buttons for that reciter, seeks to the ayah start, and follows the highlight while the surah plays on to the end. If a surah has no timings file, or the file is invalid, the app says so and plays the full surah. Reciters with per-ayah files never use timings.
+
+Generate the timings with `platform/tools/align_timings.py`. It needs python3, ffmpeg and ffprobe, a `whisper-cli` binary and a ggml model (the same ones the `recitation-service/Dockerfile.whisper` image builds into `/opt/whisper`; for a larger model such as ggml-small or ggml-medium the alignment is better than with the base model):
+
+```
+python3 platform/tools/align_timings.py \
+  --input /path/to/husary_own \
+  --output platform/reciters/timings/husary_own \
+  --whisper-cli /path/to/whisper-cli --model /path/to/ggml-small.bin
+```
+
+`--input` is a folder holding `001.mp3` to `114.mp3` (or one file). The tool runs whisper.cpp in Arabic with word timestamps, matches the recognised words against the known Tanzil text of the surah, and sets each ayah start to its first matched word. The end of an ayah is the start of the next one, and the last ayah ends at the end of the file. For surahs other than Al-Fatihah and At-Tawbah, ayah 1 starts at 0 so the opening basmalah plays with it. Existing files are kept unless you pass `--force`. For each surah it prints the share of matched words and the ayahs with weak matches, and writes `NNN.report.json` next to the timings file with per-ayah match shares. A surah where fewer than 60% of the words match (`--min-match`) is skipped and falls back to full-surah playback.
+
+Accuracy and what is verified: this is forced alignment by word matching on speech recognition output, not a hand-checked timing. Whisper base recognises slow, vowelled Quran recitation imperfectly, so ayah starts can be off by a second or more, mostly on long ayahs, repeated phrases and ayahs it failed to recognise (those are interpolated by text length, and show a low `matched` value in the report). Listen to a sample of each surah and fix starts by hand in the JSON if needed. Verified here: the matching and interpolation logic with unit tests (`python3 -m unittest` in `platform/tools`), the API loading and validation with a Java unit test, and the web code compiles in CI. Not verified: a run of whisper.cpp on real recitation audio, so the real accuracy on your files is unknown until you run it and listen.
 
 ## Production readiness
 

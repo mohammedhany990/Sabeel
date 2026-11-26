@@ -14,6 +14,8 @@ spring:
 quran:
   seed:
     mode: ${QURAN_SEED_MODE:full}
+  timings:
+    dir: ${QURAN_TIMINGS_DIR:}
   reciters:
     file: ${QURAN_RECITERS_FILE:}
   audio:

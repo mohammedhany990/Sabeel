@@ -66,6 +66,12 @@ public class QuranController {
         return quranService.ayahAudio(id, surah, ayah);
     }
 
+    @GetMapping("/reciters/{id}/surahs/{surahId}/timings")
+    @Operation(summary = "Get ayah start and end times inside the full-surah audio of a reciter")
+    public SurahTimingsResponse surahTimings(@PathVariable int id, @PathVariable int surahId) {
+        return quranService.surahTimings(id, surahId);
+    }
+
     @GetMapping("/reciters/{id}/surahs/{surahId}/audio")
     @Operation(summary = "Get the full-surah recitation audio URL for a reciter")
     public SurahAudioResponse surahAudio(@PathVariable int id, @PathVariable int surahId) {

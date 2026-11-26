@@ -8,6 +8,14 @@
       "style": "Murattal",
       "ayahBaseUrl": "https://audio.example.org/ayah/my-sheikh",
       "surahBaseUrl": "https://audio.example.org/surah/my-sheikh"
+    },
+    {
+      "key": "husary_own",
+      "nameAr": "محمود خليل الحصري",
+      "nameEn": "Mahmoud Khalil Al-Husary (own files)",
+      "country": "Egypt",
+      "style": "Murattal",
+      "surahBaseUrl": "https://audio.example.org/surah/husary_own"
     }
   ]
 }

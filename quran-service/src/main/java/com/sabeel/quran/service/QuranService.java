@@ -23,6 +23,7 @@ public class QuranService {
     private final ReadingStateRepository readingStateRepository;
     private final ReadingHistoryRepository readingHistoryRepository;
     private final AudioUrlService audioUrlService;
+    private final AyahTimingsService timingsService;
 
     @Transactional(readOnly = true)
     public List<SurahResponse> surahs() {
@@ -59,7 +60,10 @@ public class QuranService {
     public List<ReciterResponse> reciters() {
         return reciterRepository.findAll().stream()
                 .map(r -> new ReciterResponse(r.getId(), r.getNameAr(), r.getNameEn(), r.getCountry(), r.getStyle(),
-                        ArabicLabels.country(r.getCountry()), ArabicLabels.style(r.getStyle())))
+                        ArabicLabels.country(r.getCountry()), ArabicLabels.style(r.getStyle()),
+                        r.getAudioBaseUrl() != null && !r.getAudioBaseUrl().isBlank(),
+                        r.getFullAudioBaseUrl() != null && !r.getFullAudioBaseUrl().isBlank(),
+                        timingsService.hasAny(r.getReciterKey())))
                 .toList();
     }
 
@@ -69,8 +73,19 @@ public class QuranService {
                 .orElseThrow(() -> ApiException.notFound("reciter not found"));
         ayahRepository.findBySurahIdAndAyahNumber(surahId, ayahNumber)
                 .orElseThrow(() -> ApiException.notFound("ayah not found"));
+        if (reciter.getAudioBaseUrl() == null || reciter.getAudioBaseUrl().isBlank()) {
+            throw ApiException.notFound("no ayah audio for reciter " + reciterId);
+        }
         return new AyahAudioResponse(reciterId, surahId, ayahNumber,
                 audioUrlService.ayahAudioUrl(reciter.getAudioBaseUrl(), surahId, ayahNumber));
+    }
+
+    public SurahTimingsResponse surahTimings(int reciterId, int surahId) {
+        Reciter reciter = reciterRepository.findById(reciterId)
+                .orElseThrow(() -> ApiException.notFound("unknown reciter " + reciterId));
+        return timingsService.load(reciter.getReciterKey(), surahId)
+                .map(t -> new SurahTimingsResponse(reciterId, surahId, t))
+                .orElseThrow(() -> ApiException.notFound("no ayah timings for reciter " + reciterId + " surah " + surahId));
     }
 
     public SurahAudioResponse surahAudio(int reciterId, int surahId) {
