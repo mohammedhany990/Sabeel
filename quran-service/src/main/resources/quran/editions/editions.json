@@ -1,0 +1,64 @@
+{
+ "editions": [
+  {
+   "key": "arabic_moyassar",
+   "kind": "tafsir",
+   "language": "ar",
+   "version": "1.0.1",
+   "title": "At-Tafsir Al-Muyassar",
+   "publisher": "King Fahd Complex for Printing the Holy Quran in Madinah",
+   "source": "https://quranenc.com/en/browse/arabic_moyassar",
+   "terms": "https://quranenc.com/ne/home/contact_us",
+   "retrieved": "2026-11-26",
+   "rows": 6236
+  },
+  {
+   "key": "arabic_mokhtasar",
+   "kind": "tafsir",
+   "language": "ar",
+   "version": "1.0.0",
+   "title": "Al-Mukhtasar in Interpreting the Noble Quran",
+   "publisher": "Tafsir Center for Quranic Studies",
+   "source": "https://quranenc.com/en/browse/arabic_mokhtasar",
+   "terms": "https://quranenc.com/ne/home/contact_us",
+   "retrieved": "2026-11-26",
+   "rows": 6236
+  },
+  {
+   "key": "arabic_saadi",
+   "kind": "tafsir",
+   "language": "ar",
+   "version": "1.0.0",
+   "title": "Tayseer al-Kareem ar-Rahman (Tafsir As-Saadi)",
+   "publisher": "Abdul Rahman bin Nasser As-Saadi, published by QuranEnc.com",
+   "source": "https://quranenc.com/en/browse/arabic_saadi",
+   "terms": "https://quranenc.com/ne/home/contact_us",
+   "retrieved": "2026-11-26",
+   "rows": 7150
+  },
+  {
+   "key": "arabic_seraj",
+   "kind": "words",
+   "language": "ar",
+   "version": "1.0.0",
+   "title": "As-Siraj fi Bayan Gharib al-Quran (meanings of words)",
+   "publisher": "published by QuranEnc.com",
+   "source": "https://quranenc.com/en/browse/arabic_seraj",
+   "terms": "https://quranenc.com/ne/home/contact_us",
+   "retrieved": "2026-11-26",
+   "rows": 6236
+  },
+  {
+   "key": "english_rwwad",
+   "kind": "translation",
+   "language": "en",
+   "version": "1.0.21",
+   "title": "English Translation - Rowwad Translation Center",
+   "publisher": "Rowwad Translation Center with Rabwah Dawah Association, Islamic Content Service Association in Languages and IslamHouse.com",
+   "source": "https://quranenc.com/en/browse/english_rwwad",
+   "terms": "https://quranenc.com/ne/home/contact_us",
+   "retrieved": "2026-11-26",
+   "rows": 6236
+  }
+ ]
+}
