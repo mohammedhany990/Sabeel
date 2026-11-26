@@ -6,10 +6,11 @@ import { AzkarStreak, AzkarToday } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
+import { Tasbeeh } from './tasbeeh';
 
 @Component({
   selector: 'app-azkar',
-  imports: [T, Loc, Nm, PageHead, Spinner],
+  imports: [T, Loc, Nm, PageHead, Spinner, Tasbeeh],
   template: `
     <app-head [title]="'Daily azkar' | t" [subtitle]="'Tap each zikr to count. Your day follows your own timezone.' | t" />
     @if (loading()) { <app-spinner /> } @else {
@@ -42,6 +43,7 @@ import { PageHead, Spinner } from '../shared/ui';
           } @empty { <div class="empty">{{ 'No items in this category.' | t }}</div> }
         </div>
       }
+      <app-tasbeeh />
     }
   `,
   styles: [`

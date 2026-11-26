@@ -61,3 +61,4 @@ export interface EditionEntry { fromAyah: number; toAyah: number; text: string; 
 export interface EditionAyah { edition: EditionInfo; surah: number; ayah: number; entries: EditionEntry[]; }
 export interface PrayerTracker { from: string; to: string; days: Record<string, string[]>; currentStreak: number; bestStreakInRange: number; prayedInRange: number; possibleInRange: number; }
 export interface Adhan { id: string; name: string; nameAr?: string | null; url: string; }
+export interface TasbeehSummary { date: string; today: Record<string, number>; lifetime: Record<string, number>; }

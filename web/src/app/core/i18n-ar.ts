@@ -507,6 +507,16 @@ export const AR: Record<string, string> = {
   "No adhan audio is configured. You can add your own files, see the README.": "لم يُضبط صوت أذان. يمكنك إضافة ملفاتك، راجع README.",
   "None": "بدون",
   "Could not play this audio.": "تعذّر تشغيل هذا الصوت.",
+  "Tasbeeh": "التسبيح",
+  "Count": "عدّ",
+  "Today": "اليوم",
+  "All time": "الإجمالي",
+  "Target": "الهدف",
+  "Reset view": "تصفير العرض",
+  "Add {n} to the total": "إضافة {n} إلى المجموع",
+  "Save count": "حفظ العدد",
+  "Counted on this device until you save.": "يُعدّ على هذا الجهاز حتى تحفظ.",
+  "Saved.": "تم الحفظ.",
 };
 
 export const HIJRI_MONTHS: Record<string, string> = {

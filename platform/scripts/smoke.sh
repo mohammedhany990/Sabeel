@@ -113,6 +113,12 @@ ITEM_ID=$(curl -s "$BASE/api/v1/azkar/categories/MORNING/items" -H "$AUTH" | jq 
 check "azkar progress increments" "1" \
   "$(curl -s -X POST "$BASE/api/v1/azkar/items/$ITEM_ID/progress" -H "$AUTH" | jq -r '.count')"
 
+curl -s -X POST "$BASE/api/v1/azkar/tasbeeh" -H "$AUTH" -H 'Content-Type: application/json' -d '{"phrase":"SUBHANALLAH","count":33}' > /dev/null
+check "tasbeeh total after saving 33" "33" \
+  "$(curl -s "$BASE/api/v1/azkar/tasbeeh" -H "$AUTH" | jq -r '.today.SUBHANALLAH')"
+check "tasbeeh rejects an unknown phrase" "400" \
+  "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/api/v1/azkar/tasbeeh" -H "$AUTH" -H 'Content-Type: application/json' -d '{"phrase":"NOPE","count":1}')"
+
 echo "== learning =="
 TEACHER_TOKEN=$(curl -s -X POST "$BASE/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"teacher@sabeel.dev","password":"P@ssw0rd!23"}' | jq -r '.accessToken')

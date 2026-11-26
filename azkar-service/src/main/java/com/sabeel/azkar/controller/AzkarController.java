@@ -16,6 +16,7 @@ import java.util.UUID;
 public class AzkarController {
     private final AzkarService azkarService;
     private final AzkarDateResolver dateResolver;
+    private final com.sabeel.azkar.service.TasbeehService tasbeehService;
 
     @GetMapping("/categories")
     public List<CategoryResponse> categories() {
@@ -46,5 +47,18 @@ public class AzkarController {
     @GetMapping("/streaks")
     public List<StreakResponse> streaks(@AuthenticationPrincipal String userId) {
         return azkarService.streaks(UUID.fromString(userId));
+    }
+
+    @GetMapping("/tasbeeh")
+    public TasbeehResponse tasbeeh(@AuthenticationPrincipal String userId, @RequestParam(required = false) String tz) {
+        UUID uid = UUID.fromString(userId);
+        return tasbeehService.summary(uid, dateResolver.today(uid, tz));
+    }
+
+    @PostMapping("/tasbeeh")
+    public TasbeehResponse addTasbeeh(@AuthenticationPrincipal String userId, @RequestParam(required = false) String tz,
+                                      @jakarta.validation.Valid @RequestBody TasbeehRequest request) {
+        UUID uid = UUID.fromString(userId);
+        return tasbeehService.add(uid, dateResolver.today(uid, tz), request.phrase(), request.count());
     }
 }

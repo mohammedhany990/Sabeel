@@ -84,6 +84,8 @@ export class Api {
   savePrayerSettings = (b: { latitude: number; longitude: number; method: string; timezone: string; asrFactor: number }) => this.put<M.PrayerSettings>('/prayer/settings', b);
 
   azkarCategories = () => this.get<M.AzkarCategory[]>('/azkar/categories');
+  tasbeeh = (tz?: string) => this.get<M.TasbeehSummary>('/azkar/tasbeeh', { tz });
+  addTasbeeh = (phrase: string, count: number, tz?: string) => this.post<M.TasbeehSummary>('/azkar/tasbeeh', { phrase, count }, { tz });
   azkarToday = (tz?: string) => this.get<M.AzkarToday[]>('/azkar/today', { tz });
   azkarProgress = (id: number, tz?: string) => this.post<M.AzkarProgress>(`/azkar/items/${id}/progress`, {}, { tz });
   azkarStreaks = () => this.get<M.AzkarStreak[]>('/azkar/streaks');
