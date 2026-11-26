@@ -138,6 +138,12 @@ sleep 6
 check "recitation evaluation completes via worker" "COMPLETED" \
   "$(curl -s "$BASE/api/v1/recitation/evaluations/$EVAL_ID" -H "$AUTH" | jq -r '.status')"
 
+echo "== web =="
+check "web frontend serves the app shell" "200" \
+  "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/)"
+check "web runtime config is served" "200" \
+  "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/config.js)"
+
 echo "== observability =="
 check "prometheus scrapes all services" "true" \
   "$(curl -s 'http://localhost:9090/api/v1/targets?state=active' | jq '[.data.activeTargets[] | select(.health=="up")] | length >= 11')"

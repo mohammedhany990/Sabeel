@@ -19,17 +19,15 @@ jobs:
           java-version: "21"
 
       - name: Build all services
-        run: |
-          set -e
-          for svc in api-gateway auth-service user-service quran-service memorization-service revision-service notification-service prayer-service azkar-service learning-service community-service recitation-service; do
-            (cd "$svc" && mvn -B -q package)
-          done
+        run: mvn -B -q package
 
       - name: Start the full stack
         working-directory: platform
         run: |
           cp .env.example .env
-          docker compose up -d --build
+          export COMPOSE_PARALLEL_LIMIT=2
+          docker compose build
+          docker compose up -d
 
       - name: Run the smoke suite
         working-directory: platform

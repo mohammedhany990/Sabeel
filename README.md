@@ -22,15 +22,22 @@ Microservices backend for Quran reading/listening, memorization planning, smart 
 ## Quick start
 
 ```bash
-mkdir sabeel && cd sabeel
-for z in /path/to/sabeel-*.zip; do unzip -q "$z"; done
+git clone <your repository url> sabeel && cd sabeel
 cd platform
 cp .env.example .env
 docker compose up --build
 ./scripts/demo.sh
 ```
 
-Each service ZIP extracts to its own top-level directory; the platform ZIP adds `platform/`, `docs/` and `README.md`. Status: 230 unit tests green (rerun on JDK 17 after the English/Arabic changes) across all 12 services; the full Compose stack has not been run end-to-end here (no Docker daemon in the build environment). `.github/workflows/integration-smoke.yml` gives that check a reproducible path: it builds everything, starts the Compose stack and runs `platform/scripts/smoke.sh` (auth, security header checks, the memorization→revision event loop, prayer/qibla/hijri, azkar, learning/community/recitation flows, Prometheus health) on every push — its first execution happens on GitHub Actions, which provides Docker.
+The Compose stack starts PostgreSQL, MongoDB, Redis, Kafka, Mailhog, Kafka UI, Prometheus, Grafana, the 12 backend services and the Angular web app. Every service has its own multi-stage `Dockerfile` (Maven build, then a JRE 21 image); the web app builds with Node and is served by nginx. The web app is at `http://localhost:4200` and talks to the gateway at `http://localhost:8080/api/v1` (edit `web/public/config.js` to change that).
+
+## Open in an IDE
+
+The repository root has a Maven parent/aggregator `pom.xml` (`com.sabeel:sabeel-parent`) that lists the 12 services as modules. Open the root folder in IntelliJ IDEA (or any Maven-aware IDE) and import it as a Maven project to get all services in one workspace. Build everything with `mvn package` from the root, or one service with `mvn -pl auth-service -am package`. Each service keeps its own `pom.xml` with Spring Boot as its parent, so a service also builds alone from its folder and inside its own Docker image. The `web/` folder is a separate Angular project (`npm ci`, `npm start`).
+
+## Status
+
+Unit tests were green across all 12 services before the latest changes. The CI workflow `.github/workflows/integration-smoke.yml` builds all modules from the root, starts the full Compose stack and runs `platform/scripts/smoke.sh`: auth, security headers, the memorization to revision event loop, prayer, qibla and hijri, azkar, learning, community and recitation flows, web app reachability and Prometheus health. See the Actions tab for the latest result.
 
 Swagger UI per service at `http://localhost:<port>/swagger-ui.html`. Kafka UI at `http://localhost:8180`. Mailhog at `http://localhost:8025`. Prometheus at `http://localhost:9090`, Grafana at `http://localhost:3000` (admin/admin).
 
