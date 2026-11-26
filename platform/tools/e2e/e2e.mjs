@@ -23,7 +23,7 @@ async function check(name, fn) {
     console.log('PASS', name);
   } catch (e) {
     results.push({ name, ok: false, error: e.message.split('\n')[0] });
-    console.log('FAIL', name, e.message.split('\n')[0]);
+    console.log('FAIL', name, e.message.replace(/\n/g, ' | ').slice(0, 1500));
     await page.screenshot({ path: `${OUT}/fail-${results.length}.png`, fullPage: true }).catch(() => undefined);
   }
 }
@@ -82,7 +82,8 @@ await check('khatma plan starts and saves progress', async () => {
 await check('tasbeeh counts and saves a total', async () => {
   await page.goto(BASE + '/app/azkar', { waitUntil: 'networkidle' });
   await page.waitForSelector('[data-testid=tasbeeh-tick]', { timeout: 20000 });
-  for (let i = 0; i < 5; i++) await page.click('[data-testid=tasbeeh-tick]');
+  await page.waitForTimeout(1500);
+  for (let i = 0; i < 5; i++) { await page.click('[data-testid=tasbeeh-tick]'); await page.waitForTimeout(150); }
   const pending = (await page.locator('[data-testid=tasbeeh-pending]').innerText()).trim();
   if (pending !== '5') throw new Error('pending ' + pending);
   await page.click('[data-testid=tasbeeh-save]');
