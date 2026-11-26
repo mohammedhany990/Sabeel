@@ -78,7 +78,7 @@ async function pad(need) {
 }
 
 async function scene(id, en, ar, fn) {
-  const need = (durations[id] || 5) + 0.7;
+  const need = (durations[id] || 5) + 1.0;
   cur = { id, ranges: [], open: null };
   try {
     await fn(need, (() => show(en, ar)));
