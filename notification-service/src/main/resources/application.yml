@@ -1,0 +1,40 @@
+server:
+  port: 8086
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sabeel_notifications}
+    username: ${DB_USER:sabeel}
+    password: ${DB_PASS:sabeel}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-very-long-base64-secret-of-at-least-32-bytes}
+  access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
+notification:
+  from-address: ${NOTIFICATION_FROM:no-reply@sabeel.app}
+  fcm:
+    enabled: ${FCM_ENABLED:false}
+    credentials-path: ${FCM_CREDENTIALS_PATH:/run/secrets/fcm-service-account.json}
+  dispatcher-delay-ms: 30000
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

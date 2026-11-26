@@ -1,0 +1,48 @@
+server:
+  port: 8091
+spring:
+  application:
+    name: recitation-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sabeel_recitation}
+    username: ${DB_USER:sabeel}
+    password: ${DB_PASS:sabeel}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: recitation-service-worker
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-very-long-base64-secret-of-at-least-32-bytes}
+  access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
+recitation:
+  engine: ${RECITATION_ENGINE:none}
+  whisper:
+    binary-path: ${RECITATION_WHISPER_BINARY_PATH:/opt/whisper/whisper-cli}
+    model-path: ${RECITATION_WHISPER_MODEL_PATH:/opt/whisper/model.bin}
+    threads: ${RECITATION_WHISPER_THREADS:4}
+    timeout-seconds: ${RECITATION_WHISPER_TIMEOUT_SECONDS:300}
+  audio:
+    max-bytes: ${RECITATION_AUDIO_MAX_BYTES:26214400}
+    timeout-seconds: ${RECITATION_AUDIO_TIMEOUT_SECONDS:30}
+    max-duration-seconds: ${RECITATION_AUDIO_MAX_DURATION_SECONDS:600}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: sabeel-services
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - auth-service:8081
+          - user-service:8082
+          - quran-service:8083
+          - memorization-service:8084
+          - revision-service:8085
+          - notification-service:8086
+          - prayer-service:8087
+          - azkar-service:8088
+          - learning-service:8089
+          - community-service:8090
+          - recitation-service:8091

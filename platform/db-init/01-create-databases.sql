@@ -1,0 +1,11 @@
+CREATE DATABASE sabeel_auth;
+CREATE DATABASE sabeel_users;
+CREATE DATABASE sabeel_quran;
+CREATE DATABASE sabeel_memorization;
+CREATE DATABASE sabeel_revision;
+CREATE DATABASE sabeel_notifications;
+CREATE DATABASE sabeel_prayer;
+CREATE DATABASE sabeel_azkar;
+CREATE DATABASE sabeel_learning_tx;
+CREATE DATABASE sabeel_community;
+CREATE DATABASE sabeel_recitation;

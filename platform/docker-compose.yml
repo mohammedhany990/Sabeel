@@ -1,0 +1,324 @@
+name: sabeel
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sabeel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sabeel}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sabeel}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka:
+    image: apache/kafka:3.8.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: rxuHDLTCS4CW9yk2U2NJ3A==
+    ports:
+      - "127.0.0.1:9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: sabeel
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "127.0.0.1:8180:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+  api-gateway:
+    build: ../api-gateway
+    environment:
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      AUTH_SERVICE_URL: http://auth-service:8081
+      USER_SERVICE_URL: http://user-service:8082
+      QURAN_SERVICE_URL: http://quran-service:8083
+      MEMORIZATION_SERVICE_URL: http://memorization-service:8084
+      REVISION_SERVICE_URL: http://revision-service:8085
+      NOTIFICATION_SERVICE_URL: http://notification-service:8086
+      RATE_LIMIT_PER_SECOND: ${RATE_LIMIT_PER_SECOND:-20}
+      RATE_LIMIT_BURST: ${RATE_LIMIT_BURST:-40}
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  auth-service:
+    build: ../auth-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_auth
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-900}
+      JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-30}
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  user-service:
+    build: ../user-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_users
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  quran-service:
+    build: ../quran-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_quran
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  memorization-service:
+    build: ../memorization-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_memorization
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  revision-service:
+    build: ../revision-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_revision
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  notification-service:
+    build: ../notification-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_notifications
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      FCM_ENABLED: ${FCM_ENABLED:-false}
+      FCM_CREDENTIALS_PATH: ${FCM_CREDENTIALS_PATH:-/run/secrets/fcm-service-account.json}
+    ports:
+      - "127.0.0.1:8086:8086"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+
+  prayer-service:
+    build: ../prayer-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_prayer
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  azkar-service:
+    build: ../azkar-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_azkar
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8088:8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: sabeel_learning
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    ports:
+      - "127.0.0.1:27017:27017"
+
+  learning-service:
+    build: ../learning-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_learning_tx
+      MONGODB_URI: mongodb://mongodb:27017/sabeel_learning
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8089:8089"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  community-service:
+    build: ../community-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_community
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+    ports:
+      - "127.0.0.1:8090:8090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  recitation-service:
+    build: ../recitation-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sabeel_recitation
+      DB_USER: ${POSTGRES_USER:-sabeel}
+      DB_PASS: ${POSTGRES_PASSWORD:-sabeel}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      RECITATION_ENGINE: ${RECITATION_ENGINE:-passthrough}  # passthrough = DEMO transcript comparison; whispercpp = local real ASR (build with Dockerfile.whisper)
+      RECITATION_WHISPER_THREADS: ${RECITATION_WHISPER_THREADS:-4}
+      RECITATION_WHISPER_TIMEOUT_SECONDS: ${RECITATION_WHISPER_TIMEOUT_SECONDS:-300}
+      RECITATION_AUDIO_MAX_BYTES: ${RECITATION_AUDIO_MAX_BYTES:-26214400}
+      RECITATION_AUDIO_MAX_DURATION_SECONDS: ${RECITATION_AUDIO_MAX_DURATION_SECONDS:-600}
+    ports:
+      - "127.0.0.1:8091:8091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - auth-service
+      - user-service
+      - quran-service
+      - memorization-service
+      - revision-service
+      - notification-service
+      - prayer-service
+      - azkar-service
+      - learning-service
+      - community-service
+      - recitation-service
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres-data:
+  mongo-data:

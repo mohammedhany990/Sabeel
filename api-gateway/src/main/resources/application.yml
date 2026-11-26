@@ -1,0 +1,70 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: ${RATE_LIMIT_PER_SECOND:20}
+            redis-rate-limiter.burstCapacity: ${RATE_LIMIT_BURST:40}
+            redis-rate-limiter.requestedTokens: 1
+            key-resolver: '#{userKeyResolver}'
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/users/**
+        - id: quran-service
+          uri: ${QURAN_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/quran/**
+        - id: memorization-service
+          uri: ${MEMORIZATION_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/memorization/**
+        - id: revision-service
+          uri: ${REVISION_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/revision/**
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/notifications/**
+        - id: prayer-service
+          uri: ${PRAYER_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/prayer/**
+        - id: azkar-service
+          uri: ${AZKAR_SERVICE_URL:http://localhost:8088}
+          predicates:
+            - Path=/api/v1/azkar/**
+        - id: learning-service
+          uri: ${LEARNING_SERVICE_URL:http://localhost:8089}
+          predicates:
+            - Path=/api/v1/learning/**
+        - id: community-service
+          uri: ${COMMUNITY_SERVICE_URL:http://localhost:8090}
+          predicates:
+            - Path=/api/v1/community/**
+        - id: recitation-service
+          uri: ${RECITATION_SERVICE_URL:http://localhost:8091}
+          predicates:
+            - Path=/api/v1/recitation/**
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-very-long-base64-secret-of-at-least-32-bytes}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
