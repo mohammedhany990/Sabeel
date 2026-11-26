@@ -62,7 +62,7 @@ Profile (name, image, country, timezone, preferred reciter, preferred language),
 
 Quran reference data and the personal reading experience: surah/ayah lookup, mushaf pages, juz, full-text search, five reciters with per-ayah audio URLs (pattern verified live against the public CDN), bookmarks, reading state and reading history.
 
-Ships with a bundled sample seed (Al-Fatihah, Al-Baqarah 1-5, Al-Ikhlas, Al-Falaq, An-Nas — 27 ayahs, uthmani text) so the system runs immediately. `db/seed-full-quran.sh` replaces the sample with all 6236 ayahs from the public quran.com API (Tanzil-compatible text). Source caveat: the bundled seed is a sample for development, not a verified full mushaf — a production deployment should re-verify the full text against a certified source. Reciter audio URLs point at the public quranicaudio.com / everyayah.com CDNs (patterns verified reachable at build time); audio availability is a third-party dependency Sabeel does not control.
+Ships with a bundled sample seed (Al-Fatihah, Al-Baqarah 1-5, Al-Ikhlas, Al-Falaq, An-Nas — 27 ayahs, uthmani text) so the system runs immediately. The full 6236-ayah Tanzil text is bundled and loads by default; QURAN_SEED_MODE=sample switches back to the sample. Source caveat: the bundled seed is a sample for development, not a verified full mushaf — a production deployment should re-verify the full text against a certified source. Reciter audio URLs point at the public quranicaudio.com / everyayah.com CDNs (patterns verified reachable at build time); audio availability is a third-party dependency Sabeel does not control.
 
 ## memorization-service (8084)
 

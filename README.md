@@ -49,6 +49,16 @@ Swagger UI per service at `http://localhost:<port>/swagger-ui.html`. Kafka UI at
 - Azkar items have `textEn` and `referenceAr`, badges have `titleAr`/`descriptionAr`, prayer and Hijri responses have Arabic names, surahs and reciters have Arabic labels.
 - The Arabic strings were written for this project and need a native-speaker review before a public release. See "Languages" in `docs/Sabeel-Documentation.md`.
 
+## Sources and attribution
+
+- Quran text (Uthmani and simple-clean) and the surah, juz, hizb and page metadata are the Tanzil Quran text, copyright Tanzil Project, license Creative Commons Attribution 3.0. The license allows use in any application if the source is clearly indicated, a link to tanzil.net is shown, the text is not changed, and the notice is kept in the files. The bundled copies in `quran-service/src/main/resources/quran/` are verbatim and keep the Tanzil notice. The web app shows one small footer line linking to tanzil.net. Source: https://tanzil.net/docs/text_license
+- Quran text mode: the full 6236-ayah text loads on first start. Set `QURAN_SEED_MODE=sample` for the old 27-ayah development sample. A database that holds only the sample is upgraded to the full text on the next start in full mode.
+- Reciter audio is streamed from third-party hosts (everyayah.com and quranicaudio.com) and is never copied or rehosted by this project. The reciter name is shown with each recitation. Rights for commercial use of these recordings are not established; see `docs/PRODUCTION-READINESS.md`.
+
+## Production readiness
+
+This is a development release, not production-ready. See `docs/PRODUCTION-READINESS.md` for the prioritized list of what is missing and what was and was not verified.
+
 ## Reliability design
 
 - Every producer writes events to a transactional outbox in the same DB transaction as the state change; a relay publishes to Kafka and retries (10 attempts, then the row is marked dead and kept: dead rows are requeued hourly and can be replayed manually, never silently discarded).

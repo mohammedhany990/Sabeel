@@ -1,4 +1,5 @@
 export const AR: Record<string, string> = {
+  "Quran text:": "نص القرآن:",
   "Indeed, this Quran guides to what is most upright. (17:9)": "إن هذا القرآن يهدي للتي هي أقوم. (الإسراء ٩)",
   "Memorize. Revise. Recite. Grow.": "احفظ. راجع. اتلُ. ارتقِ.",
   "Welcome back": "أهلًا بعودتك",

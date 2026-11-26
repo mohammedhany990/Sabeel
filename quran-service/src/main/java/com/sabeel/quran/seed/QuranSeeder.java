@@ -8,6 +8,7 @@ import com.sabeel.quran.repository.ReciterRepository;
 import com.sabeel.quran.repository.SurahRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,16 +23,37 @@ public class QuranSeeder implements CommandLineRunner {
     private final AyahRepository ayahRepository;
     private final ReciterRepository reciterRepository;
 
+    @Value("${quran.seed.mode:full}")
+    private String seedMode;
+
     @Override
     @Transactional
     public void run(String... args) {
+        boolean full = !"sample".equalsIgnoreCase(seedMode);
         if (surahRepository.count() > 0) {
+            if (full && ayahRepository.count() < FullQuranLoader.EXPECTED_AYAHS) {
+                log.info("replacing the sample quran data with the full text");
+                ayahRepository.deleteAllInBatch();
+                surahRepository.deleteAllInBatch();
+                seedFull();
+            }
             return;
         }
-        log.info("seeding sample quran data and reciters");
-        seedSurahs();
-        seedAyahs();
+        if (full) {
+            log.info("seeding the full quran text and reciters");
+            seedFull();
+        } else {
+            log.info("seeding sample quran data and reciters");
+            seedSurahs();
+            seedAyahs();
+        }
         seedReciters();
+    }
+
+    private void seedFull() {
+        FullQuranLoader.Loaded loaded = new FullQuranLoader().load();
+        surahRepository.saveAll(loaded.surahs());
+        ayahRepository.saveAll(loaded.ayahs());
     }
 
     private void seedSurahs() {

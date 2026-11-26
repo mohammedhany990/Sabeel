@@ -46,6 +46,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
           </a>
         </header>
         <main class="content"><router-outlet /></main>
+        <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a></footer>
       </div>
     </div>
   `,
@@ -69,6 +70,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
     .small { font-size: 0.72rem; }
     .main { min-width: 0; display: flex; flex-direction: column; }
     .top { display: flex; align-items: center; gap: 12px; padding: 16px 34px 0; }
+    .credit { margin: 0; padding: 14px 34px 20px; font-size: 0.72rem; color: var(--muted); }
     .burger { display: none; }
     .bell { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line-soft); color: var(--text); background: var(--panel); }
     .bell:hover { border-color: var(--gold); text-decoration: none; }
