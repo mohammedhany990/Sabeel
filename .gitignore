@@ -7,3 +7,6 @@ target/
 .DS_Store
 models/
 *.bin
+platform/tools/demo/node_modules/
+platform/tools/demo/demo-out/
+platform/tools/demo/package*.json
