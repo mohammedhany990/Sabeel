@@ -27,7 +27,7 @@ Stack: Angular 22 (standalone components, signals, lazy routes, functional HTTP 
 | Memorization | Create plan, pause, resume, cancel, progress ring, today's tasks, complete a task with accuracy | `/memorization/plans, plans/me, plans/{id}, plans/{id}/progress, tasks/today, tasks/{id}/complete` |
 | Revision | Stats, due items, submit review (accuracy and mistakes), upcoming window | `/revision/due, upcoming, stats, items/{id}/review` |
 | Prayer | Daily times, month table, Qibla compass, Hijri date, location and method settings, "use my location" | `/prayer/times, times/month, qibla, hijri, settings` |
-| Adhan | Plays the bundled adhan recording aloud at each prayer time while the app is open, with an on/off toggle and a preview. The bundled muezzin is Nasr al-Din Tobar (with a separate Fajr recording). The choice persists on the device. To offer more muezzins, add your own audio files under `public/assets/adhan/` and an entry in `src/app/core/adhan.ts` | uses the saved `/prayer/times` schedule |
+| Adhan | Plays the bundled adhan recording aloud at each prayer time while the app is open, with an on/off toggle and a preview. The bundled muezzin is Nasr al-Din Tobar (with a separate Fajr recording). The choice persists on the device. To offer more muezzins, add audio files you hold the rights to under `public/assets/adhan/` and an entry in `src/app/core/adhan.ts` | uses the saved `/prayer/times` schedule |
 | Azkar | Categories, per-item counters, completion, streaks, day boundaries from the browser timezone via `?tz=` | `/azkar/today, streaks, items/{id}/progress` |
 | Courses | Catalog with category filter and search, course page, enroll, lesson player, progress reporting, rating; teacher tools to create a draft, add lessons and publish | `/learning/courses, courses/{slug}, enrollments/{id}, my-courses, progress, courses/{id}/ratings, lessons, publish` |
 | Community | Badges (earned and locked), challenges (join, progress), circles (create, join by code, members), admin challenge creation | `/community/challenges, challenges/{id}/join, challenges/me, circles, circles/join, circles/me, circles/{id}/members, badges, badges/me` |
@@ -124,7 +124,11 @@ What was not done:
 
 ## Adhan audio credits
 
-No third-party adhan recordings are bundled. The Madinah, Al-Aqsa and Alafasy recordings that were considered use a license that does not allow modified copies, so they are left out; add your own files if you hold the rights.
+| File | Recording | Source | License |
+| --- | --- | --- | --- |
+| `madina.mp3`, `aqsa.mp3`, `alafasy.mp3` | Madinah, Al-Aqsa, Mishary Alafasy | Internet Archive item "(mp3) Collection Adzan of world" by JpnMuslim, https://archive.org/details/Mp3CollectionAdzan | CC BY-NC-ND 4.0. Included unmodified at the project owner's decision; credit to the collection and its uploader |
+| `beautiful.mp3` | Adhan by Adam-synagda | Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg | CC0 1.0. Converted from Ogg to 64 kbps mono MP3 |
+| `azan.mp3` | Adhan by Andrewler | Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Azan.ogg | CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0). Converted from Ogg to 64 kbps mono MP3; this file stays under CC BY-SA 4.0 |
 
 `tobar.mp3` and `tobar-fajr.mp3` (Sheikh Nasr al-Din Tobar, general and Fajr adhan) were supplied directly by the project owner for this project. They were trimmed, denoised and loudness-normalized, and are not from a separately licensed source.
 

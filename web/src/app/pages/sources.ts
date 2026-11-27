@@ -24,6 +24,15 @@ import { Spinner } from '../shared/ui';
         <div><a [href]="e.source" target="_blank" rel="noopener">{{ 'Source page' | t }}</a> · <a [href]="e.terms" target="_blank" rel="noopener">{{ 'Terms' | t }}</a></div>
       </div>
     }
+    <h2 class="ed">{{ 'Adhan recordings' | t }}</h2>
+    <div class="card">
+      <p class="muted">{{ 'Madinah, Al-Aqsa and Mishary Alafasy: Internet Archive collection by JpnMuslim, included unmodified.' | t }}</p>
+      <p class="muted">{{ 'Adhan, recording 1: Adam-synagda, Wikimedia Commons, CC0 1.0, converted to MP3.' | t }}</p>
+      <p class="muted">{{ 'Adhan, recording 2: Andrewler, Wikimedia Commons, CC BY-SA 4.0, converted to MP3.' | t }}</p>
+      <a href="https://archive.org/details/Mp3CollectionAdzan" target="_blank" rel="noopener">archive.org</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg" target="_blank" rel="noopener">{{ 'Source page' | t }} 1</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Azan.ogg" target="_blank" rel="noopener">{{ 'Source page' | t }} 2</a>
+    </div>
   `,
   styles: [`.ed { margin-top: 12px; }`]
 })

@@ -8,6 +8,11 @@ import { Toast } from './toast';
 export interface Muezzin { id: string; name: string; url: string; fajrUrl?: string; }
 
 export const MUEZZINS: Muezzin[] = [
+  { id: 'madina', name: 'Madinah', url: 'assets/adhan/madina.mp3' },
+  { id: 'aqsa', name: 'Al-Aqsa', url: 'assets/adhan/aqsa.mp3' },
+  { id: 'alafasy', name: 'Mishary Alafasy', url: 'assets/adhan/alafasy.mp3' },
+  { id: 'beautiful', name: 'Adhan, recording 1', url: 'assets/adhan/beautiful.mp3' },
+  { id: 'azan', name: 'Adhan, recording 2', url: 'assets/adhan/azan.mp3' },
   { id: 'tobar', name: 'Nasr al-Din Tobar', url: 'assets/adhan/tobar.mp3', fajrUrl: 'assets/adhan/tobar-fajr.mp3' }
 ];
 

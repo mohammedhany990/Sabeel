@@ -61,8 +61,8 @@ describe('duePrayer', () => {
 });
 
 describe('muezzins', () => {
-  it('ships only the user-supplied Tobar recordings', () => {
-    expect(MUEZZINS.length).toBe(1);
+  it('ships the listed muezzins', () => {
+    expect(MUEZZINS.map((m) => m.id)).toEqual(['madina', 'aqsa', 'alafasy', 'beautiful', 'azan', 'tobar']);
     for (const m of MUEZZINS) expect(m.url).toMatch(/^assets\/adhan\/.+\.mp3$/);
   });
 
