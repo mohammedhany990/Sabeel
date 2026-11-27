@@ -6,6 +6,10 @@ import * as M from './models';
 
 type Query = Record<string, string | number | boolean | undefined | null>;
 
+export function deviceTimezone(): string | undefined {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { return undefined; }
+}
+
 @Injectable({ providedIn: 'root' })
 export class Api {
   private readonly http = inject(HttpClient);
@@ -79,8 +83,8 @@ export class Api {
   notifications = () => this.get<M.AppNotification[]>('/notifications/me');
   markRead = (id: string) => this.post<void>(`/notifications/me/${id}/read`);
 
-  prayerTimes = (q: { date?: string; lat?: number; lng?: number; method?: string }) => this.get<M.PrayerTimes>('/prayer/times', q);
-  prayerMonth = (q: { year: number; month: number; lat?: number; lng?: number; method?: string }) => this.get<M.PrayerTimes[]>('/prayer/times/month', q);
+  prayerTimes = (q: { date?: string; lat?: number; lng?: number; method?: string }) => this.get<M.PrayerTimes>('/prayer/times', { ...q, tz: deviceTimezone() });
+  prayerMonth = (q: { year: number; month: number; lat?: number; lng?: number; method?: string }) => this.get<M.PrayerTimes[]>('/prayer/times/month', { ...q, tz: deviceTimezone() });
   qibla = (lat: number, lng: number) => this.get<M.Qibla>('/prayer/qibla', { lat, lng });
   hijri = (date?: string) => this.get<M.Hijri>('/prayer/hijri', { date });
   prayerLog = (from: string, to: string) => this.get<M.PrayerTracker>('/prayer/log', { from, to });

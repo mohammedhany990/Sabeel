@@ -29,7 +29,11 @@ public class PrayerService {
     private final HijriCalendar hijriCalendar;
 
     public PrayerTimesResponse times(UUID userId, LocalDate date, Double lat, Double lng, String methodName) {
-        ResolvedLocation location = resolveLocation(userId, lat, lng, methodName);
+        return times(userId, date, lat, lng, methodName, null);
+    }
+
+    public PrayerTimesResponse times(UUID userId, LocalDate date, Double lat, Double lng, String methodName, String fallbackTimezone) {
+        ResolvedLocation location = resolveLocation(userId, lat, lng, methodName, fallbackTimezone);
         ZoneId zone = parseZone(location.timezone());
         Map<PrayerName, ZonedDateTime> times;
         try {
@@ -52,10 +56,14 @@ public class PrayerService {
     }
 
     public List<PrayerTimesResponse> month(UUID userId, int year, int month, Double lat, Double lng, String methodName) {
+        return month(userId, year, month, lat, lng, methodName, null);
+    }
+
+    public List<PrayerTimesResponse> month(UUID userId, int year, int month, Double lat, Double lng, String methodName, String fallbackTimezone) {
         YearMonth ym = YearMonth.of(year, month);
         List<PrayerTimesResponse> days = new ArrayList<>();
         for (int d = 1; d <= ym.lengthOfMonth(); d++) {
-            days.add(times(userId, ym.atDay(d), lat, lng, methodName));
+            days.add(times(userId, ym.atDay(d), lat, lng, methodName, fallbackTimezone));
         }
         return days;
     }
@@ -118,7 +126,7 @@ public class PrayerService {
     private record ResolvedLocation(double latitude, double longitude, CalculationMethod method, String timezone, int asrFactor) {
     }
 
-    private ResolvedLocation resolveLocation(UUID userId, Double lat, Double lng, String methodName) {
+    private ResolvedLocation resolveLocation(UUID userId, Double lat, Double lng, String methodName, String fallbackTimezone) {
         Optional<PrayerSettings> saved = userId == null ? Optional.empty() : settingsRepository.findById(userId);
         if ((lat == null || lng == null) && saved.isEmpty()) {
             throw ApiException.badRequest("lat and lng are required until settings are saved");
@@ -130,8 +138,19 @@ public class PrayerService {
                 lat != null ? lat : saved.get().getLatitude(),
                 lng != null ? lng : saved.get().getLongitude(),
                 method,
-                saved.map(PrayerSettings::getTimezone).orElse("UTC"),
+                saved.map(PrayerSettings::getTimezone).orElse(validZoneOrUtc(fallbackTimezone)),
                 saved.map(PrayerSettings::getAsrFactor).orElse(1));
+    }
+
+    static String validZoneOrUtc(String timezone) {
+        if (timezone == null || timezone.isBlank()) {
+            return "UTC";
+        }
+        try {
+            return ZoneId.of(timezone.trim()).getId();
+        } catch (Exception e) {
+            return "UTC";
+        }
     }
 
     static CalculationMethod parseMethod(String name) {

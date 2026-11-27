@@ -5,7 +5,7 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { Adhan, LEADS, PRAYERS } from '../core/adhan';
 import { PrayerExtras } from './prayer-extras';
 import { PrayerTracker as PrayerLocalTracker } from './prayer-tracker';
-import { Api } from '../core/api';
+import { Api, deviceTimezone } from '../core/api';
 import { Hijri, PrayerSettings, PrayerTimes, Qibla } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage, formatTime, todayIso } from '../core/util';
@@ -200,7 +200,7 @@ export class Prayer implements OnInit {
   }
   protected readonly methods = METHODS;
   protected readonly today = todayIso();
-  protected form: PrayerSettings = { latitude: 30.0444, longitude: 31.2357, method: 'EGYPT', timezone: 'Africa/Cairo', asrFactor: 1 };
+  protected form: PrayerSettings = { latitude: 30.0444, longitude: 31.2357, method: 'EGYPT', timezone: deviceTimezone() ?? 'Africa/Cairo', asrFactor: 1 };
 
   protected fmt = formatTime;
 

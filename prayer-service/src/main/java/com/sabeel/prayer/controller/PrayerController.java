@@ -23,9 +23,10 @@ public class PrayerController {
                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                      @RequestParam(required = false) Double lat,
                                      @RequestParam(required = false) Double lng,
-                                     @RequestParam(required = false) String method) {
+                                     @RequestParam(required = false) String method,
+                                     @RequestParam(required = false) String tz) {
         return prayerService.times(userId == null ? null : UUID.fromString(userId),
-                date == null ? LocalDate.now() : date, lat, lng, method);
+                date == null ? LocalDate.now() : date, lat, lng, method, tz);
     }
 
     @GetMapping("/times/month")
@@ -34,8 +35,9 @@ public class PrayerController {
                                            @RequestParam int month,
                                            @RequestParam(required = false) Double lat,
                                            @RequestParam(required = false) Double lng,
-                                           @RequestParam(required = false) String method) {
-        return prayerService.month(userId == null ? null : UUID.fromString(userId), year, month, lat, lng, method);
+                                           @RequestParam(required = false) String method,
+                                           @RequestParam(required = false) String tz) {
+        return prayerService.month(userId == null ? null : UUID.fromString(userId), year, month, lat, lng, method, tz);
     }
 
     @GetMapping("/qibla")
