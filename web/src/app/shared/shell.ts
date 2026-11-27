@@ -120,8 +120,8 @@ export class Shell implements OnInit, OnDestroy {
     {
       title: 'Quran',
       items: [
-        { path: 'quran', label: 'Read and listen', icon: this.svg('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 21V5"/>') },
-        { path: 'mushaf', label: 'Mushaf (tajweed)', icon: this.svg('<path d="M12 5c-2-1.5-5-2-8-2v16c3 0 6 .5 8 2 2-1.5 5-2 8-2V3c-3 0-6 .5-8 2Z"/><path d="M12 5v16"/>') },
+        { path: 'mushaf', label: 'Quran (mushaf pages)', icon: this.svg('<path d="M12 5c-2-1.5-5-2-8-2v16c3 0 6 .5 8 2 2-1.5 5-2 8-2V3c-3 0-6 .5-8 2Z"/><path d="M12 5v16"/>') },
+        { path: 'quran', label: 'Surah list and search', icon: this.svg('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 21V5"/>') },
         { path: 'library', label: 'Bookmarks', icon: this.svg('<path d="M6 3h12v18l-6-4-6 4Z"/>') },
         { path: 'memorization', label: 'Memorization', icon: this.svg('<path d="M12 3 3 8l9 5 9-5Z"/><path d="M7 10.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-5.5"/>') },
         { path: 'revision', label: 'Revision', icon: this.svg('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>') }

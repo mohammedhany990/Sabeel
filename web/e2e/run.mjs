@@ -49,10 +49,29 @@ await sleep(500); await shot('03-dashboard-empty');
 check('dashboard shows the ayah of the day with its tafsir', (await text()).includes('Ayah of the day') && (await text()).includes('Tafsir'));
 check('recitation feature is removed from the nav', !(await text()).includes('Recitation check'));
 
-await go('Read and listen');
+await go('Surah list and search');
 check('quran index lists 114 surahs', (await page.$$('a.surah')).length === 114);
 await shot('04-quran-index');
-await clickText('a.surah', 'Al-Fatihah'); await sleep(1500);
+await clickText('a.surah', 'Al-Fatihah'); await page.waitForSelector('span.vtext', { timeout: 20000 }).catch(() => null); await sleep(500);
+check('surah card opens the mushaf page', page.url().includes('/app/mushaf') && (await text()).includes('Mushaf with tajweed'), page.url());
+const firstVerse = await page.$('span.vtext');
+if (firstVerse) {
+  await firstVerse.click(); await sleep(500);
+  const t1 = await text();
+  check('tapping an ayah opens the menu with all actions', ['Play', 'Tafsir', 'Translation', 'Share as text', 'Share as image'].every((x) => t1.includes(x)));
+  await clickText('.sheet button', 'Translation'); await sleep(1200);
+  check('menu translation panel loads an edition', (await text()).includes('QuranEnc.com') && (await text()).includes('Mock text for 1:1'));
+  await shot('05a-mushaf-menu');
+  await page.evaluate(() => { window.__shared = null; navigator.canShare = () => true; navigator.share = async (d) => { const f = d.files && d.files[0]; if (f) { const buf = await f.arrayBuffer(); let b = ''; new Uint8Array(buf).forEach((x) => { b += String.fromCharCode(x); }); window.__shared = { type: f.type, size: f.size, b64: btoa(b) }; } }; });
+  await clickText('.sheet button', 'Share as image'); await sleep(2500);
+  const shared = await page.evaluate(() => window.__shared);
+  check('share as image produces a PNG', shared && shared.type === 'image/png' && shared.size > 5000, shared ? String(shared.size) : 'none');
+  if (shared) fs.writeFileSync(path.join(here, 'shots', '05b-share-image.png'), Buffer.from(shared.b64, 'base64'));
+  await clickText('.sheet a', 'Verse view'); await sleep(1500);
+} else {
+  check('mushaf page loaded for the surah card', false, 'no verses (api.quran.com unreachable?)');
+  await page.goto(page.url().split('/app/')[0] + '/app/quran/1'); await sleep(1500);
+}
 check('reader shows ayahs', (await page.$$('.ayah')).length === 7);
 await clickText('.ayah:nth-of-type(2) button', 'Bookmark'); await sleep(500);
 await clickText('.ayah button', 'Stopped here'); await sleep(500);
@@ -117,11 +136,20 @@ await sleep(300);
 check('zakat computes due amount', (await text()).toLowerCase().includes('zakat due'));
 await shot('21-zakat');
 
-await go('Mushaf (tajweed)'); await sleep(2500);
+await go('Quran (mushaf pages)'); await sleep(2500);
 const mushafOk = (await text()).includes('Mushaf with tajweed');
 const verses = await page.$$('span.vtext');
 check('mushaf page renders', mushafOk && (verses.length > 0 || (await text()).includes('Could not load this page')), 'verses=' + verses.length);
 await shot('23-mushaf');
+if (verses.length > 0) {
+  const before = await page.$eval('.pagehead', (e) => e.innerText);
+  await clickText('.mushaf-nav button', 'Next page'); await sleep(1500);
+  const after = await page.$eval('.pagehead', (e) => e.innerText);
+  check('mushaf next page changes the page', before !== after, before.replace(/\s+/g, ' ') + ' -> ' + after.replace(/\s+/g, ' '));
+  await page.select('.mushaf-nav label:nth-of-type(3) select', '10'); await sleep(1800);
+  check('mushaf juz jump lands on page 182', (await page.$eval('.pagehead', (e) => e.innerText)).includes('182'));
+  await shot('23b-mushaf-juz');
+}
 
 await go('Prophet stories'); await sleep(700);
 check('stories page shows prophet and quiz', (await text()).includes('Stories of the prophets') && (await text()).includes('Quiz'));

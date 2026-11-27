@@ -59,7 +59,7 @@ import { TafsirSearch } from './tafsir-search';
         </div>
         <div class="grid grid-3">
           @for (s of visible(); track s.id) {
-            <a class="card surah" [routerLink]="['/app/quran', s.id]">
+            <a class="card surah" [routerLink]="s.startPage ? ['/app/mushaf'] : ['/app/quran', s.id]" [queryParams]="s.startPage ? { page: s.startPage } : null">
               <div class="no">{{ s.id }}</div>
               <div class="grow">
                 <div class="en">{{ s | nm }}</div>

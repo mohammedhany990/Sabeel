@@ -12,7 +12,8 @@ const addDays = (n) => day(new Date(Date.now() + n * 86400000));
 const starts = [];
 let acc = 0;
 for (const s of SURAHS) { starts.push(acc + 1); acc += s[4]; }
-const surahList = SURAHS.map((s, i) => ({ id: i + 1, nameAr: s[2], nameEn: s[1], transliteration: s[0], revelationType: s[3], revelationTypeAr: s[3] === 'Meccan' ? 'مكية' : 'مدنية', ayahCount: s[4], startPage: null, startJuz: null }));
+const START_PAGES = [1, 2, 50, 77, 106, 128, 151, 177, 187, 208, 221, 235, 249, 255, 262, 267, 282, 293, 305, 312, 322, 332, 342, 350, 359, 367, 377, 385, 396, 404, 411, 415, 418, 428, 434, 440, 446, 453, 458, 467, 477, 483, 489, 496, 499, 502, 507, 511, 515, 518, 520, 523, 526, 528, 531, 534, 537, 542, 545, 549, 551, 553, 554, 556, 558, 560, 562, 564, 566, 568, 570, 572, 574, 575, 577, 578, 580, 582, 583, 585, 586, 587, 587, 589, 590, 591, 591, 592, 593, 594, 595, 595, 596, 596, 597, 597, 598, 598, 599, 599, 600, 600, 601, 601, 601, 602, 602, 602, 603, 603, 603, 604, 604, 604];
+const surahList = SURAHS.map((s, i) => ({ id: i + 1, nameAr: s[2], nameEn: s[1], transliteration: s[0], revelationType: s[3], revelationTypeAr: s[3] === 'Meccan' ? 'مكية' : 'مدنية', ayahCount: s[4], startPage: START_PAGES[i], startJuz: null }));
 const ayahsOf = (sid) => (TEXTS[sid] || []).map((t, i) => ({ id: starts[sid - 1] + i, surahId: sid, ayahNumber: i + 1, textUthmani: t, textSimple: t.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').replace(/ٱ/g, 'ا'), page: null, juz: null, hizb: null }));
 
 const db = { requestLog: [], users: [], tokens: new Map(), refresh: new Map(), profiles: new Map(), prefs: new Map(), bookmarks: [], state: new Map(), history: [], plans: [], tasks: [], revisions: [], notes: [], azkarLog: new Map(), streaks: new Map(), courses: [], enrollments: [], progress: new Map(), ratings: new Map(), challenges: [], parts: [], circles: [], members: [], evals: [], badges: new Map(), stats: new Map(), settings: new Map() };
@@ -135,6 +136,16 @@ route('GET', '/quran/search', async ({ q }) => {
   const term = (q.get('q') || '').trim();
   const all = Object.keys(TEXTS).flatMap((s) => ayahsOf(Number(s))).filter((a) => a.textSimple.includes(term) || a.textUthmani.includes(term));
   return [200, { content: all, page: 0, size: 20, totalElements: all.length, totalPages: 1 }];
+}, true);
+const EDITIONS = [
+  { key: 'arabic_moyassar', kind: 'tafsir', language: 'ar', version: '1', title: 'Al-Tafsir Al-Muyassar', publisher: 'Mock', source: 'https://quranenc.com', terms: 'https://quranenc.com', retrieved: '2026-11-26' },
+  { key: 'english_rwwad', kind: 'translation', language: 'en', version: '1', title: 'English translation', publisher: 'Mock', source: 'https://quranenc.com', terms: 'https://quranenc.com', retrieved: '2026-11-26' }
+];
+route('GET', '/quran/editions', async () => [200, EDITIONS], true);
+route('GET', '/quran/editions/{key}/{surah}/{number}', async ({ p }) => {
+  const e = EDITIONS.find((x) => x.key === p.key);
+  if (!e) return [404, { detail: 'Unknown edition' }];
+  return [200, { edition: e, surah: Number(p.surah), ayah: Number(p.number), entries: [{ fromAyah: Number(p.number), toAyah: Number(p.number), text: 'Mock text for ' + p.surah + ':' + p.number }] }];
 }, true);
 route('GET', '/quran/reciters', async () => [200, RECITERS], true);
 route('GET', '/quran/reciters/{id}/audio', async ({ p, q }) => {

@@ -84,7 +84,7 @@ await step('s02', 'Create an account', 'إنشاء حساب', async () => {
   await page.waitForURL('**/app/dashboard', { timeout: 20000 });
 }, 2000);
 await step('s03', 'Dashboard: your day at a glance', 'لوحة التحكم: ملخص يومك', null, 3000);
-await step('s04', 'All 114 surahs from the full Tanzil text', 'القرآن كاملاً: ١١٤ سورة', async () => { await nav('Read and listen'); }, 3000);
+await step('s04', 'All 114 surahs from the full Tanzil text', 'القرآن كاملاً: ١١٤ سورة', async () => { await nav('Surah list and search'); }, 3000);
 await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
   await clickText('a.surah', 'The Opening');
   await page.waitForSelector('.ayah', { timeout: 15000 });
