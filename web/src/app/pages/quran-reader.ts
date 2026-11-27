@@ -121,8 +121,8 @@ import { Spinner } from '../shared/ui';
     .ed-title { font-size: 0.78rem; color: var(--gold); }
     .ed-text { line-height: 1.9; white-space: pre-wrap; margin: 6px 0; }
     .ed-notes { font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
-    .playerbar { position: sticky; bottom: 12px; z-index: 30; display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--gold); border-radius: 14px; padding: 10px 14px; margin: 14px 0; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); }
-    .playerbar audio { flex: 1; min-width: 160px; height: 40px; }
+    .playerbar { position: sticky; bottom: 12px; z-index: 30; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--gold); border-radius: 14px; padding: 10px 14px; margin: 14px 0; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); }
+    .playerbar audio { flex: 1 1 160px; min-width: 0; max-width: 100%; height: 40px; }
     .pb-info { white-space: nowrap; color: var(--gold); }
     .sharebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 0 4px; }
     .sopt { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.9rem; }
