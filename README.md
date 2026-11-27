@@ -85,6 +85,22 @@ After rebuilding the web image, hard-refresh the browser once. The app registers
 Every text, audio and data source with its license is listed in [docs/SOURCES.md](docs/SOURCES.md).
 
 
+## Sending real email (SMTP)
+
+By default the stack sends all email to the Mailhog container (http://localhost:8025), so nothing leaves your machine. To send through a real provider, put the values in `platform/.env`, which is git-ignored. Never put them in a file that is committed.
+
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-address@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_AUTH=true
+SMTP_STARTTLS=true
+NOTIFICATION_FROM=your-address@gmail.com
+```
+
+Then run `docker compose up -d notification-service`. For Gmail, use an app password (needs 2-step verification), not the account password. Many providers require the From address to match the logged-in account. The settings are read by notification-service only. This path has not been tested against a real provider.
+
 ## Adding your own adhan
 
 The web app ships with the adhan recordings listed in [docs/SOURCES.md](docs/SOURCES.md). To offer more through the prayer service, host audio files you have the right to use and list them in a JSON file based on `platform/adhans/adhans.example.json`:
