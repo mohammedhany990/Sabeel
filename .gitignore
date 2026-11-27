@@ -10,3 +10,13 @@ models/
 platform/tools/demo/node_modules/
 platform/tools/demo/demo-out/
 platform/tools/demo/package*.json
+.env.*
+!.env.example
+*-service-account*.json
+firebase*.json
+platform/secrets/
+platform/adhans/adhans.json
+platform/reciters/reciters.json
+*.pem
+*.p12
+*.jks
