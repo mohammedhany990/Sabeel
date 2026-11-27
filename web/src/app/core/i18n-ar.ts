@@ -211,7 +211,6 @@ export const AR: Record<string, string> = {
   "Open dashboard": "افتح لوحة التحكم",
   "Get started": "ابدأ الآن",
   "Your complete companion for a life with the Quran": "رفيقك الكامل لحياة مع القرآن",
-  "Plan your hifz, revise with spaced repetition, check your recitation, keep your prayers and azkar, learn from teachers and grow with a community. One calm, beautiful place.": "خطّط لحفظك، وراجع بالتكرار المتباعد، وافحص تلاوتك، وحافظ على صلواتك وأذكارك، وتعلّم من المعلّمين وانمُ مع مجتمع. كل ذلك في مكان واحد هادئ وجميل.",
   "I already have an account": "لدي حساب بالفعل",
   "Sabeel · built on a twelve-service Spring Boot platform · Angular frontend": "سبيل · مبني على منصة Spring Boot من اثنتي عشرة خدمة · واجهة Angular",
   "Read and listen": "اقرأ واستمع",
