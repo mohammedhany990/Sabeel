@@ -1,8 +1,40 @@
-# Sabeel — Islamic Life Platform (Backend)
+# Sabeel
 
-Microservices backend for Quran reading/listening, memorization planning, smart spaced-repetition revision, prayer times/Qibla/Hijri, daily azkar with streaks, online courses, community challenges/badges/circles, recitation evaluation, and event-driven notifications. Java 17+ bytecode (built and tested with JDK 21), Spring Boot 3.5.16, Spring Cloud 2025.0.3 (Gateway), Apache Kafka 3.8 (KRaft), PostgreSQL 16, MongoDB 7, Redis 7, Docker Compose.
+Sabeel is a self-hosted Islamic daily-life app: Quran reading as mushaf pages with tajweed colors, prayer times with a live countdown and per-prayer adhan settings, azkar, tasbih, memorization with spaced revision, a Hijri calendar and more. It has an Angular web app (English and Arabic, right-to-left) on top of 12 Spring Boot microservices.
 
-## Services
+This is a development release. It is not production-ready; see [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) for what is missing and what was and was not verified.
+
+## Screenshots
+
+The screenshots come from the browser run in `web/e2e`, which uses a mock gateway. Texts under "Meaning" and "Tafsir" in the dashboard shot are placeholder strings from that mock, not real tafsir. The mushaf text is fetched live from the Quran Foundation API.
+
+| | |
+|---|---|
+| ![Dashboard with the ayah of the day](docs/screenshots/dashboard-ayah.png) | ![Mushaf pages with tajweed colors](docs/screenshots/mushaf-pages.png) |
+| Dashboard: ayah of the day with meaning and tafsir below it | Mushaf pages with tajweed colors and the Mushaf pages / Verse view toggle |
+| ![Tajweed rules for one ayah](docs/screenshots/tajweed-rules.png) | ![Verse view with the docked player](docs/screenshots/verse-view-player.png) |
+| Tapping an ayah: tajweed rules that appear in it | Verse view with the docked player (reciter, speed, stop) |
+| ![Prayer times with the next-prayer countdown](docs/screenshots/prayer-countdown.png) | ![Per-prayer adhan settings](docs/screenshots/prayer-settings.png) |
+| Next-prayer countdown (hours, minutes, seconds) and adhan controls | Per-prayer settings: muezzin, adhan, reminder, lead time, volume |
+| ![Names of Allah with meaning](docs/screenshots/asma-ul-husna.png) | ![Tasbih counter](docs/screenshots/tasbih.png) |
+| Asma ul-Husna: tap a name for its meaning | Tasbih counter with auto-advance |
+| ![Hijri calendar and fasting](docs/screenshots/hijri-calendar.png) | |
+| Hijri calendar with recommended fasts and occasions | |
+
+## Features
+
+- Quran as 604 mushaf pages with tajweed colors (text fetched live from the Quran Foundation API), a per-ayah menu (play, tafsir, translation, tajweed rules, share as text or image), and a verse-by-verse view reachable with a toggle that keeps your position.
+- Docked audio player with play and pause, stop, progress, speed and a reciter selector (reciters stream from third-party hosts).
+- Ayah of the day with meaning and tafsir (QuranEnc editions), search across the Quran text and the bundled editions, bookmarks, last-read position, khatma plan.
+- Prayer times and Qibla, a next-prayer countdown that rolls over to the next Fajr, adhan with per-prayer settings (muezzin, on or off, reminder, lead time, volume), prayer tracker with missed-prayer counters, qiyam and witr.
+- Azkar with streaks, tasbih counters, masnoon duas including istikhara, the 99 names of Allah, Hijri calendar with fasting hints and a fasting tracker, an approximate zakat calculator, prophet stories with a short quiz.
+- Memorization plans with spaced-repetition revision, courses, community challenges and circles.
+- English and Arabic with right-to-left layout, dark and light theme, installable PWA.
+- Not done: a Jumu'ah-specific adhan setting; the recitation check was removed from the web app (the recitation-service backend remains).
+
+## Architecture
+
+The browser talks to one API gateway. Each service owns its database. Services publish events through a transactional outbox to Kafka, and other services consume them (for example completed memorization tasks feed the revision engine, and prayer and azkar reminders feed notifications).
 
 | Service | Port | Responsibility | Database |
 |---|---|---|---|
@@ -19,7 +51,9 @@ Microservices backend for Quran reading/listening, memorization planning, smart 
 | community-service | 8090 | Event-driven badges, time-windowed challenges, invite-code memorization circles | sabeel_community |
 | recitation-service | 8091 | Async recitation evaluation (pluggable ASR engine, Arabic normalization, word-level alignment) | sabeel_recitation |
 
-## Quick start
+Supporting containers in the Compose stack: PostgreSQL, MongoDB, Redis, Kafka, Mailhog, Kafka UI, Prometheus and Grafana. More detail: [docs/TECHNICAL-ARCHITECTURE.md](docs/TECHNICAL-ARCHITECTURE.md).
+
+## How to run
 
 ```bash
 git clone <your repository url> sabeel && cd sabeel
@@ -29,17 +63,31 @@ docker compose up --build
 ./scripts/demo.sh
 ```
 
-The Compose stack starts PostgreSQL, MongoDB, Redis, Kafka, Mailhog, Kafka UI, Prometheus, Grafana, the 12 backend services and the Angular web app. Every service has its own multi-stage `Dockerfile` (Maven build, then a JRE 21 image); the web app builds with Node and is served by nginx. The web app is at `http://localhost:4200` and talks to the gateway at `http://localhost:8080/api/v1` (edit `web/public/config.js` to change that).
+The web app is at `http://localhost:4200` and talks to the gateway at `http://localhost:8080/api/v1` (edit `web/public/config.js` to change that). Every service has its own multi-stage `Dockerfile`; the web app builds with Node and is served by nginx. See [docs/LOCAL-RUN.md](docs/LOCAL-RUN.md) for prerequisites, URLs, stopping and troubleshooting.
 
-See `docs/LOCAL-RUN.md` for prerequisites, URLs, stopping and troubleshooting.
+After rebuilding the web image, hard-refresh the browser once. The app registers a service worker, and an older cached build can otherwise keep showing.
 
-## Features in the web app
+## Tech stack
 
-Quran reader with per-ayah tafsir and translation panels, a sticky audio player, teaching reciters (Husary and Minshawi, streamed per ayah), share ayah as text or image, search across the Quran text and each bundled edition, ayah of the day, bookmarks and last-read position, khatma plan with a daily page target, a page-by-page tajweed mushaf view (text fetched live from the Quran Foundation API), memorization plans with spaced revision and an optional revision reminder, prayer times with a next-prayer countdown, adhan (Nasr al-Din Tobar) and a 15-minute prayer reminder, a prayer tracker with missed-prayer counters and qiyam and witr, azkar with streaks, tasbih counters, masnoon duas, the names of Allah, a Hijri calendar with fasting hints and a fasting tracker, an approximate zakat calculator, prophet stories with a short quiz, courses, community challenges and circles, English and Arabic with right-to-left layout, a dark and light theme, and an installable offline-capable PWA. The recitation check was removed from the web app (the recitation-service backend remains). The browser checks in `.github/workflows/browser-e2e.yml` exercise the main flows of the earlier features on the Compose stack; the newer pages are covered by the mock-gateway browser run in `web/e2e`.
+- Backend: Java 17+ bytecode (built and tested with JDK 21), Spring Boot 3.5.16, Spring Cloud 2025.0.3 (Gateway), Apache Kafka 3.8 (KRaft), PostgreSQL 16, MongoDB 7, Redis 7.
+- Web: Angular 22, TypeScript 6, Vitest, PWA service worker, served by nginx.
+- Ops: Docker Compose, Prometheus, Grafana, GitHub Actions workflows in `.github/workflows`.
+
+## Tests
+
+- Web unit tests: 56 passing on commit a4f0656 (`npx ng test --watch=false` in `web`).
+- Web browser run against the mock gateway (`web/e2e/run.mjs`): 71 of 71 checks passed on a4f0656.
+- GitHub Actions (integration-smoke, browser-e2e) were green on 8dffe59. Runs on later commits could not start because GitHub assigned no runner, so they are not verified in CI.
+- Backend unit tests were green across all 12 services before the latest changes and were not re-run for this README.
+
+## Sources and licenses
+
+Every text, audio and data source with its license is listed in [docs/SOURCES.md](docs/SOURCES.md).
+
 
 ## Adding your own adhan
 
-No adhan audio is bundled. To offer an adhan in the prayer page, host the audio files you have the right to use and list them in a JSON file based on `platform/adhans/adhans.example.json`:
+The web app ships with the adhan recordings listed in [docs/SOURCES.md](docs/SOURCES.md). To offer more through the prayer service, host audio files you have the right to use and list them in a JSON file based on `platform/adhans/adhans.example.json`:
 
 1. Copy the example to `platform/adhans/adhans.json` and replace the entries. Each entry has `id`, `name`, `nameAr` and a `url` that the browser can play.
 2. Set `PRAYER_ADHAN_FILE=/app/adhans/adhans.json` in `platform/.env`. Compose mounts `platform/adhans` into the prayer service read-only.
