@@ -103,7 +103,7 @@ import { Spinner } from '../shared/ui';
     .hero { text-align: center; margin: 14px 0 18px; }
     .title { font-size: 3.4rem; color: var(--gold); line-height: 1.6; }
     .bar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
-    .hidden { display: none; }
+    .hidden, .playerbar.hidden { display: none; }
     .bismillah { text-align: center; font-size: 2rem; color: var(--gold); margin: 18px 0; }
     .text { padding: 8px 26px; }
     .ayah { padding: 18px 0; border-bottom: 1px solid var(--line-soft); }
@@ -122,6 +122,7 @@ import { Spinner } from '../shared/ui';
     .ed-text { line-height: 1.9; white-space: pre-wrap; margin: 6px 0; }
     .ed-notes { font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
     .playerbar { position: sticky; bottom: 12px; z-index: 30; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--gold); border-radius: 14px; padding: 10px 14px; margin: 14px 0; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); }
+    .playerbar.hidden { display: none; }
     .playerbar audio { flex: 1 1 160px; min-width: 0; max-width: 100%; height: 40px; }
     .pb-info { white-space: nowrap; color: var(--gold); }
     .sharebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 0 4px; }
