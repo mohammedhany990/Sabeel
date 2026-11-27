@@ -111,7 +111,7 @@ await step('n04', 'Tap Tajweed rules to see each rule in the ayah, with a short 
   await sleep(3500);
 }, 3000);
 await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
-  await clickText('.sheet a', 'Verse view');
+  await page.evaluate(() => document.querySelector('[data-testid=view-verse]').click());
   await page.waitForSelector('.ayah', { timeout: 15000 });
 }, 3000);
 await step('s06', 'Bookmark an ayah, or mark where you stopped', 'علامة على آية أو موضع التوقف', async () => {
