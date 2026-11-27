@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { describe, expect, it } from 'vitest';
-import { addDays, errorMessage, formatTime, parseMistakes, toArabicDigits } from './util';
+import { addDays, errorMessage, formatTime, toArabicDigits } from './util';
 
 describe('util', () => {
   it('reads RFC 7807 detail from backend errors', () => {
@@ -10,12 +10,6 @@ describe('util', () => {
 
   it('explains an unreachable gateway', () => {
     expect(errorMessage(new HttpErrorResponse({ status: 0 }))).toContain('Cannot reach');
-  });
-
-  it('parses mistakes json and tolerates garbage', () => {
-    expect(parseMistakes('[{"type":"OMISSION","expected":"a","actual":"","position":2}]')[0].type).toBe('OMISSION');
-    expect(parseMistakes('not json')).toEqual([]);
-    expect(parseMistakes(null)).toEqual([]);
   });
 
   it('adds days as an ISO date', () => {

@@ -44,29 +44,13 @@ export function formatCountdown(ms: number): string {
   selector: 'app-prayer-extras',
   imports: [T, FormsModule],
   template: `
-    <div class="grid grid-2" style="margin-top:18px">
+    <div style="margin-top:18px">
       <div class="card gilded" id="countdown">
         <div class="card-title"><h3>{{ 'Next prayer' | t }}</h3></div>
         @if (isToday() && next(); as n) {
           <div class="big">{{ name(n.name) }}</div>
           <div class="count" data-testid="countdown">{{ remaining() }}</div>
         } @else { <div class="muted">{{ 'No more prayers today.' | t }}</div> }
-      </div>
-
-      <div class="card" id="adhan">
-        <div class="card-title"><h3>{{ 'Adhan' | t }}</h3></div>
-        @if (adhans().length) {
-          <label class="field">{{ 'Adhan audio' | t }}
-            <select [ngModel]="adhanId()" (ngModelChange)="pickAdhan($event)" name="adhan">
-              <option value="">{{ 'None' | t }}</option>
-              @for (a of adhans(); track a.id) { <option [value]="a.id">{{ i18n.isRtl() && a.nameAr ? a.nameAr : a.name }}</option> }
-            </select>
-          </label>
-          <div class="row">
-            <button class="btn btn-sm" type="button" (click)="preview()" [disabled]="!adhanId()">{{ 'Preview' | t }}</button>
-            <label class="row"><input type="checkbox" [ngModel]="autoplay()" (ngModelChange)="setAutoplay($event)" name="autoplay"> {{ 'Play the adhan at prayer time while this page is open' | t }}</label>
-          </div>
-        } @else { <p class="muted">{{ 'No adhan audio is configured. You can add your own files, see the README.' | t }}</p> }
       </div>
     </div>
 

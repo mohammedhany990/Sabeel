@@ -3,7 +3,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { Api } from '../core/api';
+import { ShareAyah, ShareOptions } from '../core/share-ayah';
 import { Auth } from '../core/auth';
+import { DailyAyah, pickDailyAyah } from '../core/daily-ayah';
 import { AzkarStreak, Badge, PrayerTimes, ReadingState, RevisionStats, Surah, Task } from '../core/models';
 import { formatTime } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
@@ -25,6 +27,21 @@ const ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
         <div class="card gilded stat"><div class="num">{{ stats()?.dueNow ?? 0 }}</div><div class="lbl">{{ 'Revisions due now' | t }}</div></div>
         <div class="card gilded stat"><div class="num">{{ bestStreak() }}</div><div class="lbl">{{ 'Best azkar streak (days)' | t }}</div></div>
         <div class="card gilded stat"><div class="num">{{ badges().length }}</div><div class="lbl">{{ 'Badges earned' | t }}</div></div>
+      </div>
+
+      <div class="card gilded" style="margin-top:18px">
+        <div class="card-title"><h3>{{ 'Ayah of the day' | t }}</h3><a [routerLink]="['/app/quran', daily().surahId]" [queryParams]="{ ayah: daily().ayahNumber }">{{ 'Open in the mushaf' | t }}</a></div>
+        <p class="daily-ayah">{{ ayahText() }}</p>
+        <p class="muted">{{ surahName(daily().surahId) }} · {{ 'ayah {n}' | t: { n: daily().ayahNumber } }}</p>
+        <div class="tafsir-box">
+          <div class="tafsir-head"><strong>{{ 'Tafsir' | t }}</strong><button class="btn btn-sm btn-ghost" (click)="showTafsir.set(!showTafsir())">{{ (showTafsir() ? 'Hide' : 'Show') | t }}</button></div>
+          @if (showTafsir()) { <p class="tafsir-text">{{ tafsirText() }}</p> }
+        </div>
+        <div class="tafsir-box" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-sm" (click)="shareAyah('text')">{{ 'Share as text' | t }}</button>
+          <button class="btn btn-sm btn-gold" (click)="shareAyah('image')">{{ 'Share as image' | t }}</button>
+          <label class="sopt"><input type="checkbox" [checked]="shareOpts.tafsir" (change)="shareOpts.tafsir = !shareOpts.tafsir"> {{ 'Include tafsir' | t }}</label>
+        </div>
       </div>
 
       <div class="grid grid-2" style="margin-top:18px">
@@ -73,7 +90,13 @@ const ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
         </div>
       </div>
     }
-  `
+  `,
+  styles: [`
+    .daily-ayah { font-size: 1.6rem; line-height: 2.2; color: var(--gold); text-align: center; margin: 8px 0 4px; }
+    .tafsir-head { display: flex; align-items: center; justify-content: space-between; color: var(--gold); margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+    .sopt { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.85rem; }
+    .tafsir-text { margin-top: 8px; line-height: 1.9; }
+  `]
 })
 export class Dashboard implements OnInit {
   private readonly api = inject(Api);
@@ -88,6 +111,26 @@ export class Dashboard implements OnInit {
   protected readonly reading = signal<ReadingState | null>(null);
   protected readonly surahs = signal<Surah[]>([]);
   protected readonly next = signal<{ name: string; nameAr: string | null; time: string } | null>(null);
+  protected readonly daily = signal<DailyAyah>(pickDailyAyah());
+  protected readonly ayahText = signal('');
+  protected readonly showTafsir = signal(true);
+  protected readonly shareOpts: ShareOptions = { tafsir: true };
+  private readonly shareSvc = inject(ShareAyah);
+
+  protected shareAyah(kind: 'text' | 'image'): void {
+    const d = this.daily();
+    const surah = this.surahs().find((x) => x.id === d.surahId);
+    const s: Surah = surah ?? ({ id: d.surahId, nameAr: '', nameEn: 'Surah ' + d.surahId, transliteration: 'Surah ' + d.surahId, ayahCount: 0 } as Surah);
+    const a = { id: 0, surahId: d.surahId, ayahNumber: d.ayahNumber, textUthmani: this.ayahText(), textSimple: '', page: null, juz: null, hizb: null };
+    const tafsir = this.tafsirText();
+    if (kind === 'text') this.shareSvc.shareText(a, s, this.shareOpts, tafsir);
+    else this.shareSvc.shareImage(a, s, this.shareOpts, tafsir);
+  }
+
+  protected tafsirText(): string {
+    const d = this.daily();
+    return this.i18n.isRtl() ? d.tafsirAr : d.tafsirEn;
+  }
 
   protected greeting(): string {
     const h = new Date().getHours();
@@ -134,6 +177,11 @@ export class Dashboard implements OnInit {
       this.prayer.set(v);
       if (v) this.next.set(this.pickNext(v));
       done();
+    });
+    const d = this.daily();
+    this.ayahText.set(d.text);
+    this.api.ayah(d.surahId, d.ayahNumber).pipe(catchError(() => of(null))).subscribe((a) => {
+      if (a?.textUthmani) this.ayahText.set(a.textUthmani);
     });
   }
 

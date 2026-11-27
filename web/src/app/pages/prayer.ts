@@ -2,19 +2,21 @@ import { Hj, I18n, Loc, T } from '../core/i18n';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { catchError, forkJoin, of } from 'rxjs';
+import { Adhan } from '../core/adhan';
+import { PrayerExtras } from './prayer-extras';
+import { PrayerTracker as PrayerLocalTracker } from './prayer-tracker';
 import { Api } from '../core/api';
 import { Hijri, PrayerSettings, PrayerTimes, Qibla } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage, formatTime, todayIso } from '../core/util';
 import { PageHead, Spinner } from '../shared/ui';
-import { PrayerExtras } from './prayer-extras';
 
 const NAMES = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
 
 @Component({
   selector: 'app-prayer',
-  imports: [T, Loc, Hj, FormsModule, PageHead, Spinner, PrayerExtras],
+  imports: [T, Loc, Hj, FormsModule, PageHead, Spinner, PrayerExtras, PrayerLocalTracker],
   template: `
     <app-head [title]="'Prayer and Qibla' | t" [subtitle]="'Calculated locally from your coordinates.' | t" />
     @if (loading()) { <app-spinner /> } @else {
@@ -59,6 +61,32 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
       <app-prayer-extras [times]="times()" [isToday]="date() === today" />
 
       <div class="card" style="margin-top:18px">
+        <div class="card-title"><h3>{{ 'Adhan' | t }}</h3><span class="badge" [class.badge-ok]="adhan.enabled()">{{ (adhan.enabled() ? 'On' : 'Off') | t }}</span></div>
+        <p class="muted">{{ 'Plays the adhan aloud at every prayer time while the app is open, and reminds you with a notification.' | t }}</p>
+        <div class="adhan-row">
+          <label class="field">{{ 'Muezzin' | t }}
+            <select name="mz" [ngModel]="adhan.muezzin()" (ngModelChange)="adhan.setMuezzin($event)">
+              @for (m of adhan.muezzins; track m.id) { <option [value]="m.id">{{ m.name | t }}</option> }
+            </select>
+          </label>
+          <div class="row">
+            <button class="btn" type="button" (click)="adhan.preview()">{{ 'Preview' | t }}</button>
+            @if (adhan.playing()) { <button class="btn btn-ghost" type="button" (click)="adhan.stop()">{{ 'Stop' | t }}</button> }
+            <button class="btn btn-gold" type="button" (click)="toggleAdhan()">{{ (adhan.enabled() ? 'Turn off' : 'Turn on') | t }}</button>
+          </div>
+        </div>
+        <p class="muted small">{{ 'Your choice is saved on this device. Browsers may ask you to tap Preview once before sound can play automatically.' | t }}</p>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-title"><h3>{{ 'Prayer reminder' | t }}</h3><span class="badge" [class.badge-ok]="adhan.reminder()">{{ (adhan.reminder() ? 'On' : 'Off') | t }}</span></div>
+        <p class="muted">{{ 'Notifies you 15 minutes before each prayer with a gentle chime.' | t }}</p>
+        <button class="btn btn-gold" type="button" (click)="adhan.reminder() ? adhan.disableReminder() : adhan.enableReminder()">{{ (adhan.reminder() ? 'Turn off' : 'Turn on') | t }}</button>
+      </div>
+
+      <app-prayer-tracker style="display:block;margin-top:18px"></app-prayer-tracker>
+
+      <div class="card" style="margin-top:18px">
         <div class="card-title"><h3>{{ 'Location and method' | t }}</h3></div>
         <form class="grid grid-4" (ngSubmit)="save()">
           <label class="field">{{ 'Latitude' | t }}<input type="number" step="any" name="lat" [(ngModel)]="form.latitude" required></label>
@@ -92,6 +120,8 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
   `,
   styles: [`
     .item.next { border-color: var(--gold); background: rgba(226, 194, 117, 0.08); }
+    .adhan-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+    .adhan-row .field { min-width: 200px; }
     .time { font: 600 1.35rem var(--font-ui); color: var(--gold); }
     .small { font-size: 0.8rem; }
     .compass { display: grid; justify-items: center; gap: 6px; padding: 10px; }
@@ -117,6 +147,12 @@ export class Prayer implements OnInit {
   private readonly api = inject(Api);
   private readonly toast = inject(Toast);
   private readonly i18n = inject(I18n);
+  protected readonly adhan = inject(Adhan);
+
+  protected toggleAdhan(): void {
+    if (this.adhan.enabled()) this.adhan.disable();
+    else this.adhan.enable();
+  }
   protected readonly loading = signal(true);
   protected readonly times = signal<PrayerTimes | null>(null);
   protected readonly timesError = signal('');

@@ -26,9 +26,9 @@ import { Logo } from '../shared/logo';
       </header>
 
       <section class="hero">
-        <span class="badge">{{ 'Memorize. Revise. Recite. Grow.' | t }}</span>
+        <span class="badge">{{ 'Memorize. Revise. Reflect. Grow.' | t }}</span>
         <h1>{{ 'Your complete companion for a life with the Quran' | t }}</h1>
-        <p class="lead">{{ 'Plan your hifz, revise with spaced repetition, check your recitation, keep your prayers and azkar, learn from teachers and grow with a community. One calm, beautiful place.' | t }}</p>
+        <p class="lead">{{ 'Plan your hifz, revise with spaced repetition, read the ayah of the day with its tafsir, keep your prayers and azkar, learn from teachers and grow with a community. One calm, beautiful place.' | t }}</p>
         <div class="row cta">
           <a class="btn btn-gold" routerLink="/register">{{ 'Get started' | t }}</a>
           <a class="btn" routerLink="/login">{{ 'I already have an account' | t }}</a>
@@ -68,8 +68,8 @@ export class Landing {
     { mark: 'ق', title: 'Read and listen', text: 'All 114 surahs in Uthmani script with ayah-level audio from five reciters, search, bookmarks and resume where you stopped.' },
     { mark: 'ح', title: 'Memorization plans', text: 'Set a target date and get a daily ayah goal, carry-over for missed days and a live progress ring.' },
     { mark: 'م', title: 'Spaced revision', text: 'A 1, 3, 7, 14, 30, 60 day ladder with ease factors keeps what you memorized from slipping away.' },
-    { mark: 'ت', title: 'Recitation check', text: 'Submit audio and get a word-level comparison with missed, added and substituted words.' },
-    { mark: 'ص', title: 'Prayer and Qibla', text: 'Calculated prayer times, Qibla bearing with a compass and the Hijri date for your location.' },
+    { mark: 'ت', title: 'Ayah of the day with tafsir', text: 'A new ayah every day with a short, clear tafsir in English and Arabic, right on your dashboard.' },
+    { mark: 'ص', title: 'Prayer, Qibla and adhan', text: 'Calculated prayer times, Qibla bearing with a compass, the Hijri date, and the adhan played aloud at prayer time.' },
     { mark: 'ذ', title: 'Daily azkar', text: 'Morning, evening, after-prayer and sleep azkar with counters and streaks.' },
     { mark: 'د', title: 'Courses', text: 'Learn tafsir, hadith, fiqh, seerah and tajweed with progress tracking and ratings.' },
     { mark: 'ج', title: 'Community', text: 'Earn badges, join challenges and study in private circles with an invite code.' }

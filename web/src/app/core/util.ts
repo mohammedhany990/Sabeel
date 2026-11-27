@@ -20,15 +20,6 @@ export function addDays(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function parseMistakes(json: string | null): { type: string; expected: string; actual: string; position: number }[] {
-  if (!json) return [];
-  try {
-    const v = JSON.parse(json);
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
 
 export function formatTime(iso: string, tz?: string): string {
   try {

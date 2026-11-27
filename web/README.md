@@ -8,6 +8,10 @@ Stack: Angular 22 (standalone components, signals, lazy routes, functional HTTP 
 
 ![Landing](docs/screenshots/01-landing.png)
 ![Reader](docs/screenshots/05-reader.png)
+![Mushaf tajweed](docs/screenshots/23-mushaf.png)
+![Tasbih](docs/screenshots/17-tasbih.png)
+![Hijri calendar](docs/screenshots/20-hijri.png)
+![Zakat](docs/screenshots/21-zakat.png)
 ![Arabic landing](docs/screenshots/01-landing-ar.png)
 ![Arabic dashboard](docs/screenshots/04-dashboard-ar.png)
 ![Arabic reader](docs/screenshots/06-reader-ar.png)
@@ -18,15 +22,21 @@ Stack: Angular 22 (standalone components, signals, lazy routes, functional HTTP 
 |---|---|---|
 | Auth | Landing, register (auto sign-in), login, forgot and reset password, email verification link page, silent token refresh on 401, route guards, sign out | `/auth/register, login, refresh, logout, forgot-password, reset-password, verify-email, me` |
 | Profile and preferences | Name, image, country, timezone, preferred reciter; push and email toggles, prayer and azkar reminder toggles, reminder times; FCM web token registration | `/users/me`, `/users/me/preferences`, `/users/me/device-tokens` |
-| Quran | 114-surah index with filter, full-text search with paging, reader with Uthmani text, reciter picker, per-ayah audio with auto-advance, full-surah audio, bookmarks, "stopped here" reading state, resume from dashboard, reading history | `/quran/surahs, surahs/{id}, search, reciters, reciters/{id}/audio, reciters/{id}/surahs/{s}/audio, bookmarks, reading-state, reading-history` |
+| Quran | 114-surah index with filter, full-text search with paging, reader with Uthmani text, reciter picker, per-ayah audio with auto-advance, full-surah audio, bookmarks, "stopped here" reading state, resume from dashboard, reading history | `/quran/surahs, surahs/{id}, ayahs/{surah}/{number}, search, reciters, reciters/{id}/audio, reciters/{id}/surahs/{s}/audio, bookmarks, reading-state, reading-history` |
+| Ayah of the day | A daily ayah card on the dashboard with its tafsir inline in English and Arabic, expandable in place, with a link into the mushaf. The ayah text is fetched live from `/quran/ayahs/{surah}/{number}`; a bundled fallback and the tafsir summaries ship with the app because the backend has no tafsir endpoint | `/quran/ayahs/{surah}/{number}` |
 | Memorization | Create plan, pause, resume, cancel, progress ring, today's tasks, complete a task with accuracy | `/memorization/plans, plans/me, plans/{id}, plans/{id}/progress, tasks/today, tasks/{id}/complete` |
 | Revision | Stats, due items, submit review (accuracy and mistakes), upcoming window | `/revision/due, upcoming, stats, items/{id}/review` |
-| Recitation | Request an evaluation from a public audio URL or a transcript, live polling until done, accuracy ring, mistake list, history; every result shows the engine mode label | `/recitation/evaluations` (POST, list, get) |
 | Prayer | Daily times, month table, Qibla compass, Hijri date, location and method settings, "use my location" | `/prayer/times, times/month, qibla, hijri, settings` |
+| Adhan | Plays the bundled adhan recording aloud at each prayer time while the app is open, with an on/off toggle and a preview. The bundled muezzin is Nasr al-Din Tobar (with a separate Fajr recording). The choice persists on the device. To offer more muezzins, add your own audio files under `public/assets/adhan/` and an entry in `src/app/core/adhan.ts` | uses the saved `/prayer/times` schedule |
 | Azkar | Categories, per-item counters, completion, streaks, day boundaries from the browser timezone via `?tz=` | `/azkar/today, streaks, items/{id}/progress` |
 | Courses | Catalog with category filter and search, course page, enroll, lesson player, progress reporting, rating; teacher tools to create a draft, add lessons and publish | `/learning/courses, courses/{slug}, enrollments/{id}, my-courses, progress, courses/{id}/ratings, lessons, publish` |
 | Community | Badges (earned and locked), challenges (join, progress), circles (create, join by code, members), admin challenge creation | `/community/challenges, challenges/{id}/join, challenges/me, circles, circles/join, circles/me, circles/{id}/members, badges, badges/me` |
-| Notifications | Bell with unread count, list, mark as read | `/notifications/me`, `/notifications/me/{id}/read` |
+| Notifications | Bell with unread count that opens the notifications page and, pressed again, closes it and returns to the page you were on; list, mark as read | `/notifications/me`, `/notifications/me/{id}/read` |
+| Adhan and prayer reminder | Adhan at each prayer time (Nasr al-Din Tobar, with a separate Fajr recording), preview; separate 15-minute-before-prayer reminder with a generated chime | uses the saved `/prayer/times` schedule |
+| Worship tools | Tasbih counter with presets and daily totals; masnoon duas by situation (Hisn al-Muslim); Asma ul-Husna daily card and full list; Hijri calendar with occasions and Monday/Thursday and white-day fasting hints plus a fasting tracker; prayer tracking with qada counters and a qiyam/witr card on the Prayer page; zakat calculator with editable nisab and rates (labeled approximate) | all stored on the device |
+| Share ayah | Every ayah in the reader and the ayah-of-the-day card can be shared as text (Web Share API with clipboard fallback) or as a rendered image, and on the dashboard card with optional tafsir | uses the loaded ayah and tafsir |
+| Mushaf (tajweed) | Page-by-page Madani-style view (604 pages) with colored tajweed text, page/juz/surah headers, previous/next and jump controls. Text is fetched at runtime from the Quran Foundation API (`api.quran.com`, field `text_uthmani_tajweed`) and cached by the service worker for offline reading | `api.quran.com/api/v4/verses/by_page` |
+| Offline (PWA) | Installable progressive web app: service worker precaches the app shell, Quran text and icons, and runtime-caches Quran and azkar API data plus CDN audio and fonts | Angular service worker (`ngsw-config.json`) |
 
 ## Languages and RTL
 
@@ -77,25 +87,46 @@ The output is in `dist/sabeel-web/browser`. A `Dockerfile` and `nginx.conf` (sin
 
 What was actually done:
 
-- `ng build --configuration production` succeeds with no errors or warnings. Initial bundle is about 308 kB raw (about 84 kB transferred), every page is a lazy chunk.
-- `ng test`: 24 unit tests pass (Vitest). They cover the language service (translation, parameters, fallback, Hijri, `dir` and persistence), the error mapping, the auth service, the interceptor (bearer header, no header on login, one refresh then retry on 401) and the API URL, query and body shapes.
-- End-to-end: `npm run e2e` drives the production build in headless Chrome against the contract mock and runs 29 checks across register, reading, bookmarks, memorization to revision to badges, prayer, azkar, courses (student and teacher), community, recitation, notifications, settings, token refresh (20 second token lifetime) and sign out. Result: 29 of 29 passed. Screenshots of every page were inspected, including a 390 px wide mobile layout.
-- `npm run e2e:ar` runs the same build in Arabic: it checks that the language switch flips `dir`, persists across reloads, that registration works, that every page opens, that no untranslated English words remain on 13 pages (apart from server-supplied course content and the user's own name), that the sidebar sits on the right, and that the mobile layout does not overflow. Result: 23 of 23 passed. The screenshots were inspected for RTL layout. It also checks that every API call carries `Accept-Language`, that registration in Arabic posts `language: ar`, that switching language while signed in PUTs `preferredLanguage` to `/users/me`, and that azkar text and references follow the language (29 checks).
+- `ng build --configuration production` succeeds with no errors or warnings (service worker included). Every page is a lazy chunk.
+- `ng test`: 39 unit tests pass (Vitest). They cover the language service (translation, parameters, fallback, Hijri, `dir` and persistence), the error mapping, the auth service, the interceptor (bearer header, no header on login, one refresh then retry on 401), the API URL, query and body shapes, and the bundled religious content (99 names count and completeness, tasbih presets, dua references, Hijri conversion round-trip and month lengths, upcoming occasions).
+- End-to-end: `npm run e2e` drives the production build in headless Chrome against the contract mock and runs 42 checks across register, reading, bookmarks, share-ayah panel, memorization to revision to badges, prayer (times, adhan, tracker, qada, qiyam), azkar, tasbih, duas, Asma ul-Husna, Hijri calendar and fasting tracker, zakat, prophet stories quiz, tajweed mushaf page, courses, community, notifications, settings, token refresh and sign out. Result: 42 of 42 passed. The tajweed check fetched page 1 live from api.quran.com during the run. Screenshots of every page were inspected, including a 390 px wide mobile layout.
+- `npm run e2e:ar` runs the same build in Arabic: it checks that the language switch flips `dir`, persists across reloads, that registration works, that every page opens, that no untranslated English words remain on 18 pages (apart from server-supplied course content, proper nouns and the user's own name), that the sidebar sits on the right, and that the mobile layout does not overflow. Result: 36 of 36 passed. The screenshots were inspected for RTL layout. It also checks that every API call carries `Accept-Language`, that registration in Arabic posts `language: ar`, that switching language while signed in PUTs `preferredLanguage` to `/users/me`, and that azkar text and references follow the language (29 checks).
 - Request and response shapes were taken from the backend source (controllers and DTO records in the delivered services), not guessed.
 
 What was not done:
 
 - The frontend has not been run against the real Sabeel services. No Docker daemon or database was available, so the end-to-end run used the mock above. Expect small mismatches to surface on the first real run (for example exact error bodies, how `GET /quran/reading-state` answers before a first read, or the ZonedDateTime format of prayer times). The calls are written to degrade to an empty state rather than crash.
 - Audio playback was exercised only up to requesting the audio URL. The audio files come from third-party CDNs (everyayah.com, mp3quran.net).
+- The mushaf (tajweed) view was verified rendering live data from api.quran.com. Pages need one online visit each before they are available offline through the service worker cache.
+- The Husary and Al-Minshawi muallim reciters stream per-ayah audio from everyayah.com, a public CDN. Verify the licensing for redistribution before shipping them in a product; nothing of theirs is bundled in this zip.
 - Not tested: real browser push, FCM, email links, and the Docker image.
 
 ## Known limitations
 
-- Mapping a bookmark or history ayah id to its surah assumes the full 6,236-ayah seed (ids are global). With the 27-ayah sample seed, links from the bookmarks page can open the wrong surah. The backend now loads the full text by default.
+- Mapping a bookmark or history ayah id to its surah assumes the full 6,236-ayah seed (ids are global). With the 27-ayah sample seed, links from the bookmarks page can open the wrong surah. Load the full text with `quran-service/db/seed-full-quran.sh`.
 - Draft courses are not listed in the public catalog. After creating a draft, the app opens it directly by slug; whether the backend returns drafts by slug to their owner depends on the learning service.
-- The recitation check is automated speech-to-text plus word alignment. It is not a tajweed assessment, and the UI says so. Audio must be a public http or https URL because the backend downloads it. Browser microphone recording is not implemented.
 - Tokens are kept in `localStorage`. For a production deployment, serve over HTTPS, set a strict content security policy, and consider moving refresh tokens to httpOnly cookies on the server side.
 - Prayer times and Hijri dates come from the backend's calculations, which differ from official timetables by a few minutes or a day.
+- The adhan plays only while the app is open in a tab; a web app cannot fire audio from the background. Browsers may require one tap on Preview before they allow automatic sound.
+- The daily tafsir summaries are short mainstream explanations written for this project, not a quoted tafsir source, and cover the 30-ayah rotation only.
+- The recitation-check feature was removed at the owner's request. The typed API client still covers `/recitation/evaluations`.
+
+## Religious content sources
+
+- Quran text and reading data: the project backend (Tanzil-verified Uthmani text lineage; Tanzil Quran text is CC BY 3.0, https://tanzil.net/docs/text_license).
+- No English translation is bundled in the web app. Translations and tafsir come from the QuranEnc editions served by the backend, see the Sources page.
+- Colored tajweed text: Quran Foundation API (`text_uthmani_tajweed`), fetched at runtime under their developer terms (https://api-docs.quran.com/legal/developer-terms/); colors use a conventional tajweed palette, not an official one.
+- Masnoon duas: Hisn al-Muslim (Fortress of the Muslim), short widely-circulated supplications with hadith references.
+- Asma ul-Husna: the commonly narrated list of 99 names.
+- Hijri dates: arithmetic Umm al-Qura approximation computed in the app; verify against local moon-sighting.
+- Zakat calculator: 2.5% rate and 85 g gold nisab by default, both editable; approximate guidance, not a fatwa.
+- Prophet stories: short summaries from the Quran and well-known seerah, written for this project.
+
+## Adhan audio credits
+
+No third-party adhan recordings are bundled. The Madinah, Al-Aqsa and Alafasy recordings that were considered use a license that does not allow modified copies, so they are left out; add your own files if you hold the rights.
+
+`tobar.mp3` and `tobar-fajr.mp3` (Sheikh Nasr al-Din Tobar, general and Fajr adhan) were supplied directly by the project owner for this project. They were trimmed, denoised and loudness-normalized, and are not from a separately licensed source.
 
 ## Project layout
 

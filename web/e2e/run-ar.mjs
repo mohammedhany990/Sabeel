@@ -18,7 +18,7 @@ await sleep(1200);
 
 const results = [];
 const check = (name, ok, extra = '') => { results.push({ name, ok: !!ok, extra }); console.log(ok ? 'PASS' : 'FAIL', name, extra); };
-const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] });
+const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--mute-audio', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1440, height: 900 });
 const errors = [];
@@ -29,7 +29,7 @@ const setVal = async (sel, v) => { await page.$eval(sel, (el, v) => { el.value =
 const attrs = () => page.evaluate(() => ({ dir: document.documentElement.dir, lang: document.documentElement.lang, stored: localStorage.getItem('sabeel.lang') }));
 const latin = async () => {
   const t = await text();
-  const allowed = new Set(['Sabeel', 'Angular', 'Spring', 'Boot', 'FCM', 'IANA', 'http', 'https', 'MP', 'Al', 'com', 'everyayah', 'Alafasy', 'kbps', 'mp', 'Africa', 'Cairo', 'Amiri', 'Hifz', 'teacherar', 'Teacher', 'Hany', 'example', 'Passw', 'ayah', 'EN', 'English', 'Welcome', 'WELCOME', 'Your', 'account', 'ready', 'Create', 'memorization', 'plan', 'begin', 'Tajweed', 'TAJWEED', 'Foundations', 'Makharij', 'sifat', 'and', 'the', 'core', 'rules', 'with', 'practice', 'drills', 'for', 'every', 'lesson']);
+  const allowed = new Set(['Sabeel', 'Angular', 'Spring', 'Boot', 'FCM', 'IANA', 'http', 'https', 'MP', 'Al', 'com', 'everyayah', 'Alafasy', 'kbps', 'mp', 'Bukhari', 'Muslim', 'Tirmidhi', 'Dawud', 'Zukhruf', 'Az', 'Abu', 'At', 'api', 'quran', 'Africa', 'Cairo', 'Amiri', 'Hifz', 'teacherar', 'Teacher', 'Hany', 'example', 'Passw', 'ayah', 'EN', 'English', 'Welcome', 'WELCOME', 'Your', 'account', 'ready', 'Create', 'memorization', 'plan', 'begin', 'Tajweed', 'TAJWEED', 'Foundations', 'Makharij', 'sifat', 'and', 'the', 'core', 'rules', 'with', 'practice', 'drills', 'for', 'every', 'lesson']);
   return [...new Set((t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !allowed.has(w)))];
 };
 const visit = async (p, name) => {
@@ -64,6 +64,7 @@ await setVal('input[name=name]', 'Teacher Hany'); await setVal('input[name=email
 await shot('03-register-ar');
 await page.click('button[type=submit]'); await sleep(1800);
 check('register in Arabic opens dashboard', page.url().endsWith('/app/dashboard'), page.url());
+check('Arabic dashboard shows ayah of the day and tafsir', (await text()).includes('آية اليوم') && (await text()).includes('التفسير'));
 
 await page.goto('http://localhost:4300/app/quran/1', { waitUntil: 'networkidle0' }); await sleep(600);
 await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find((e) => /علامة|Bookmark/i.test(e.innerText + e.title)); if (b) b.click(); });
@@ -81,7 +82,7 @@ await page.click('app-lang button'); await sleep(900);
 await page.goto('http://localhost:4300/app/azkar', { waitUntil: 'networkidle0' }); await sleep(700);
 const azAr = await text();
 check('Arabic azkar shows the Arabic reference from the backend field', azAr.includes('صحيح مسلم') && !azAr.includes('Glory be to Allah'));
-for (const [p, n] of [['/app/dashboard', '04-dashboard-ar'], ['/app/quran', '05-quran-ar'], ['/app/quran/1', '06-reader-ar'], ['/app/library', '07-library-ar'], ['/app/memorization', '08-memorization-ar'], ['/app/revision', '09-revision-ar'], ['/app/recitation', '10-recitation-ar'], ['/app/prayer', '11-prayer-ar'], ['/app/azkar', '12-azkar-ar'], ['/app/courses', '13-courses-ar'], ['/app/community', '14-community-ar'], ['/app/notifications', '15-notifications-ar'], ['/app/settings', '16-settings-ar']]) await visit(p, n);
+for (const [p, n] of [['/app/dashboard', '04-dashboard-ar'], ['/app/quran', '05-quran-ar'], ['/app/quran/1', '06-reader-ar'], ['/app/library', '07-library-ar'], ['/app/memorization', '08-memorization-ar'], ['/app/revision', '09-revision-ar'], ['/app/prayer', '11-prayer-ar'], ['/app/azkar', '12-azkar-ar'], ['/app/tasbih', '21-tasbih-ar'], ['/app/duas', '22-duas-ar'], ['/app/asma', '23-asma-ar'], ['/app/hijri', '24-hijri-ar'], ['/app/zakat', '25-zakat-ar'], ['/app/stories', '26-stories-ar'], ['/app/mushaf', '27-mushaf-ar'], ['/app/courses', '13-courses-ar'], ['/app/community', '14-community-ar'], ['/app/notifications', '15-notifications-ar'], ['/app/settings', '16-settings-ar']]) await visit(p, n);
 
 const rtl = await page.evaluate(() => {
   const side = document.querySelector('.side')?.getBoundingClientRect();

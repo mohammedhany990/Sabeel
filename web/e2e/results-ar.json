@@ -1,0 +1,185 @@
+{
+ "results": [
+  {
+   "name": "Arabic selected: html dir=rtl lang=ar",
+   "ok": true,
+   "extra": "{\"dir\":\"rtl\",\"lang\":\"ar\",\"stored\":\"ar\"}"
+  },
+  {
+   "name": "landing shows Arabic hero",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "switch to English: dir=ltr and persisted",
+   "ok": true,
+   "extra": "{\"dir\":\"ltr\",\"lang\":\"en\",\"stored\":\"en\"}"
+  },
+  {
+   "name": "English hero shown after switch",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "English choice survives reload",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "Arabic choice survives reload",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "02-login-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "register in Arabic opens dashboard",
+   "ok": true,
+   "extra": "http://localhost:4300/app/dashboard"
+  },
+  {
+   "name": "Arabic dashboard shows ayah of the day and tafsir",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "English azkar shows the English translation",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "Arabic azkar shows the Arabic reference from the backend field",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "04-dashboard-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "05-quran-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "06-reader-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "07-library-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "08-memorization-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "09-revision-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "11-prayer-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "12-azkar-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "21-tasbih-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "22-duas-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "23-asma-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "24-hijri-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "25-zakat-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "26-stories-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "27-mushaf-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "13-courses-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "14-community-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "15-notifications-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "16-settings-ar: no untranslated English words",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "sidebar sits on the right in RTL",
+   "ok": true,
+   "extra": "{\"sideLeft\":1170,\"width\":1440}"
+  },
+  {
+   "name": "no horizontal overflow on mobile in Arabic",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "every API call carries Accept-Language",
+   "ok": true,
+   "extra": "0 without"
+  },
+  {
+   "name": "Arabic calls send ar and English calls send en",
+   "ok": true,
+   "extra": ""
+  },
+  {
+   "name": "register sends language ar",
+   "ok": true,
+   "extra": "{\"name\":\"Teacher Hany\",\"email\":\"teacherar@example.com\",\"language\":\"ar\"}"
+  },
+  {
+   "name": "switching language while logged in syncs preferredLanguage",
+   "ok": true,
+   "extra": "[\"en\",\"ar\"]"
+  }
+ ],
+ "errors": []
+}

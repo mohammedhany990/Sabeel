@@ -9,10 +9,8 @@ export type PreferencesRequest = Partial<PreferencesResponse>;
 
 export interface Surah { id: number; nameAr: string; nameEn: string; transliteration: string; revelationType: string; revelationTypeAr?: string | null; ayahCount: number; startPage: number | null; startJuz: number | null; }
 export interface Ayah { id: number; surahId: number; ayahNumber: number; textUthmani: string; textSimple: string; page: number | null; juz: number | null; hizb: number | null; }
-export interface Reciter { id: number; nameAr: string; nameEn: string; country: string; countryAr?: string | null; style: string; styleAr?: string | null; hasAyahAudio?: boolean; hasSurahAudio?: boolean; hasTimings?: boolean; }
+export interface Reciter { id: number; nameAr: string; nameEn: string; country: string; countryAr?: string | null; style: string; styleAr?: string | null; }
 export interface AyahAudio { reciterId: number; surahId: number; ayahNumber: number; audioUrl: string; }
-export interface AyahTiming { ayah: number; start: number; end: number; }
-export interface SurahTimings { reciterId: number; surahId: number; ayahs: AyahTiming[]; }
 export interface SurahAudio { reciterId: number; surahId: number; surahNameEn: string; url: string; format: string; }
 export interface Paged<T> { content: T[]; page: number; size: number; totalElements: number; totalPages: number; }
 export interface Bookmark { id: string; ayahId: number; note: string | null; createdAt: string; }

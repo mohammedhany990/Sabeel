@@ -3,7 +3,9 @@ import { LangSwitch } from './lang-switch';
 import { ThemeSwitch } from './theme-switch';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { Adhan } from '../core/adhan';
 import { Api } from '../core/api';
 import { Auth } from '../core/auth';
 import { Logo } from './logo';
@@ -42,10 +44,10 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
           <div class="grow"></div>
           <app-theme />
           <app-lang />
-          <a routerLink="/app/notifications" class="bell" [attr.aria-label]="'Notifications' | t">
+          <button type="button" class="bell" [class.on]="onNotifications()" (click)="toggleNotifications()" [attr.aria-label]="'Notifications' | t">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
             @if (unread() > 0) { <span class="dot">{{ unread() }}</span> }
-          </a>
+          </button>
         </header>
         <main class="content"><router-outlet /></main>
         <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a> · <a routerLink="/app/sources">{{ 'Sources' | t }}</a></footer>
@@ -72,10 +74,10 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
     .small { font-size: 0.72rem; }
     .main { min-width: 0; display: flex; flex-direction: column; }
     .top { display: flex; align-items: center; gap: 12px; padding: 16px 34px 0; }
-    .credit { margin: 0; padding: 14px 34px 20px; font-size: 0.72rem; color: var(--muted); }
     .burger { display: none; }
-    .bell { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line-soft); color: var(--text); background: var(--panel); }
+    .bell { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line-soft); color: var(--text); background: var(--panel); cursor: pointer; padding: 0; font: inherit; }
     .bell:hover { border-color: var(--gold); text-decoration: none; }
+    .bell.on { border-color: var(--gold); color: var(--gold); background: rgba(226, 194, 117, 0.12); }
     .dot { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--gold); color: #1b1405; font: 700 0.7rem var(--font-ui); display: grid; place-items: center; }
     .content { padding: 18px 34px 60px; max-width: 1280px; width: 100%; }
     @media (max-width: 900px) {
@@ -93,8 +95,11 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly auth = inject(Auth);
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly adhan = inject(Adhan);
   protected readonly menuOpen = signal(false);
   protected readonly unread = signal(0);
+  protected readonly onNotifications = signal(false);
+  private returnUrl = '/app/dashboard';
   private timer: ReturnType<typeof setInterval> | undefined;
 
   protected readonly initials = computed(() =>
@@ -116,17 +121,23 @@ export class Shell implements OnInit, OnDestroy {
       title: 'Quran',
       items: [
         { path: 'quran', label: 'Read and listen', icon: this.svg('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 21V5"/>') },
+        { path: 'mushaf', label: 'Mushaf (tajweed)', icon: this.svg('<path d="M12 5c-2-1.5-5-2-8-2v16c3 0 6 .5 8 2 2-1.5 5-2 8-2V3c-3 0-6 .5-8 2Z"/><path d="M12 5v16"/>') },
         { path: 'library', label: 'Bookmarks', icon: this.svg('<path d="M6 3h12v18l-6-4-6 4Z"/>') },
         { path: 'memorization', label: 'Memorization', icon: this.svg('<path d="M12 3 3 8l9 5 9-5Z"/><path d="M7 10.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-5.5"/>') },
-        { path: 'revision', label: 'Revision', icon: this.svg('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>') },
-        { path: 'recitation', label: 'Recitation check', icon: this.svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>') }
+        { path: 'revision', label: 'Revision', icon: this.svg('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>') }
       ]
     },
     {
       title: 'Daily worship',
       items: [
         { path: 'prayer', label: 'Prayer and Qibla', icon: this.svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>') },
-        { path: 'azkar', label: 'Azkar', icon: this.svg('<path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/>') }
+        { path: 'azkar', label: 'Azkar', icon: this.svg('<path d="M12 21s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.4-7 10-7 10Z"/>') },
+        { path: 'tasbih', label: 'Tasbih', icon: this.svg('<circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>') },
+        { path: 'duas', label: 'Duas', icon: this.svg('<path d="M12 4v8"/><path d="M8 8c0-2 1.5-4 4-4s4 2 4 4"/><path d="M6 20c0-3 2.5-5 6-5s6 2 6 5"/>') },
+        { path: 'asma', label: 'Asma ul-Husna', icon: this.svg('<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/>') },
+        { path: 'hijri', label: 'Hijri calendar', icon: this.svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>') },
+        { path: 'stories', label: 'Prophet stories', icon: this.svg('<path d="M4 19V6a2 2 0 0 1 2-2h13v13H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h13"/>') },
+        { path: 'zakat', label: 'Zakat', icon: this.svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5-1.3 2.5-3 2.5-3 1.1-3 2.5 1.3 2.5 3 2.5 3-1.1 3-2.5"/>') }
       ]
     },
     {
@@ -145,9 +156,23 @@ export class Shell implements OnInit, OnDestroy {
     }
   ];
 
+  constructor() {
+    this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
+      const on = e.urlAfterRedirects.startsWith('/app/notifications');
+      this.onNotifications.set(on);
+      if (!on) this.returnUrl = e.urlAfterRedirects;
+    });
+  }
+
   ngOnInit(): void {
     this.refreshUnread();
     this.timer = setInterval(() => this.refreshUnread(), 60000);
+    this.adhan.start();
+  }
+
+  protected toggleNotifications(): void {
+    if (this.onNotifications()) this.router.navigateByUrl(this.returnUrl);
+    else this.router.navigate(['/app/notifications']);
   }
 
   ngOnDestroy(): void {

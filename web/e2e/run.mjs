@@ -17,7 +17,7 @@ await sleep(1200);
 
 const results = [];
 const check = (name, ok, extra = '') => { results.push({ name, ok: !!ok, extra }); console.log(ok ? 'PASS' : 'FAIL', name, extra); };
-const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] });
+const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--mute-audio', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1440, height: 900 });
 const errors = [];
@@ -46,6 +46,8 @@ await shot('02-register');
 await page.click('button[type=submit]'); await sleep(1800);
 check('register logs in and opens dashboard', page.url().endsWith('/app/dashboard'), page.url());
 await sleep(500); await shot('03-dashboard-empty');
+check('dashboard shows the ayah of the day with its tafsir', (await text()).includes('Ayah of the day') && (await text()).includes('Tafsir'));
+check('recitation feature is removed from the nav', !(await text()).includes('Recitation check'));
 
 await go('Read and listen');
 check('quran index lists 114 surahs', (await page.$$('a.surah')).length === 114);
@@ -56,6 +58,10 @@ await clickText('.ayah:nth-of-type(2) button', 'Bookmark'); await sleep(500);
 await clickText('.ayah button', 'Stopped here'); await sleep(500);
 await shot('05-reader');
 check('bookmark saved', (await text()).includes('Bookmarked'));
+await clickText('button', 'Share ayah'); await sleep(400);
+check('share panel offers text and image', (await text()).includes('Share as text') && (await text()).includes('Share as image'));
+await clickText('button', 'Share as text'); await sleep(600);
+
 await clickText('button', 'Play from start'); await sleep(1200);
 check('play from start asks backend for audio url (no crash)', errors.filter((e) => e.startsWith('pageerror')).length === 0);
 
@@ -77,9 +83,49 @@ check('review submitted', !(await text()).includes('Submit review'));
 
 await go('Prayer'); await sleep(800); await shot('09-prayer');
 check('prayer times and qibla', (await text()).includes('Fajr') && (await text()).includes('°'));
+check('adhan card with muezzin picker', (await text()).includes('Adhan') && (await text()).includes('Muezzin'));
+await clickText('button', 'Turn on'); await sleep(900);
+check('adhan turns on and offers turn off', (await text()).includes('Turn off'));
+await shot('09b-adhan');
+await clickText('button', 'Turn off'); await sleep(500);
 await clickText('button', 'Load month'); await sleep(900);
 check('month table', (await page.$$('table tbody tr')).length >= 28);
 await clickText('button', 'Save and recalculate'); await sleep(800);
+
+check('prayer tracker card with qada and qiyam', (await text()).includes('Qada') && (await text()).includes('Night prayer'));
+
+await go('Tasbih'); await sleep(700);
+await clickText('button.big', 'Tap to count'); await sleep(400);
+check('tasbih counter increments', (await text()).includes('Today') && !((await text()).includes('No tasbih counted yet')));
+await shot('17-tasbih');
+
+await go('Duas'); await sleep(600);
+check('duas page lists categories and a dua', (await text()).includes('Masnoon duas') && (await text()).includes('Al-Bukhari'));
+await shot('18-duas');
+
+await go('Asma ul-Husna'); await sleep(600);
+check('asma page shows name of the day and 99 names', (await text()).includes('Name of the day') && (await page.$$('div.name')).length === 99);
+await shot('19-asma');
+
+await go('Hijri calendar'); await sleep(600);
+check('hijri calendar shows occasions and tracker', (await text()).includes('Upcoming occasions') && (await text()).includes('Fasting tracker'));
+await shot('20-hijri');
+
+await go('Zakat'); await sleep(500);
+await setVal('input[name=cash]', '100000'); await setVal('input[name=gp]', '100');
+await sleep(300);
+check('zakat computes due amount', (await text()).toLowerCase().includes('zakat due'));
+await shot('21-zakat');
+
+await go('Mushaf (tajweed)'); await sleep(2500);
+const mushafOk = (await text()).includes('Mushaf with tajweed');
+const verses = await page.$$('span.vtext');
+check('mushaf page renders', mushafOk && (verses.length > 0 || (await text()).includes('Could not load this page')), 'verses=' + verses.length);
+await shot('23-mushaf');
+
+await go('Prophet stories'); await sleep(700);
+check('stories page shows prophet and quiz', (await text()).includes('Stories of the prophets') && (await text()).includes('Quiz'));
+await shot('22-stories');
 
 await go('Azkar'); await sleep(800);
 await clickText('button.tab', 'Sleep'); await sleep(300);
@@ -119,18 +165,14 @@ check('circle created', (await text()).includes('Fajr Hifz Circle'));
 await clickText('button', 'Show members'); await sleep(700);
 await shot('16-community-circles');
 
-await go('Recitation'); await sleep(800);
-await clickText('button.tab', 'Transcript'); await sleep(300);
-await page.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحمة'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-await clickText('button', 'Evaluate recitation'); await sleep(5500);
-await shot('17-recitation');
-check('recitation completes with accuracy and mode label', (await text()).includes('TRANSCRIPT_COMPARISON_DEMO') && (await text()).includes('accuracy'));
-check('recitation shows mistakes', (await text()).includes('SUBSTITUTION'));
-
 await go('Notifications'); await sleep(700);
 await clickText('button', 'Mark as read'); await sleep(500);
 await shot('18-notifications');
 check('notifications list', (await text()).includes('Welcome to Sabeel'));
+await page.click('button.bell'); await sleep(900);
+check('bell click on the notifications page returns to the previous page', !page.url().includes('/app/notifications'), page.url());
+await page.click('button.bell'); await sleep(900);
+check('bell click again reopens notifications', page.url().includes('/app/notifications'), page.url());
 
 await go('Profile'); await sleep(900); await shot('19-settings');
 await setVal('input[name=n]', 'Teacher M. Hany'); await clickText('button', 'Save profile'); await sleep(800);

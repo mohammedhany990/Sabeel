@@ -1,0 +1,16 @@
+{
+  "name": "Sabeel - Quran and Azkar",
+  "short_name": "Sabeel",
+  "description": "Read the Quran, track prayers, and keep your daily azkar.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0e1420",
+  "theme_color": "#0e1420",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

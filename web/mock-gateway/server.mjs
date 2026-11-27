@@ -127,6 +127,10 @@ route('POST', '/users/me/device-tokens', async () => [200, undefined]);
 
 route('GET', '/quran/surahs', async () => [200, surahList], true);
 route('GET', '/quran/surahs/{id}', async ({ p }) => [200, ayahsOf(Number(p.id))], true);
+route('GET', '/quran/ayahs/{surah}/{number}', async ({ p }) => {
+  const a = ayahsOf(Number(p.surah)).find((x) => x.ayahNumber === Number(p.number));
+  return a ? [200, a] : [404, { title: 'Not Found', detail: 'Ayah not found' }];
+}, true);
 route('GET', '/quran/search', async ({ q }) => {
   const term = (q.get('q') || '').trim();
   const all = Object.keys(TEXTS).flatMap((s) => ayahsOf(Number(s))).filter((a) => a.textSimple.includes(term) || a.textUthmani.includes(term));
