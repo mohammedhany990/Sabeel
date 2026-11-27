@@ -105,6 +105,11 @@ await step('n02', 'Tap any ayah to play it, read tafsir or translation, or share
   await clickText('.sheet button', 'Tafsir');
   await sleep(3000);
 }, 3000);
+await step('n04', 'Tap Tajweed rules to see each rule in the ayah, with a short explanation', 'اضغط على أحكام التجويد لترى كل حكم في الآية مع شرح مختصر', async () => {
+  await clickText('.sheet button', 'Tajweed rules');
+  await page.waitForSelector('[data-testid=tajweed-rules] .tj-rule', { timeout: 10000 });
+  await sleep(3500);
+}, 3000);
 await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
   await clickText('.sheet a', 'Verse view');
   await page.waitForSelector('.ayah', { timeout: 15000 });
@@ -133,6 +138,11 @@ await step('w04', 'Sticky player and the Husary and Minshawi teaching reciters',
   await sleep(600);
   await clickText('button', 'Play from start');
   await sleep(3500);
+}, 3000);
+await step('n06', 'The player stays at the bottom while you read: pause, stop, change the speed or seek', 'المشغّل يبقى أسفل الشاشة أثناء القراءة: إيقاف مؤقت وإيقاف وتغيير السرعة وتقديم', async () => {
+  await page.evaluate(() => window.scrollBy(0, 700));
+  await sleep(2500);
+  await clickText('[data-testid=reader-playbar] button', 'Stop');
 }, 3000);
 await step('s07', 'Library: bookmarks and last position', 'المكتبة: العلامات وآخر موضع', async () => { await nav('Bookmarks'); }, 3000);
 await step('s08', 'Memorization plan with a daily target', 'خطة الحفظ والورد اليومي', async () => {
@@ -189,6 +199,13 @@ await step('w09', 'Masnoon duas and the names of Allah', 'أدعية مسنون�
   await sleep(2000);
   await nav('Asma ul-Husna');
 }, 3500);
+await step('n05', 'Tap any of the 99 names to read its meaning and its greatness', 'اضغط على أي اسم من الأسماء التسعة والتسعين لتقرأ معناه وعظمته', async () => {
+  await page.locator('div.name').nth(0).click();
+  await sleep(3000);
+  await clickText('[data-testid=asma-detail] button', 'Next');
+  await sleep(2500);
+  await clickText('[data-testid=asma-detail] button', 'Close');
+}, 3000);
 await step('w10', 'Hijri calendar with fasting hints and a fasting tracker', 'تقويم هجري مع مناسبات الصيام ومتابع الصيام', async () => {
   await nav('Hijri calendar');
   await sleep(1500);
