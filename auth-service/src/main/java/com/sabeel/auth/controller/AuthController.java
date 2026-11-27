@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Authentication")
 public class AuthController {
     private final AuthService authService;
@@ -57,7 +59,11 @@ public class AuthController {
     @PostMapping("/forgot-password")
     @Operation(summary = "Request a password reset token by email")
     public MessageResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request.email());
+        try {
+            authService.forgotPassword(request.email().trim());
+        } catch (RuntimeException e) {
+            log.error("forgot-password processing failed", e);
+        }
         return new MessageResponse("if the email exists, a reset link was sent");
     }
 
