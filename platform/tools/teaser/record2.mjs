@@ -17,13 +17,7 @@ await prePage.fill('input[name=email]', email);
 await prePage.fill('input[name=password]', 'Passw0rd!demo');
 await prePage.click('button[type=submit]');
 await prePage.waitForURL('**/app/dashboard', { timeout: 30000 });
-await prePage.goto(BASE + '/app/recitation', { waitUntil: 'networkidle' });
-await prePage.waitForSelector('button.tab', { timeout: 30000 });
-await prePage.click('button.tab:has-text("Transcript")');
-await prePage.waitForSelector('textarea[name=tr]', { timeout: 30000 });
-await prePage.$eval('textarea[name=tr]', (el) => { el.value = 'بسم الله الرحمن الرحيم'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-await prePage.click('button:has-text("Evaluate recitation")');
-await prePage.waitForSelector('.badge-ok', { timeout: 90000 }).catch(() => {});
+await prePage.evaluate(() => localStorage.setItem('sabeel.quranView', 'verse'));
 const state = await pre.storageState();
 await pre.close();
 
@@ -147,23 +141,6 @@ await scene('n05', 'Memorization plan with a daily target', 'خطة حفظ بو�
   await sleep(1800);
   await page.locator('button:has-text("Create plan")').first().click();
   await page.waitForSelector('text=Complete', { timeout: 20000 });
-});
-
-await scene('n06', 'Recitation text comparison', 'مقارنة نصية للتلاوة', async (need, show) => {
-  await page.goto(BASE + '/app/recitation', { waitUntil: 'networkidle' });
-  await page.waitForSelector('button.tab', { timeout: 20000 });
-  await page.locator('button.tab', { hasText: 'Transcript' }).click();
-  await page.waitForSelector('textarea[name=tr]', { timeout: 20000 });
-  await sleep(500);
-  await show();
-  await page.click('textarea[name=tr]');
-  await page.keyboard.type('بسم الله الرحمن الرحمة', { delay: 90 });
-  await sleep(500);
-  await page.locator('button', { hasText: 'Evaluate recitation' }).click();
-  hold();
-  await page.waitForFunction(() => [...document.querySelectorAll('.card-title')].some((t) => /Latest result/.test(t.innerText) && t.querySelector('.badge-ok')), null, { timeout: 60000 });
-  await sleep(400);
-  cur.open = now();
 });
 
 await scene('n07', 'Ayah of the day and your weekly summary', 'آية اليوم وملخص أسبوعك', async (need, show) => {
