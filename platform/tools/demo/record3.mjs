@@ -96,6 +96,7 @@ await step('n01', 'The Quran opens as mushaf pages: turn the page, or jump by pa
   await sleep(2500);
 }, 3000);
 await step('n02', 'Tap any ayah to play it, read tafsir or translation, or share it as text or an image with the Sabeel logo', 'اضغط على أي آية لتشغيلها أو قراءة التفسير أو الترجمة أو مشاركتها كنص أو كصورة بشعار سبيل', async () => {
+  await page.addStyleTag({ content: '.sheet { bottom: 110px !important; }' });
   await page.locator('span.vtext').first().click();
   await sleep(1500);
   await clickText('.sheet button', 'Translation');

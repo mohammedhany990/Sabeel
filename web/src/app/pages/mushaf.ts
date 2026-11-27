@@ -132,7 +132,7 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
     .vtext { cursor: pointer; border-radius: 6px; }
     .vtext.sel { background: rgba(184, 134, 11, 0.25); }
     .vtext.playing { background: rgba(13, 138, 63, 0.22); }
-    .sheet { position: sticky; bottom: 12px; z-index: 30; margin-top: 14px; background: var(--panel); border: 1px solid var(--gold); border-radius: 14px; padding: 12px 14px; max-height: 55vh; overflow: auto; }
+    .sheet { position: sticky; bottom: 12px; z-index: 30; margin-top: 14px; background: linear-gradient(var(--panel), var(--panel)), var(--bg); border: 1px solid var(--gold); border-radius: 14px; padding: 12px 14px; max-height: 55vh; overflow: auto; }
     .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--gold); }
     .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .sheet-actions .on { outline: 2px solid var(--gold); }
