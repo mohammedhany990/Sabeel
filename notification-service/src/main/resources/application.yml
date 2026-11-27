@@ -34,6 +34,7 @@ jwt:
 notification:
   from-address: ${NOTIFICATION_FROM:no-reply@sabeel.app}
   app-base-url: ${APP_BASE_URL:http://localhost:4200}
+  support-email: ${SUPPORT_EMAIL:}
   fcm:
     enabled: ${FCM_ENABLED:false}
     credentials-path: ${FCM_CREDENTIALS_PATH:/run/secrets/fcm-service-account.json}

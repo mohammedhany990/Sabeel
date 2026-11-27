@@ -9,6 +9,7 @@ import { Adhan } from '../core/adhan';
 import { Api } from '../core/api';
 import { Auth } from '../core/auth';
 import { Logo } from './logo';
+import { SUPPORT_EMAIL } from '../core/config';
 
 interface NavItem { path: string; label: string; icon: SafeHtml; }
 
@@ -50,7 +51,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
           </button>
         </header>
         <main class="content"><router-outlet /></main>
-        <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a> · <a routerLink="/app/sources">{{ 'Sources' | t }}</a></footer>
+        <footer class="credit">{{ 'Quran text:' | t }} <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil Project</a> · <a routerLink="/app/sources">{{ 'Sources' | t }}</a>@if (supportEmail) { · <a data-testid="footer-contact" [href]="'mailto:' + supportEmail">{{ 'Contact us' | t }}</a> }</footer>
       </div>
     </div>
   `,
@@ -92,6 +93,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
   `]
 })
 export class Shell implements OnInit, OnDestroy {
+  protected readonly supportEmail = SUPPORT_EMAIL;
   protected readonly auth = inject(Auth);
   private readonly api = inject(Api);
   private readonly router = inject(Router);

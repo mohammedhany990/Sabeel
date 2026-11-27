@@ -89,6 +89,8 @@ Every text, audio and data source with its license is listed in [docs/SOURCES.md
 
 Password-reset emails link to `APP_BASE_URL` (default `http://localhost:4200`) followed by `/reset-password?token=...`.
 
+Set `SUPPORT_EMAIL` in `platform/.env` to show a "Contact us" link in the app and a support line in the emails. Empty hides both.
+
 By default the stack sends all email to the Mailhog container (http://localhost:8025), so nothing leaves your machine. To send through a real provider, put the values in `platform/.env`, which is git-ignored. Never put them in a file that is committed.
 
 ```bash

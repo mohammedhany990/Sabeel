@@ -198,6 +198,7 @@ services:
       SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
       NOTIFICATION_FROM: ${NOTIFICATION_FROM:-no-reply@sabeel.app}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
       FCM_ENABLED: ${FCM_ENABLED:-false}
       FCM_CREDENTIALS_PATH: ${FCM_CREDENTIALS_PATH:-/run/secrets/fcm-service-account.json}
     ports:
@@ -322,6 +323,8 @@ services:
 
   web:
     build: ../web
+    environment:
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
     ports:
       - "4200:80"
     depends_on:

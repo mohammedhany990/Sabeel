@@ -19,6 +19,7 @@ const results = [];
 const check = (name, ok, extra = '') => { results.push({ name, ok: !!ok, extra }); console.log(ok ? 'PASS' : 'FAIL', name, extra); };
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--mute-audio', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage();
+await page.evaluateOnNewDocument(() => { Object.defineProperty(window, 'SABEEL_SUPPORT_EMAIL', { get: () => 'help@example.org', set: () => undefined, configurable: true }); });
 await page.setViewport({ width: 1440, height: 900 });
 const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -294,6 +295,9 @@ check('change password: success message shown and fields cleared', (await page.$
 await shot('19b-change-password');
 await setVal('input[name=cp]', 'Passw0rd!x'); await setVal('input[name=np]', 'AnotherPass1!'); await setVal('input[name=cf]', 'AnotherPass1!'); await clickText('button', 'Change password'); await sleep(700);
 check('change password: old password no longer accepted', (await page.$eval('[data-testid=pw-error]', (e) => e.innerText).catch(() => '')).includes('current password is incorrect'));
+
+check('settings shows a Contact us mailto link', (await page.$eval('[data-testid=support-mailto]', (e) => e.getAttribute('href')).catch(() => '')) === 'mailto:help@example.org');
+check('footer shows a Contact us mailto link', (await page.$eval('[data-testid=footer-contact]', (e) => e.getAttribute('href')).catch(() => '')) === 'mailto:help@example.org');
 
 await sleep(21000);
 await go('Notifications'); await sleep(1500);

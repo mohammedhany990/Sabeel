@@ -180,13 +180,58 @@ class LocalizedNotificationTest {
         assertTrue(templates.passwordReset("ar", "reset-123").body().contains("reset-123"));
     }
 
-    @Test
-    void passwordResetEmailHasLinkWithTokenAndRawCode() {
-        for (String lang : new String[]{"en", "ar"}) {
-            String body = templates.passwordReset(lang, "abc.def").body();
-            assertTrue(body.contains("http://localhost:4200/reset-password?token=abc.def"));
-            assertTrue(body.indexOf("abc.def", body.indexOf("token=abc.def") + 5) > 0);
+    private static int count(String haystack, String needle) {
+        int n = 0;
+        for (int i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + 1)) {
+            n++;
         }
+        return n;
+    }
+
+    @Test
+    void resetAndVerificationEmailsShowOnlyALinkNeverAStandaloneCode() {
+        for (String lang : new String[]{"en", "ar"}) {
+            var contents = java.util.List.of(templates.passwordReset(lang, "abc.def"), templates.emailVerification(lang, "Omar", "abc.def"));
+            for (var c : contents) {
+                assertEquals(1, count(c.body(), "abc.def"));
+                assertTrue(c.body().contains("?token=abc.def"));
+                assertEquals(1, count(c.html(), "abc.def"));
+                assertTrue(c.html().contains("href=\"http://localhost:4200/"));
+                assertTrue(c.html().contains("?token=abc.def\""));
+            }
+        }
+    }
+
+    @Test
+    void htmlEmailIsTableBasedBrandedAndHasProperDirection() {
+        String en = templates.passwordReset("en", "t").html();
+        String ar = templates.passwordReset("ar", "t").html();
+        assertTrue(en.contains("<table") && en.contains("#e2c275") && en.contains("dir=\"ltr\"") && en.contains("30 minutes"));
+        assertTrue(en.contains("Reset password"));
+        assertTrue(ar.contains("dir=\"rtl\"") && ar.contains("lang=\"ar\"") && ar.contains("text-align:right") && ar.contains("30 دقيقة"));
+        assertTrue(templates.emailVerification("en", "Omar", "t").html().contains("Verify email"));
+        assertTrue(templates.emailVerification("en", "Omar", "t").html().contains("24 hours"));
+    }
+
+    @Test
+    void userNameIsEscapedInHtml() {
+        String html = templates.emailVerification("en", "<b>Omar</b>", "t").html();
+        assertFalse(html.contains("<b>Omar</b>"));
+        assertTrue(html.contains("&lt;b&gt;Omar&lt;/b&gt;"));
+    }
+
+    @Test
+    void supportLineAppearsOnlyWhenConfiguredAndValid() {
+        assertFalse(templates.passwordReset("en", "t").html().contains("mailto:"));
+        assertFalse(templates.passwordReset("en", "t").body().contains("Questions?"));
+        NotificationTemplates with = new NotificationTemplates();
+        org.springframework.test.util.ReflectionTestUtils.setField(with, "supportEmail", "help@example.org");
+        assertTrue(with.passwordReset("en", "t").html().contains("mailto:help@example.org"));
+        assertTrue(with.passwordReset("en", "t").body().contains("help@example.org"));
+        assertTrue(with.passwordReset("ar", "t").html().contains("mailto:help@example.org"));
+        NotificationTemplates bad = new NotificationTemplates();
+        org.springframework.test.util.ReflectionTestUtils.setField(bad, "supportEmail", "not an email\"><x");
+        assertFalse(bad.passwordReset("en", "t").html().contains("mailto:"));
     }
 
     @Test

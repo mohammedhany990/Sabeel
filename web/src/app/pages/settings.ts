@@ -7,6 +7,7 @@ import { Auth } from '../core/auth';
 import { PreferencesResponse, ProfileResponse, Reciter } from '../core/models';
 import { Toast } from '../core/toast';
 import { errorMessage } from '../core/util';
+import { SUPPORT_EMAIL } from '../core/config';
 import { PageHead, Spinner } from '../shared/ui';
 
 @Component({
@@ -71,6 +72,14 @@ import { PageHead, Spinner } from '../shared/ui';
         </form>
       </div>
 
+      @if (supportEmail) {
+        <div class="card" style="margin-top:18px" data-testid="support-card">
+          <div class="card-title"><h3>{{ 'Support' | t }}</h3></div>
+          <p class="muted">{{ 'Questions, feedback or a problem? Email the project.' | t }}</p>
+          <a class="btn" data-testid="support-mailto" [href]="'mailto:' + supportEmail">{{ 'Contact us' | t }}</a>
+        </div>
+      }
+
       <div class="card" style="margin-top:18px">
         <div class="card-title"><h3>{{ 'Session' | t }}</h3></div>
         <button class="btn btn-danger" (click)="auth.logout()">{{ 'Sign out' | t }}</button>
@@ -89,6 +98,7 @@ export class Settings implements OnInit {
   protected pf = { name: '', profileImageUrl: '', country: '', timezone: '', preferredReciterId: null as number | null, preferredLanguage: 'en' };
   protected pr: PreferencesResponse = { pushEnabled: true, emailEnabled: true, memorizationReminderTime: null, revisionReminderTime: null, prayerReminders: true, azkarReminders: true, revisionReminders: true };
   protected token = '';
+  protected readonly supportEmail = SUPPORT_EMAIL;
   protected pw = { current: '', next: '', confirm: '' };
   protected readonly pwBusy = signal(false);
   protected readonly pwError = signal('');

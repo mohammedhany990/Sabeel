@@ -13,7 +13,13 @@ public class NotificationTemplates {
     @Value("${notification.app-base-url:http://localhost:4200}")
     private String appBaseUrl = "http://localhost:4200";
 
-    public record Content(String title, String body) {
+    @Value("${notification.support-email:}")
+    private String supportEmail = "";
+
+    public record Content(String title, String body, String html) {
+        public Content(String title, String body) {
+            this(title, body, null);
+        }
     }
 
     private static final Map<String, String> PRAYERS_AR = Map.of(
@@ -27,30 +33,59 @@ public class NotificationTemplates {
         return language != null && language.toLowerCase().startsWith(AR) ? AR : EN;
     }
 
-    public Content emailVerification(String language, String name, String token) {
-        if (AR.equals(normalize(language))) {
-            return new Content("فعّل حسابك في سبيل",
-                    "السلام عليكم " + name + "،\n\nمرحباً بك في سبيل. فعّل بريدك الإلكتروني بهذا الرمز:\n\n" + token
-                            + "\n\nتنتهي صلاحية الرمز خلال 24 ساعة.");
+    private String support() {
+        String v = supportEmail == null ? "" : supportEmail.trim();
+        return v.matches("[^\\s@<>\"']+@[^\\s@<>\"']+\\.[^\\s@<>\"']+") ? v : "";
+    }
+
+    private String supportText(boolean ar) {
+        String v = support();
+        if (v.isEmpty()) {
+            return "";
         }
-        return new Content("Verify your Sabeel account",
-                "Assalamu alaikum " + name + ",\n\nWelcome to Sabeel. Verify your email with this token:\n\n" + token
-                        + "\n\nThe token expires in 24 hours.");
+        return (ar ? "\n\nللمساعدة راسلنا على: " : "\n\nQuestions? Write to ") + v;
+    }
+
+    private String base() {
+        return appBaseUrl == null ? "" : appBaseUrl.trim().replaceAll("/+$", "");
+    }
+
+    public Content emailVerification(String language, String name, String token) {
+        String link = base() + "/verify-email?token=" + token;
+        if (AR.equals(normalize(language))) {
+            String text = "السلام عليكم " + name + "،\n\nمرحباً بك في سبيل. فعّل بريدك الإلكتروني من الرابط التالي (صالح لمدة 24 ساعة):\n\n"
+                    + link + "\n\nإذا لم تنشئ حساباً في سبيل فتجاهل هذه الرسالة." + supportText(true);
+            return new Content("فعّل حسابك في سبيل", text, EmailLayout.action(true, "فعّل حسابك",
+                    "السلام عليكم " + name + "،", "مرحباً بك في سبيل. اضغط الزر لتفعيل بريدك الإلكتروني والبدء.",
+                    "تفعيل البريد", link, "الرابط صالح لمدة 24 ساعة. إذا لم تنشئ حساباً في سبيل فتجاهل هذه الرسالة.",
+                    "سبيل · احفظ. راجع. اتلُ. وارتقِ.", "للمساعدة:", support()));
+        }
+        String text = "Assalamu alaikum " + name + ",\n\nWelcome to Sabeel. Verify your email with this link (valid 24 hours):\n\n"
+                + link + "\n\nIf you did not create a Sabeel account, ignore this email." + supportText(false);
+        return new Content("Verify your Sabeel account", text, EmailLayout.action(false, "Verify your email",
+                "Assalamu alaikum " + name + ",", "Welcome to Sabeel. Tap the button to verify your email and get started.",
+                "Verify email", link, "This link is valid for 24 hours. If you did not create a Sabeel account, ignore this email.",
+                "Sabeel · Memorize. Revise. Recite. Grow.", "Questions?", support()));
     }
 
     public Content passwordReset(String language, String token) {
-        String base = appBaseUrl == null ? "" : appBaseUrl.trim().replaceAll("/+$", "");
-        String link = base + "/reset-password?token=" + token;
+        String link = base() + "/reset-password?token=" + token;
         if (AR.equals(normalize(language))) {
-            return new Content("إعادة تعيين كلمة مرور سبيل",
-                    "لإعادة تعيين كلمة المرور اضغط على الرابط التالي (صالح لمدة 30 دقيقة):\n\n" + link
-                            + "\n\nأو افتح صفحة إعادة التعيين والصق هذا الرمز:\n\n" + token
-                            + "\n\nإذا لم تطلب ذلك فتجاهل هذه الرسالة.");
+            String text = "لإعادة تعيين كلمة المرور افتح الرابط التالي (صالح لمدة 30 دقيقة):\n\n" + link
+                    + "\n\nإذا لم تطلب ذلك فتجاهل هذه الرسالة." + supportText(true);
+            return new Content("إعادة تعيين كلمة مرور سبيل", text, EmailLayout.action(true, "إعادة تعيين كلمة المرور",
+                    "السلام عليكم،", "وصلنا طلب لإعادة تعيين كلمة مرور حسابك في سبيل. اضغط الزر لاختيار كلمة مرور جديدة.",
+                    "إعادة تعيين كلمة المرور", link,
+                    "الرابط صالح لمدة 30 دقيقة. إذا لم تطلب ذلك فتجاهل هذه الرسالة وستبقى كلمة مرورك كما هي.",
+                    "سبيل · احفظ. راجع. اتلُ. وارتقِ.", "للمساعدة:", support()));
         }
-        return new Content("Reset your Sabeel password",
-                "To reset your password, open this link (valid 30 minutes):\n\n" + link
-                        + "\n\nOr open the reset page and paste this code:\n\n" + token
-                        + "\n\nIf you did not ask for this, ignore this email.");
+        String text = "To reset your password, open this link (valid 30 minutes):\n\n" + link
+                + "\n\nIf you did not ask for this, ignore this email." + supportText(false);
+        return new Content("Reset your Sabeel password", text, EmailLayout.action(false, "Reset your password",
+                "Assalamu alaikum,", "We got a request to reset the password of your Sabeel account. Tap the button to choose a new one.",
+                "Reset password", link,
+                "This link is valid for 30 minutes. If you did not ask for this, ignore this email and your password stays the same.",
+                "Sabeel · Memorize. Revise. Recite. Grow.", "Questions?", support()));
     }
 
     public Content memorizationTask(String language, String date, int surahId, int fromAyah, int toAyah) {

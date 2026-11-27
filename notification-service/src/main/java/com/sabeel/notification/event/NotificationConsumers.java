@@ -37,7 +37,7 @@ public class NotificationConsumers {
             notificationService.upsertUserMirror(userId, p.get("email").asText(), p.get("name").asText(), language);
             var content = templates.emailVerification(notificationService.languageOf(userId),
                     p.get("name").asText(), p.get("verificationToken").asText());
-            notificationService.sendNow(userId, "EMAIL_VERIFICATION", content.title(), content.body(),
+            notificationService.sendNow(userId, "EMAIL_VERIFICATION", content.title(), content.body(), content.html(),
                     Notification.Channel.EMAIL);
         });
     }
@@ -50,7 +50,7 @@ public class NotificationConsumers {
         notificationService.processEvent(eventId, TOPIC_PASSWORD_RESET, () -> {
             UUID userId = UUID.fromString(p.get("userId").asText());
             var content = templates.passwordReset(notificationService.languageOf(userId), p.get("resetToken").asText());
-            notificationService.sendNow(userId, "PASSWORD_RESET", content.title(), content.body(),
+            notificationService.sendNow(userId, "PASSWORD_RESET", content.title(), content.body(), content.html(),
                     Notification.Channel.EMAIL);
         });
     }

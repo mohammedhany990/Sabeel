@@ -52,10 +52,14 @@ public class NotificationService {
                 .build());
     }
 
-    @Transactional
     public void sendNow(UUID userId, String type, String title, String body, Notification.Channel channel) {
+        sendNow(userId, type, title, body, null, channel);
+    }
+
+    @Transactional
+    public void sendNow(UUID userId, String type, String title, String body, String bodyHtml, Notification.Channel channel) {
         Notification notification = notificationRepository.save(Notification.builder()
-                .userId(userId).type(type).title(title).body(body)
+                .userId(userId).type(type).title(title).body(body).bodyHtml(bodyHtml)
                 .channel(channel).status(Notification.Status.PENDING)
                 .scheduledFor(Instant.now()).createdAt(Instant.now())
                 .language(languageOf(userId))
@@ -91,7 +95,7 @@ public class NotificationService {
         boolean emailAllowed = mirror.map(UserMirror::isEmailEnabled).orElse(true);
         try {
             if ((n.getChannel() == Notification.Channel.EMAIL || n.getChannel() == Notification.Channel.BOTH) && emailAllowed) {
-                mirror.ifPresent(u -> emailSender.send(u.getEmail(), n.getTitle(), n.getBody()));
+                mirror.ifPresent(u -> emailSender.send(u.getEmail(), n.getTitle(), n.getBody(), n.getBodyHtml()));
             }
             if ((n.getChannel() == Notification.Channel.PUSH || n.getChannel() == Notification.Channel.BOTH) && pushAllowed) {
                 List<String> tokens = deviceTokenMirrorRepository.findByUserId(n.getUserId()).stream()

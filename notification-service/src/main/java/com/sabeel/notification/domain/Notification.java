@@ -33,6 +33,9 @@ public class Notification {
     @Column(nullable = false, columnDefinition = "text")
     private String body;
 
+    @Column(columnDefinition = "text")
+    private String bodyHtml;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Channel channel;
