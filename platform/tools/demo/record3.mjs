@@ -155,6 +155,8 @@ await step('s10', 'Spaced-repetition revision: 1, 3, 7, 14, 30, 60 days', 'مر�
 await step('n03', 'Choose between several muezzins for the adhan, with a reminder 15 minutes before each prayer', 'اختر من عدة مؤذنين للأذان مع تذكير قبل الصلاة بخمس عشرة دقيقة', async () => {
   await nav('Prayer');
   await sleep(1200);
+  await page.evaluate(() => document.querySelector('select[name=mz]').scrollIntoView({ block: 'center' }));
+  await sleep(1200);
   await page.selectOption('select[name=mz]', { value: 'beautiful' });
   await sleep(800);
   await clickText('button', 'Preview');
