@@ -69,7 +69,7 @@ docker compose down -v         # remove containers and all data (database, mongo
 
 ## Settings
 
-All settings live in `platform/.env` (copied from `.env.example`). Change `JWT_SECRET` to a long random value for anything other than a local trial. `RECITATION_ENGINE=passthrough` runs the recitation check as a demo that compares transcripts; the real speech recognition needs the whisper image described in the README.
+All settings live in `platform/.env` (copied from `.env.example`). Every service refuses to start when `JWT_SECRET` is missing, shorter than 32 bytes or a known default, unless `SABEEL_DEV_MODE=true`. The example file sets dev mode to true so a local run works unchanged. For any real deployment set a long random `JWT_SECRET` and remove `SABEEL_DEV_MODE`. `RECITATION_ENGINE=passthrough` runs the recitation check as a demo that compares transcripts; the real speech recognition needs the whisper image described in the README.
 
 ## Troubleshooting
 
