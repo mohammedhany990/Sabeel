@@ -2,7 +2,7 @@ import { Hj, I18n, Loc, T } from '../core/i18n';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { catchError, forkJoin, of } from 'rxjs';
-import { Adhan } from '../core/adhan';
+import { Adhan, LEADS, PRAYERS } from '../core/adhan';
 import { PrayerExtras } from './prayer-extras';
 import { PrayerTracker as PrayerLocalTracker } from './prayer-tracker';
 import { Api } from '../core/api';
@@ -71,7 +71,6 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
           </label>
           <div class="row">
             <button class="btn" type="button" (click)="adhan.preview()" data-testid="adhan-preview">{{ (adhan.playing() ? 'Stop' : 'Preview') | t }}</button>
-            @if (adhan.playing()) { <button class="btn btn-ghost" type="button" (click)="adhan.stop()">{{ 'Stop' | t }}</button> }
             <button class="btn btn-gold" type="button" (click)="toggleAdhan()">{{ (adhan.enabled() ? 'Turn off' : 'Turn on') | t }}</button>
           </div>
         </div>
@@ -82,6 +81,30 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
         <div class="card-title"><h3>{{ 'Prayer reminder' | t }}</h3><span class="badge" [class.badge-ok]="adhan.reminder()">{{ (adhan.reminder() ? 'On' : 'Off') | t }}</span></div>
         <p class="muted">{{ 'Notifies you 15 minutes before each prayer with a gentle chime.' | t }}</p>
         <button class="btn btn-gold" type="button" (click)="adhan.reminder() ? adhan.disableReminder() : adhan.enableReminder()">{{ (adhan.reminder() ? 'Turn off' : 'Turn on') | t }}</button>
+      </div>
+
+      <div class="card" style="margin-top:18px" data-testid="prayer-settings">
+        <div class="card-title"><h3>{{ 'Settings for each prayer' | t }}</h3></div>
+        <p class="muted small">{{ 'The adhan and reminder switches above stay the master switches. Fajr has its own adhan recording where the muezzin offers one.' | t }}</p>
+        <div class="pp-list">
+          @for (p of prayerKeys; track p) {
+            <div class="pp-row" [attr.data-testid]="'pp-' + p">
+              <strong class="pp-name">{{ pname(p) }}</strong>
+              <select [attr.aria-label]="'Muezzin' | t" [ngModel]="adhan.prayers()[p].muezzin" (ngModelChange)="adhan.setPrayer(p, { muezzin: $event })" [name]="'pm-' + p" [attr.data-testid]="'pp-muezzin-' + p">
+                <option value="">{{ 'Default muezzin' | t }}</option>
+                @for (m of adhan.muezzins; track m.id) { <option [value]="m.id">{{ m.name | t }}</option> }
+              </select>
+              <label class="pp-chk"><input type="checkbox" [checked]="adhan.prayers()[p].adhan" (change)="adhan.setPrayer(p, { adhan: $any($event.target).checked })" [attr.data-testid]="'pp-adhan-' + p"> {{ 'Adhan' | t }}</label>
+              <label class="pp-chk"><input type="checkbox" [checked]="adhan.prayers()[p].reminder" (change)="adhan.setPrayer(p, { reminder: $any($event.target).checked })" [attr.data-testid]="'pp-reminder-' + p"> {{ 'Reminder' | t }}</label>
+              <select [attr.aria-label]="'Reminder lead time' | t" [ngModel]="adhan.prayers()[p].lead" (ngModelChange)="adhan.setPrayer(p, { lead: +$event })" [name]="'pl-' + p" [disabled]="!adhan.prayers()[p].reminder" [attr.data-testid]="'pp-lead-' + p">
+                @for (l of leads; track l) { <option [value]="l" [selected]="l === adhan.prayers()[p].lead">{{ '{n} min before' | t: { n: l } }}</option> }
+              </select>
+              <label class="pp-chk pp-vol">{{ 'Volume' | t }} <input type="range" min="10" max="100" step="5" [value]="adhan.prayers()[p].volume" (input)="adhan.setPrayer(p, { volume: +$any($event.target).value })" [attr.data-testid]="'pp-volume-' + p"> <span class="muted">{{ adhan.prayers()[p].volume }}%</span></label>
+              @if (p === 'fajr') { <label class="pp-chk"><input type="checkbox" [checked]="adhan.prayers()[p].fajrRecording" (change)="adhan.setPrayer(p, { fajrRecording: $any($event.target).checked })" data-testid="pp-fajrrec"> {{ 'Fajr recording' | t }}</label> }
+              <button class="btn btn-sm" type="button" (click)="adhan.previewPrayer(p)">{{ 'Preview' | t }}</button>
+            </div>
+          }
+        </div>
       </div>
 
       <app-prayer-tracker style="display:block;margin-top:18px"></app-prayer-tracker>
@@ -120,6 +143,12 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
   `,
   styles: [`
     .item.next { border-color: var(--gold); background: rgba(226, 194, 117, 0.08); }
+    .pp-list { display: grid; gap: 10px; margin-top: 10px; }
+    .pp-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+    .pp-row select { width: auto; flex: 0 1 200px; padding: 7px 10px; border-radius: 8px; background: var(--panel); color: var(--text); border: 1px solid var(--line); min-width: 0; }
+    .pp-chk { display: flex; gap: 6px; align-items: center; white-space: nowrap; color: var(--muted); }
+    .pp-name { min-width: 80px; text-transform: capitalize; }
+    .pp-vol input { width: 110px; }
     .adhan-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
     .adhan-row .field { min-width: 200px; }
     .time { font: 600 1.35rem var(--font-ui); color: var(--gold); }
@@ -148,6 +177,8 @@ export class Prayer implements OnInit {
   private readonly toast = inject(Toast);
   private readonly i18n = inject(I18n);
   protected readonly adhan = inject(Adhan);
+  protected readonly prayerKeys = PRAYERS;
+  protected readonly leads = LEADS;
 
   protected toggleAdhan(): void {
     if (this.adhan.enabled()) this.adhan.disable();

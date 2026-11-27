@@ -16,7 +16,51 @@ export const MUEZZINS: Muezzin[] = [
   { id: 'tobar', name: 'Nasr al-Din Tobar', url: 'assets/adhan/tobar.mp3', fajrUrl: 'assets/adhan/tobar-fajr.mp3' }
 ];
 
-const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+export const LEADS = [5, 10, 15, 20, 30];
+const PRAYER_KEY = 'sabeel.adhan.prayers';
+
+export interface PrayerCfg { adhan: boolean; muezzin: string; reminder: boolean; lead: number; volume: number; fajrRecording: boolean; }
+
+export function defaultCfg(): Record<string, PrayerCfg> {
+  const o: Record<string, PrayerCfg> = {};
+  for (const p of PRAYERS) o[p] = { adhan: true, muezzin: '', reminder: true, lead: 15, volume: 100, fajrRecording: true };
+  return o;
+}
+
+export function parseCfg(raw: string): Record<string, PrayerCfg> {
+  const base = defaultCfg();
+  try {
+    const j = JSON.parse(raw || '{}');
+    for (const p of PRAYERS) {
+      const c = j?.[p];
+      if (!c || typeof c !== 'object') continue;
+      base[p] = {
+        adhan: c.adhan !== false,
+        muezzin: typeof c.muezzin === 'string' && MUEZZINS.some((m) => m.id === c.muezzin) ? c.muezzin : '',
+        reminder: c.reminder !== false,
+        lead: LEADS.includes(c.lead) ? c.lead : 15,
+        volume: typeof c.volume === 'number' && c.volume >= 10 && c.volume <= 100 ? Math.round(c.volume) : 100,
+        fajrRecording: c.fajrRecording !== false
+      };
+    }
+  } catch { return base; }
+  return base;
+}
+
+export function dueReminderFor(times: Record<string, string>, now: number, cfg: Record<string, PrayerCfg>, windowMs: number = WINDOW_MS): { prayer: string; lead: number } | null {
+  for (const p of PRAYERS) {
+    const c = cfg[p];
+    const iso = times[p];
+    if (!c || !c.reminder || !iso) continue;
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) continue;
+    const before = c.lead * 60000;
+    const diff = t - now;
+    if (diff <= before && diff > before - windowMs) return { prayer: p, lead: c.lead };
+  }
+  return null;
+}
 const ENABLED_KEY = 'sabeel.adhan.enabled';
 const MUEZZIN_KEY = 'sabeel.adhan.muezzin';
 const REMINDER_KEY = 'sabeel.reminder.enabled';
@@ -57,6 +101,24 @@ export class Adhan {
   readonly reminder = signal(this.read(REMINDER_KEY) === '1');
   readonly muezzin = signal(this.read(MUEZZIN_KEY) || 'madina');
   readonly playing = signal(false);
+  readonly prayers = signal<Record<string, PrayerCfg>>(parseCfg(this.read(PRAYER_KEY)));
+
+  setPrayer(p: string, patch: Partial<PrayerCfg>): void {
+    const next = { ...this.prayers(), [p]: { ...this.prayers()[p], ...patch } };
+    this.prayers.set(next);
+    this.write(PRAYER_KEY, JSON.stringify(next));
+  }
+
+  previewPrayer(p: string): void {
+    if (this.playing()) { this.stop(); return; }
+    this.play(this.urlFor(p), this.prayers()[p].volume);
+  }
+
+  private urlFor(p: string): string {
+    const id = this.prayers()[p]?.muezzin || this.muezzin();
+    const m = MUEZZINS.find((x) => x.id === id) ?? MUEZZINS[0];
+    return p === 'fajr' && m.fajrUrl && this.prayers()[p].fajrRecording ? m.fajrUrl : m.url;
+  }
   private lastReminded = '';
 
   private times: PrayerTimes | null = null;
@@ -77,7 +139,7 @@ export class Adhan {
     this.enabled.set(true);
     this.write(ENABLED_KEY, '1');
     this.loadTimes();
-    this.preview();
+    this.play(CHIME_URL);
   }
 
   disable(): void {
@@ -105,6 +167,7 @@ export class Adhan {
   }
 
   preview(): void {
+    if (this.playing()) { this.stop(); return; }
     const m = MUEZZINS.find((x) => x.id === this.muezzin()) ?? MUEZZINS[0];
     this.play(m.url);
   }
@@ -121,37 +184,41 @@ export class Adhan {
     if (!this.times) return;
     const now = Date.now();
     if (this.reminder()) {
-      const r = dueReminder(this.times.times, now);
-      if (r) {
+      const due = dueReminderFor(this.times.times, now, this.prayers());
+      if (due) {
+        const r = due.prayer;
         const rkey = r + this.times.times[r];
         if (this.lastReminded !== rkey) {
           this.lastReminded = rkey;
           this.play(CHIME_URL);
           const name = r.charAt(0).toUpperCase() + r.slice(1);
-          this.toast.show(this.i18n.t('{p} starts in 15 minutes', { p: this.i18n.t(name) }), 'info');
+          this.toast.show(this.i18n.t('{p} starts in {n} minutes', { p: this.i18n.t(name), n: due.lead }), 'info');
         }
       }
     }
     if (!this.enabled()) return;
     const p = duePrayer(this.times.times, now);
-    if (!p) return;
+    if (!p || !this.prayers()[p]?.adhan) return;
     const key = p + this.times.times[p];
     if (this.lastFired === key) return;
     this.lastFired = key;
-    const m = MUEZZINS.find((x) => x.id === this.muezzin()) ?? MUEZZINS[0];
-    this.play(p === 'fajr' && m.fajrUrl ? m.fajrUrl : m.url);
+    this.play(this.urlFor(p), this.prayers()[p].volume);
     this.toast.show('Time for ' + p.charAt(0).toUpperCase() + p.slice(1), 'info');
   }
 
-  private play(url: string): void {
+  private play(url: string, volume = 100): void {
     this.stop();
     const a = new Audio(url);
+    a.volume = Math.max(0, Math.min(1, volume / 100));
     this.audio = a;
-    a.onended = () => { this.playing.set(false); this.audio = null; };
-    a.onerror = () => { this.playing.set(false); this.audio = null; };
-    a.play().then(() => this.playing.set(true)).catch(() => {
-      this.playing.set(false);
-      this.audio = null;
+    const done = () => { if (this.audio === a) { this.playing.set(false); this.audio = null; } };
+    a.onended = done;
+    a.onerror = done;
+    a.onpause = done;
+    a.onemptied = done;
+    a.onplaying = () => { if (this.audio === a) this.playing.set(true); };
+    a.play().catch(() => {
+      done();
       this.toast.error('The browser blocked audio playback. Tap Preview once to allow sound.');
     });
   }
