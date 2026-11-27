@@ -51,8 +51,10 @@ function saveCounts(c: Record<string, number>): void {
         }
         <button class="chip" [class.active]="target() === 0" (click)="target.set(0)">{{ 'Open' | t }}</button>
       </div>
+      <label class="chip-line"><input type="checkbox" [checked]="cycle()" (change)="setCycle($any($event.target).checked)" data-testid="tasbih-cycle"> {{ 'Move to the next zikr when the target is reached' | t }}</label>
       <button class="big" (click)="tap()">{{ 'Tap to count' | t }}</button>
       <div class="row" style="justify-content:center;gap:10px">
+        <button class="btn btn-ghost btn-sm" (click)="nextZikr()" data-testid="tasbih-next">{{ 'Next zikr' | t }}</button>
         <button class="btn btn-ghost btn-sm" (click)="reset()">{{ 'Reset this zikr' | t }}</button>
         @if (target() > 0 && count() >= target()) { <span class="gold">{{ 'Complete. May Allah accept it.' | t }}</span> }
       </div>
@@ -76,6 +78,7 @@ function saveCounts(c: Record<string, number>): void {
     .targets { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
     .chip.active { border-color: var(--gold); color: var(--gold); }
+    .chip-line { color: var(--muted); font-size: 0.9rem; display: flex; gap: 8px; justify-content: center; align-items: center; }
     .big { padding: 22px; border-radius: 18px; border: none; background: linear-gradient(135deg, var(--gold), #b8944a); color: #1a1408; font-size: 1.3rem; font-weight: 700; cursor: pointer; }
     .big:active { transform: scale(0.98); }
     .row { display: flex; align-items: center; }
@@ -104,6 +107,19 @@ export class Tasbih {
     c[id] = (c[id] || 0) + 1;
     this.counts.set(c);
     saveCounts(c);
+    if (this.cycle() && this.target() > 0 && c[id] === this.target()) setTimeout(() => this.nextZikr(), 700);
+  }
+
+  protected readonly cycle = signal(localStorage.getItem('sabeel.tasbihCycle') !== '0');
+
+  protected setCycle(v: boolean): void {
+    this.cycle.set(v);
+    localStorage.setItem('sabeel.tasbihCycle', v ? '1' : '0');
+  }
+
+  protected nextZikr(): void {
+    const i = this.presets.findIndex((p) => p.id === this.current().id);
+    this.select(this.presets[(i + 1) % this.presets.length]);
   }
 
   protected reset(): void {

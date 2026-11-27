@@ -9,6 +9,8 @@ import { extraAyahUrl, extraOf, mergeReciters } from '../core/extra-reciters';
 import { ShareAyah } from '../core/share-ayah';
 import { Toast } from '../core/toast';
 import { PageHead, Spinner } from '../shared/ui';
+import { DockPlayer } from '../shared/dock-player';
+import { analyzeTajweed } from '../core/data/tajweed-rules';
 
 interface Verse {
   verse_key: string;
@@ -32,7 +34,7 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
 
 @Component({
   selector: 'app-mushaf',
-  imports: [T, PageHead, Spinner, RouterLink],
+  imports: [T, PageHead, Spinner, RouterLink, DockPlayer],
   template: `
     <app-head [title]="'Mushaf with tajweed' | t" [subtitle]="'Page-by-page Madani layout with colored tajweed text from the Quran Foundation API (api.quran.com).' | t" />
     <div class="mushaf-nav" style="margin-bottom:14px">
@@ -80,14 +82,21 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
           <div class="sheet-actions">
             <button class="btn btn-sm btn-gold" (click)="playSel()">{{ (playingKey() === k ? 'Stop' : 'Play') | t }}</button>
             <button class="btn btn-sm" [class.on]="panel() === 'tafsir'" (click)="openPanel('tafsir')">{{ 'Tafsir' | t }}</button>
+            <button class="btn btn-sm" [class.on]="panel() === 'tajweed'" (click)="openPanel('tajweed')">{{ 'Tajweed rules' | t }}</button>
             <button class="btn btn-sm" [class.on]="panel() === 'translation'" (click)="openPanel('translation')">{{ 'Translation' | t }}</button>
             <button class="btn btn-sm" (click)="shareText()">{{ 'Share as text' | t }}</button>
             <button class="btn btn-sm" (click)="shareImage()">{{ 'Share as image' | t }}</button>
-            <a class="btn btn-sm btn-ghost" [routerLink]="['/app/quran', selSurah()]">{{ 'Verse view' | t }}</a>
+            <a class="btn btn-sm btn-ghost" [routerLink]="['/app/quran', selSurah()]" [queryParams]="{ view: 'verse' }">{{ 'Verse view' | t }}</a>
           </div>
-          @if (panel(); as pn) {
+          @if (panel() === 'tajweed') {
+            <div class="tj-panel" data-testid="tajweed-rules">
+              @for (h of tajweedHits(); track h.rule.key) {
+                <div class="tj-rule"><strong [style.color]="h.rule.color">{{ i18n.isRtl() ? h.rule.ar : h.rule.en }}</strong> <span class="ar tj-words">{{ h.words.join(' ، ') }}</span><div class="muted small">{{ i18n.isRtl() ? h.rule.descAr : h.rule.descEn }}</div></div>
+              } @empty { <p class="muted">{{ 'No tajweed marks in this ayah.' | t }}</p> }
+            </div>
+          } @else if (panel(); as pn) {
             <label class="field">{{ (pn === 'tafsir' ? 'Tafsir' : 'Translation') | t }}
-              <select (change)="pickEdition(pn, $any($event.target).value)">
+              <select (change)="pickEdition(pn === 'tafsir' ? 'tafsir' : 'translation', $any($event.target).value)">
                 @for (e of (pn === 'tafsir' ? tafsirEditions() : translationEditions()); track e.key) { <option [value]="e.key" [selected]="e.key === (pn === 'tafsir' ? tafsirKey() : translationKey())">{{ e.title }} ({{ e.version }})</option> }
               </select>
             </label>
@@ -101,7 +110,10 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
           }
         </div>
       }
-      <audio #player (ended)="onEnded()" (error)="onAudioError()"></audio>
+      <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()"></audio>
+      @if (playingKey(); as pk) {
+        <app-dock-player testid="mushaf-playbar" [audio]="audioEl()" [title]="surahName(Number(pk.split(':')[0])) + ' ' + pk" [subtitle]="reciterName()" [paused]="paused()" (toggle)="togglePause()" (stop)="stopAudio()" />
+      }
       @if (!i18n.isRtl()) {
         <p class="muted small legend">
           <span class="tj-madda_normal">Madd</span> · <span class="tj-ghunnah">Ghunnah</span> · <span class="tj-qalqalah">Qalqalah</span> · <span class="tj-ikhfa">Ikhfa</span> · <span class="tj-ham_wasl">Hamzat wasl</span>
@@ -133,10 +145,13 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
     .vtext.sel { background: rgba(184, 134, 11, 0.25); }
     .vtext.playing { background: rgba(13, 138, 63, 0.22); }
     .sheet { position: sticky; bottom: 12px; z-index: 30; margin-top: 14px; background: linear-gradient(var(--panel), var(--panel)), var(--bg); border: 1px solid var(--gold); border-radius: 14px; padding: 12px 14px; max-height: 55vh; overflow: auto; }
+    .sheet { bottom: 84px; }
     .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--gold); }
     .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .sheet-actions .on { outline: 2px solid var(--gold); }
     .ed-title { font-size: 0.78rem; color: var(--gold); margin-top: 8px; }
+    .tj-rule { margin: 6px 0; }
+    .tj-words { margin-inline-start: 8px; font-size: 1.2rem; }
     .ed-text { line-height: 1.9; white-space: pre-wrap; margin: 6px 0; }
   `]
 })
@@ -147,6 +162,7 @@ export class Mushaf implements OnInit, OnDestroy {
   private readonly shareSvc = inject(ShareAyah);
   private readonly toast = inject(Toast);
   readonly page = input<string>();
+  readonly ayah = input<string>();
   private readonly cur = signal(1);
   private readonly player = viewChild<ElementRef<HTMLAudioElement>>('player');
   protected readonly verses = signal<Verse[]>([]);
@@ -159,7 +175,7 @@ export class Mushaf implements OnInit, OnDestroy {
   protected readonly juzList = Array.from({ length: 30 }, (_, i) => i + 1);
   protected readonly sel = signal<string | null>(null);
   protected readonly playingKey = signal<string | null>(null);
-  protected readonly panel = signal<'tafsir' | 'translation' | null>(null);
+  protected readonly panel = signal<'tafsir' | 'translation' | 'tajweed' | null>(null);
   protected readonly editions = signal<EditionInfo[]>([]);
   protected readonly detail = signal<EditionAyah | null>(null);
   protected readonly detailError = signal(false);
@@ -170,6 +186,12 @@ export class Mushaf implements OnInit, OnDestroy {
 
   protected page$ = this.cur;
 
+  protected tajweedHits = () => {
+    const k = this.sel();
+    const v = this.verses().find((x) => x.verse_key === k);
+    return v ? analyzeTajweed(v.text_uthmani_tajweed) : [];
+  };
+
   protected tafsirEditions = () => this.editions().filter((e) => e.kind !== 'translation');
   protected translationEditions = () => this.editions().filter((e) => e.kind === 'translation');
 
@@ -179,8 +201,23 @@ export class Mushaf implements OnInit, OnDestroy {
     if (fromUrl >= 1 && fromUrl <= 604) this.cur.set(fromUrl);
     else if (saved >= 1 && saved <= 604) this.cur.set(saved);
     this.api.surahs().subscribe({ next: (s) => this.surahs.set(s), error: () => undefined });
+    const key = this.ayah();
+    if (key && /^\d+:\d+$/.test(key)) {
+      this.pendingKey = key;
+      fetch(`https://api.quran.com/api/v4/verses/by_key/${key}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+        .then((d) => {
+          const pg = Number(d?.verse?.page_number);
+          if (pg >= 1 && pg <= 604) { this.cur.set(pg); localStorage.setItem('sabeel.mushafPage', String(pg)); }
+          this.load();
+        })
+        .catch(() => this.load());
+      return;
+    }
     this.load();
   }
+
+  private pendingKey: string | null = null;
 
   ngOnDestroy(): void {
     this.stopAudio();
@@ -196,6 +233,10 @@ export class Mushaf implements OnInit, OnDestroy {
 
   protected surahStart(v: Verse): boolean {
     return this.ayahOf(v) === 1;
+  }
+
+  protected ayahNo(): number {
+    return Number((this.sel() ?? '1:1').split(':')[1]);
   }
 
   protected selSurah(): number {
@@ -263,9 +304,10 @@ export class Mushaf implements OnInit, OnDestroy {
     this.stopAudio();
   }
 
-  protected openPanel(p: 'tafsir' | 'translation'): void {
+  protected openPanel(p: 'tafsir' | 'translation' | 'tajweed'): void {
     if (this.panel() === p) { this.panel.set(null); return; }
     this.panel.set(p);
+    if (p === 'tajweed') return;
     if (!this.editions().length) {
       this.api.editions().subscribe({ next: (e) => this.editions.set(e), error: () => this.detailError.set(true) });
     }
@@ -281,7 +323,7 @@ export class Mushaf implements OnInit, OnDestroy {
   private loadDetail(): void {
     const k = this.sel();
     const p = this.panel();
-    if (!k || !p) return;
+    if (!k || !p || p === 'tajweed') return;
     const [s, a] = k.split(':').map(Number);
     this.detailError.set(false);
     this.detail.set(null);
@@ -318,6 +360,8 @@ export class Mushaf implements OnInit, OnDestroy {
         const list = mergeReciters(r);
         const pref = p?.preferredReciterId;
         this.reciterId = pref && list.some((x) => x.id === pref) ? pref : (list[0]?.id ?? 1);
+        const rr = list.find((x) => x.id === this.reciterId);
+        this.reciterName.set(rr ? (this.i18n.isRtl() ? rr.nameAr : rr.nameEn) : '');
         resolve(this.reciterId);
       },
       error: () => this.toast.error('Audio unavailable for this selection. The audio CDN is a third-party service.')
@@ -342,7 +386,24 @@ export class Mushaf implements OnInit, OnDestroy {
     }
   }
 
-  private stopAudio(): void {
+  protected readonly paused = signal(false);
+  protected readonly reciterName = signal('');
+  protected audioEl = () => this.player()?.nativeElement ?? null;
+  protected readonly Number = Number;
+
+  protected togglePause(): void {
+    const el = this.player()?.nativeElement;
+    if (!el) return;
+    if (el.paused) el.play().catch(() => this.toast.error('Audio could not start.'));
+    else el.pause();
+  }
+
+  protected onPaused(): void {
+    if (this.playingKey() !== null) this.paused.set(true);
+  }
+
+  protected stopAudio(): void {
+    this.paused.set(false);
     const el = this.player()?.nativeElement;
     if (el) { el.pause(); el.removeAttribute('src'); }
     this.playingKey.set(null);
@@ -401,6 +462,14 @@ export class Mushaf implements OnInit, OnDestroy {
     this.juz.set(v[0]?.juz_number ?? 1);
     this.fromCache.set(cached);
     this.loading.set(false);
+    if (this.pendingKey) {
+      const k = this.pendingKey;
+      this.pendingKey = null;
+      if (v.some((x) => x.verse_key === k)) {
+        this.sel.set(k);
+        setTimeout(() => document.querySelector(`[data-key="${k}"]`)?.scrollIntoView({ block: 'center' }), 50);
+      }
+    }
   }
 
   private load(): void {

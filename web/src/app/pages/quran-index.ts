@@ -33,7 +33,7 @@ import { TafsirSearch } from './tafsir-search';
         @if (searching()) { <app-spinner /> }
         <div class="list">
           @for (a of r.content; track a.id) {
-            <a class="item" [routerLink]="['/app/quran', a.surahId]" [queryParams]="{ ayah: a.id }">
+            <a class="item" [routerLink]="['/app/mushaf']" [queryParams]="{ ayah: a.surahId + ':' + a.ayahNumber }">
               <div class="ar grow" style="font-size:1.6rem;line-height:2">{{ a.textUthmani }}</div>
               <span class="badge">{{ surahName(a.surahId) }} {{ a.surahId }}:{{ a.ayahNumber }}</span>
             </a>

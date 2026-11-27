@@ -38,6 +38,23 @@ function loadFasts(): Record<string, boolean> {
       </div>
     }
 
+    <div class="card" style="margin-bottom:18px" data-testid="fast-reminders">
+      <div class="card-title"><h3>{{ 'Next recommended fasts' | t }}</h3></div>
+      <div class="list">
+        @for (f of nextFasts(); track f.date) {
+          <div class="row between">
+            <div>
+              <div>{{ f.label | t }}</div>
+              <div class="muted small">{{ f.date }}</div>
+            </div>
+            @if (f.daysAway === 0) { <span class="badge">{{ 'Today' | t }}</span> }
+            @else if (f.daysAway === 1) { <span class="badge">{{ 'Tomorrow' | t }}</span> }
+            @else { <span class="badge">{{ 'In {n} days' | t: { n: f.daysAway } }}</span> }
+          </div>
+        }
+      </div>
+    </div>
+
     <div class="card" style="margin-bottom:18px">
       <div class="card-title"><h3>{{ 'Upcoming occasions' | t }}</h3></div>
       <div class="list">
@@ -81,14 +98,33 @@ export class Hijri {
   protected readonly monthsAr = HIJRI_MONTHS_AR;
   protected readonly today = computed(() => hijriFromGregorian(new Date()));
   protected readonly fasts = signal<Record<string, boolean>>(loadFasts());
-  protected readonly upcoming = computed(() => upcomingOccasions(this.today(), 6));
+  protected readonly upcoming = computed(() => upcomingOccasions(this.today(), 10));
   protected readonly days = computed(() => Array.from({ length: hijriMonthLength(this.today().month, this.today().year) }, (_, i) => i + 1));
   protected readonly monthFasts = computed(() => this.days().filter((d) => this.fasts()[this.key(d)]).length);
   protected readonly totalFasts = computed(() => Object.values(this.fasts()).filter(Boolean).length);
 
+  protected readonly nextFasts = computed(() => {
+    const out: { label: string; date: string; daysAway: number }[] = [];
+    let gotMT = false;
+    let gotWhite = false;
+    const base = new Date();
+    for (let i = 0; i < 45 && out.length < 4; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+      const h = hijriFromGregorian(d);
+      const date = d.toLocaleDateString(this.i18n.isRtl() ? 'ar' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      const wd = d.getDay();
+      if (h.month === 9) continue;
+      if (!gotWhite && h.day >= 13 && h.day <= 15) { out.push({ label: 'White day (13th to 15th of the Hijri month)', date, daysAway: i }); gotWhite = true; continue; }
+      if (!gotMT && (wd === 1 || wd === 4)) { out.push({ label: wd === 1 ? 'Monday fast (sunnah)' : 'Thursday fast (sunnah)', date, daysAway: i }); gotMT = true; }
+      else if (out.filter((x) => x.label.includes('fast (sunnah)')).length < 2 && (wd === 1 || wd === 4)) out.push({ label: wd === 1 ? 'Monday fast (sunnah)' : 'Thursday fast (sunnah)', date, daysAway: i });
+    }
+    return out.sort((a, b) => a.daysAway - b.daysAway);
+  });
+
   protected fastingHint(): string | null {
     const wd = new Date().getDay();
     const t = this.today();
+    if (wd === 0 || wd === 3) return wd === 0 ? 'Tomorrow is Monday, a recommended day to fast.' : 'Tomorrow is Thursday, a recommended day to fast.';
     if (t.month === 9) return 'Ramadan Mubarak. May Allah accept your fasting.';
     if (wd === 1) return 'Today is Monday, a recommended day to fast.';
     if (wd === 4) return 'Today is Thursday, a recommended day to fast.';

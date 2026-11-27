@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Api } from '../core/api';
+import { DockPlayer } from '../shared/dock-player';
 import { extraAyahUrl, extraOf, mergeReciters } from '../core/extra-reciters';
 import { Ayah, Bookmark, EditionAyah, EditionInfo, Reciter, Surah } from '../core/models';
 import { Toast } from '../core/toast';
@@ -13,7 +14,7 @@ import { Spinner } from '../shared/ui';
 
 @Component({
   selector: 'app-quran-reader',
-  imports: [T, Loc, Nm, FormsModule, RouterLink, Spinner],
+  imports: [DockPlayer, T, Loc, Nm, FormsModule, RouterLink, Spinner],
   template: `
     <a routerLink="/app/quran" class="muted">{{ '← All surahs' | t }}</a>
     @if (loading()) { <app-spinner /> } @else if (error()) { <div class="error-box" style="margin-top:14px">{{ error() | t }}</div> } @else if (surah(); as s) {
@@ -38,14 +39,10 @@ import { Spinner } from '../shared/ui';
         @if (playingId() !== null || surahMode()) { <button class="btn btn-ghost" (click)="stop()">{{ 'Stop' | t }}</button> }
       </div>
 
-      <div class="playerbar" [class.hidden]="playingId() === null && !surahMode()">
-        <div class="pb-info">
-          <strong>{{ surahMode() ? ('Full surah' | t) : ('Ayah {n}' | t: { n: playingNumber() }) }}</strong>
-        </div>
-        <button class="btn btn-sm" (click)="togglePause()">{{ (paused() ? 'Resume' : 'Pause') | t }}</button>
-        <button class="btn btn-sm btn-ghost" (click)="stop()">{{ 'Stop' | t }}</button>
-        <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()" controls></audio>
-      </div>
+      @if (playingId() !== null || surahMode()) {
+        <app-dock-player testid="reader-playbar" [audio]="audioEl()" [title]="surahMode() ? ('Full surah' | t) : ('Ayah {n}' | t: { n: playingNumber() })" [subtitle]="reciterLabel()" [paused]="paused()" (toggle)="togglePause()" (stop)="stop()" />
+      }
+      <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()"></audio>
 
       @if (s.id !== 1 && s.id !== 9) { <div class="ar bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div> }
 
@@ -103,7 +100,7 @@ import { Spinner } from '../shared/ui';
     .hero { text-align: center; margin: 14px 0 18px; }
     .title { font-size: 3.4rem; color: var(--gold); line-height: 1.6; }
     .bar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
-    .hidden, .playerbar.hidden { display: none; }
+    .hidden { display: none; }
     .bismillah { text-align: center; font-size: 2rem; color: var(--gold); margin: 18px 0; }
     .text { padding: 8px 26px; }
     .ayah { padding: 18px 0; border-bottom: 1px solid var(--line-soft); }
@@ -121,9 +118,6 @@ import { Spinner } from '../shared/ui';
     .ed-title { font-size: 0.78rem; color: var(--gold); }
     .ed-text { line-height: 1.9; white-space: pre-wrap; margin: 6px 0; }
     .ed-notes { font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
-    .playerbar { position: sticky; bottom: 12px; z-index: 30; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: linear-gradient(var(--panel), var(--panel)), var(--bg); border: 1px solid var(--gold); border-radius: 14px; padding: 10px 14px; margin: 14px 0; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); }
-    .playerbar.hidden { display: none; }
-    .playerbar audio { flex: 1 1 160px; min-width: 0; max-width: 100%; height: 40px; }
     .pb-info { white-space: nowrap; color: var(--gold); }
     .sharebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 0 4px; }
     .sopt { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.9rem; }
@@ -143,6 +137,11 @@ export class QuranReader implements OnDestroy {
   protected readonly ayahs = signal<Ayah[]>([]);
   protected readonly reciters = signal<Reciter[]>([]);
   protected readonly reciterId = signal(1);
+  protected audioEl = () => this.player()?.nativeElement ?? null;
+  protected reciterLabel = (): string => {
+    const r = this.reciters().find((x) => x.id === this.reciterId());
+    return r ? (this.i18n.isRtl() ? r.nameAr : r.nameEn) : '';
+  };
   protected readonly bookmarks = signal<Bookmark[]>([]);
   protected readonly playingId = signal<number | null>(null);
   protected readonly surahMode = signal(false);

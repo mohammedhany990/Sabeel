@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards';
+import { authGuard, guestGuard, verseRedirectGuard } from './core/guards';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: () => import('./pages/landing').then((m) => m.Landing) },
@@ -16,7 +16,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard').then((m) => m.Dashboard) },
       { path: 'quran', loadComponent: () => import('./pages/quran-index').then((m) => m.QuranIndex) },
-      { path: 'quran/:id', loadComponent: () => import('./pages/quran-reader').then((m) => m.QuranReader) },
+      { path: 'quran/:id', canActivate: [verseRedirectGuard], loadComponent: () => import('./pages/quran-reader').then((m) => m.QuranReader) },
       { path: 'mushaf', loadComponent: () => import('./pages/mushaf').then((m) => m.Mushaf) },
       { path: 'library', loadComponent: () => import('./pages/library').then((m) => m.Library) },
       { path: 'memorization', loadComponent: () => import('./pages/memorization').then((m) => m.Memorization) },

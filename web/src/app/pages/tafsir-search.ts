@@ -25,7 +25,7 @@ export function validQuery(q: string): boolean {
       @if (message()) { <p class="muted small">{{ message() | t }}</p> }
       <div class="list" style="margin-top:12px">
         @for (h of hits(); track h.surah + ':' + h.ayah) {
-          <a class="item" [routerLink]="['/app/quran', h.surah]" data-testid="ts-hit">
+          <a class="item" [routerLink]="['/app/mushaf']" [queryParams]="{ ayah: h.surah + ':' + h.ayah }" data-testid="ts-hit">
             <span class="badge">{{ h.surah }}:{{ h.ayah }}</span>
             <span class="grow" dir="auto">{{ h.snippet }}</span>
           </a>

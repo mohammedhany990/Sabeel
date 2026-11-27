@@ -42,8 +42,40 @@ await check('register and land on the dashboard', async () => {
   await page.waitForURL('**/app/dashboard', { timeout: 30000 });
 });
 
+await check('dashboard ayah of the day shows meaning and tafsir directly', async () => {
+  await page.goto(BASE + '/app/dashboard', { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-testid=daily-tafsir] p.body', { timeout: 20000 });
+  const m = (await page.locator('[data-testid=daily-meaning] p.body').first().innerText()).trim();
+  const t = (await page.locator('[data-testid=daily-tafsir] p.body').first().innerText()).trim();
+  if (m.length < 5 || t.length < 5) throw new Error('empty meaning or tafsir');
+  if (await page.locator('h3', { hasText: 'Ayah of the day' }).count() !== 1) throw new Error('more than one ayah of the day card');
+  await page.screenshot({ path: `${process.env.SHOTS || '/tmp'}/real-dashboard-ayah.png` });
+});
+
+await check('ayah of the day opens the mushaf page', async () => {
+  await page.getByRole('link', { name: 'Open in the mushaf' }).click();
+  await page.waitForURL('**/app/mushaf?ayah=*', { timeout: 20000 });
+  await page.waitForSelector('span.vtext', { timeout: 30000 });
+  await page.waitForSelector('.sheet', { timeout: 10000 });
+  await page.getByRole('button', { name: 'Tajweed rules' }).click();
+  await page.waitForSelector('[data-testid=tajweed-rules] .tj-rule', { timeout: 5000 });
+  await page.screenshot({ path: `${process.env.SHOTS || '/tmp'}/real-mushaf-tajweed.png` });
+});
+
+await check('verse route redirects to the mushaf page', async () => {
+  await page.goto(BASE + '/app/quran/2', { waitUntil: 'networkidle' });
+  await page.waitForURL('**/app/mushaf?page=*', { timeout: 20000 });
+});
+
+await check('asma ul-husna name opens meaning and greatness', async () => {
+  await page.goto(BASE + '/app/asma', { waitUntil: 'networkidle' });
+  await page.locator('div.name').nth(3).click();
+  const t = await page.locator('[data-testid=asma-detail]').innerText();
+  if (!t.includes('Meaning') || !t.includes('Greatness') || t.length < 150) throw new Error('detail incomplete: ' + t.slice(0, 80));
+});
+
 await check('tafsir panel shows the edition text with its version and source', async () => {
-  await page.goto(BASE + '/app/quran/1', { waitUntil: 'networkidle' });
+  await page.goto(BASE + '/app/quran/1?view=verse', { waitUntil: 'networkidle' });
   await page.waitForSelector('.ayah', { timeout: 20000 });
   await page.locator('.ayah').first().getByRole('button', { name: 'Tafsir and translation' }).click();
   await page.waitForSelector('.ed-block .ed-text', { timeout: 20000 });
@@ -169,7 +201,7 @@ await check('light theme toggles, persists and keeps text readable', async () =>
   });
   if (ratios.text < 7 || ratios.muted < 4.5 || ratios.gold < 4.5) throw new Error('contrast ' + JSON.stringify(ratios));
   await page.screenshot({ path: `${OUT}/light-dashboard.png`, fullPage: true });
-  await page.goto(BASE + '/app/quran/1', { waitUntil: 'networkidle' });
+  await page.goto(BASE + '/app/quran/1?view=verse', { waitUntil: 'networkidle' });
   await page.waitForSelector('.ayah', { timeout: 20000 });
   await page.screenshot({ path: `${OUT}/light-reader.png` });
   await page.goto(BASE + '/app/prayer', { waitUntil: 'networkidle' });
@@ -178,7 +210,7 @@ await check('light theme toggles, persists and keeps text readable', async () =>
   await page.evaluate(() => localStorage.removeItem('sabeel.theme'));
 });
 
-const overflowPages = ['/app/dashboard', '/app/quran', '/app/quran/1', '/app/memorization', '/app/revision', '/app/prayer', '/app/azkar', '/app/library', '/app/community', '/app/settings'];
+const overflowPages = ['/app/dashboard', '/app/quran', '/app/quran/1?view=verse', '/app/memorization', '/app/revision', '/app/prayer', '/app/azkar', '/app/library', '/app/community', '/app/settings'];
 for (const [label, size] of [['phone', { width: 390, height: 844 }], ['tablet', { width: 820, height: 1180 }]]) {
   await check('no horizontal overflow on ' + label + ' in English and Arabic', async () => {
     await page.setViewportSize(size);
@@ -191,7 +223,7 @@ for (const [label, size] of [['phone', { width: 390, height: 844 }], ['tablet', 
         const width = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth);
         if (width > 2) bad.push(lang + ' ' + path + ' +' + width + 'px');
         if (path === '/app/dashboard') await page.screenshot({ path: `${OUT}/${label}-${lang}-dashboard.png` });
-        if (path === '/app/quran/1') await page.screenshot({ path: `${OUT}/${label}-${lang}-reader.png` });
+        if (path === '/app/quran/1?view=verse') await page.screenshot({ path: `${OUT}/${label}-${lang}-reader.png` });
       }
     }
     await page.evaluate(() => localStorage.setItem('sabeel.lang', 'en'));

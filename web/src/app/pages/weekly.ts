@@ -26,7 +26,7 @@ export function sumValues(m: Record<string, number> | undefined): number {
 export function suggest(i: WeeklyInput): Suggestion {
   const due = i.revision?.dueNow ?? 0;
   if (due > 0) return { key: 'revise', link: '/app/revision', n: due };
-  if (!i.khatma || i.khatma.completed) return { key: 'khatma', link: '/app/quran', n: 0 };
+  if (!i.khatma || i.khatma.completed) return { key: 'khatma', link: '/app/mushaf', n: 0 };
   const missed = i.prayers ? i.prayers.possibleInRange - i.prayers.prayedInRange : 0;
   if (missed > 0) return { key: 'prayers', link: '/app/prayer', n: missed };
   return { key: 'steady', link: '/app/dashboard', n: 0 };

@@ -23,7 +23,7 @@ import { PageHead, Spinner } from '../shared/ui';
             @for (b of bookmarks(); track b.id) {
               <div class="item">
                 <div>
-                  <a [routerLink]="['/app/quran', surahOf(b.ayahId)]" [queryParams]="{ ayah: b.ayahId }">{{ 'Ayah #{n}' | t: { n: b.ayahId } }}</a>
+                  <a [routerLink]="['/app/mushaf']" [queryParams]="{ ayah: keyOf(b.ayahId) }">{{ 'Ayah #{n}' | t: { n: b.ayahId } }}</a>
                   @if (b.note) { <div class="muted">{{ b.note }}</div> }
                   <div class="muted small">{{ b.createdAt | dt: 'medium' }}</div>
                 </div>
@@ -36,7 +36,7 @@ import { PageHead, Spinner } from '../shared/ui';
           <div class="card-title"><h3>{{ 'Reading history' | t }}</h3></div>
           <div class="list">
             @for (h of history()?.content ?? []; track $index) {
-              <div class="item"><a [routerLink]="['/app/quran', surahOf(h.ayahId)]" [queryParams]="{ ayah: h.ayahId }">{{ 'Ayah #{n}' | t: { n: h.ayahId } }}</a><span class="muted small">{{ h.readAt | dt: 'medium' }}</span></div>
+              <div class="item"><a [routerLink]="['/app/mushaf']" [queryParams]="{ ayah: keyOf(h.ayahId) }">{{ 'Ayah #{n}' | t: { n: h.ayahId } }}</a><span class="muted small">{{ h.readAt | dt: 'medium' }}</span></div>
             } @empty { <div class="empty">{{ 'Nothing here yet.' | t }}</div> }
           </div>
         </div>
@@ -58,6 +58,15 @@ export class Library implements OnInit {
       next: (r) => { this.bookmarks.set(r.b); this.history.set(r.h); this.surahs.set(r.s); this.loading.set(false); },
       error: (e) => { this.error.set(errorMessage(e)); this.loading.set(false); }
     });
+  }
+
+  protected keyOf(ayahId: number): string {
+    let acc = 0;
+    for (const s of this.surahs()) {
+      if (ayahId <= acc + s.ayahCount) return s.id + ':' + (ayahId - acc);
+      acc += s.ayahCount;
+    }
+    return '1:1';
   }
 
   protected surahOf(ayahId: number): number {

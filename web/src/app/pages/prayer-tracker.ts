@@ -42,6 +42,7 @@ function loadJson<T>(k: string, fallback: T): T {
     <div class="card" style="margin-top:18px">
       <div class="card-title"><h3>{{ 'Night prayer (qiyam and witr)' | t }}</h3></div>
       <p class="muted small">{{ 'Plan tonight\u2019s qiyam, mark the rakahs you prayed, and record your witr.' | t }}</p>
+      @if (!witr()) { <p class="gold small" data-testid="witr-reminder">{{ 'Reminder: witr is not marked yet. Pray it before you sleep or before Fajr.' | t }}</p> }
       <div class="prow" style="align-items:center">
         <label class="field" style="margin:0">{{ 'Target rakahs' | t }}
           <select class="tselect" [value]="target()" (change)="setTarget($any($event.target).value)">

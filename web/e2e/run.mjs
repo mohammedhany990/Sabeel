@@ -46,7 +46,19 @@ await shot('02-register');
 await page.click('button[type=submit]'); await sleep(1800);
 check('register logs in and opens dashboard', page.url().endsWith('/app/dashboard'), page.url());
 await sleep(500); await shot('03-dashboard-empty');
-check('dashboard shows the ayah of the day with its tafsir', (await text()).includes('Ayah of the day') && (await text()).includes('Tafsir'));
+await sleep(1200);
+const dd = await page.evaluate(() => { const g = (id) => { const e = document.querySelector(`[data-testid=${id}] p.body`); if (!e) return null; const r = e.getBoundingClientRect(); return { len: e.innerText.trim().length, vis: r.height > 0 }; }; return { m: g('daily-meaning'), t: g('daily-tafsir'), cards: [...document.querySelectorAll('h3')].filter((h) => h.innerText.includes('Ayah of the day')).length }; });
+check('dashboard ayah of the day shows meaning and tafsir directly, no click', dd.m && dd.m.vis && dd.m.len > 5 && dd.t && dd.t.vis && dd.t.len > 5 && dd.cards === 1, JSON.stringify(dd));
+await shot('03b-dashboard-ayah');
+await clickText('a', 'Open in the mushaf'); await page.waitForSelector('span.vtext', { timeout: 20000 }).catch(() => null); await sleep(800);
+check('ayah of the day opens the mushaf page with the ayah selected', page.url().includes('/app/mushaf') && (await page.$('.sheet')) !== null, page.url());
+await shot('03c-ayah-in-mushaf');
+await clickText('.sheet button', 'Tajweed rules'); await sleep(400);
+check('tajweed rules are explained for the selected ayah', (await page.$$('[data-testid=tajweed-rules] .tj-rule')).length > 0);
+await shot('03d-tajweed-rules');
+await page.goto('http://localhost:4300/app/quran/2', { waitUntil: 'networkidle0' }); await sleep(1500);
+check('old verse route redirects to the mushaf page', page.url().includes('/app/mushaf?page='), page.url());
+await page.goto('http://localhost:4300/app/dashboard', { waitUntil: 'networkidle0' }); await sleep(800);
 check('recitation feature is removed from the nav', !(await text()).includes('Recitation check'));
 
 await go('Surah list and search');
@@ -73,6 +85,15 @@ if (firstVerse) {
   await page.goto(page.url().split('/app/')[0] + '/app/quran/1'); await sleep(1500);
 }
 check('reader shows ayahs', (await page.$$('.ayah')).length === 7);
+await page.evaluate(() => { Object.defineProperty(HTMLMediaElement.prototype, 'src', { configurable: true, set(v) { this.setAttribute('data-src', v); }, get() { return this.getAttribute('data-src') || ''; } }); HTMLMediaElement.prototype.play = function () { this.dispatchEvent(new Event('play')); return Promise.resolve(); }; HTMLMediaElement.prototype.pause = function () { this.dispatchEvent(new Event('pause')); }; });
+await clickText('button', 'Play from start'); await sleep(1500);
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+await page.evaluate(() => { const m = document.querySelector('main, .content, .main'); if (m) m.scrollTop = m.scrollHeight; });
+const dock = await page.evaluate(() => { const e = document.querySelector('[data-testid=reader-playbar]'); if (!e) return null; const r = e.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, vh: innerHeight, native: !!document.querySelector('audio[controls]') }; });
+check('reader dock player stays visible at the bottom with stop and no native audio bar', dock && dock.bottom <= dock.vh && dock.top > 0 && !dock.native, JSON.stringify(dock));
+await shot('05c-reader-dock');
+await clickText('[data-testid=reader-playbar] button', 'Stop'); await sleep(400);
+check('stop button hides the player', (await page.$('[data-testid=reader-playbar]')) === null);
 await clickText('.ayah:nth-of-type(2) button', 'Bookmark'); await sleep(500);
 await clickText('.ayah button', 'Stopped here'); await sleep(500);
 await shot('05-reader');
@@ -111,23 +132,38 @@ await clickText('button', 'Load month'); await sleep(900);
 check('month table', (await page.$$('table tbody tr')).length >= 28);
 await clickText('button', 'Save and recalculate'); await sleep(800);
 
-check('prayer tracker card with qada and qiyam', (await text()).includes('Qada') && (await text()).includes('Night prayer'));
+check('prayer tracker card with qada, qiyam and witr reminder', (await text()).includes('Qada') && (await text()).includes('Night prayer') && (await text()).includes('witr is not marked'));
 
 await go('Tasbih'); await sleep(700);
 await clickText('button.big', 'Tap to count'); await sleep(400);
 check('tasbih counter increments', (await text()).includes('Today') && !((await text()).includes('No tasbih counted yet')));
+await page.reload({ waitUntil: 'networkidle0' }); await sleep(600);
+check('tasbih count is saved across reload', (await page.$eval('.counter .num', (e) => e.innerText)).trim().startsWith('1'));
+const firstTab = await page.$eval('.tab.active', (e) => e.innerText);
+await page.evaluate(() => { const b = document.querySelector('button.big'); for (let i = 0; i < 32; i++) b.click(); });
+await sleep(1500);
+const secondTab = await page.$eval('.tab.active', (e) => e.innerText);
+check('tasbih moves to the next zikr after the target is reached', firstTab !== secondTab, firstTab + ' -> ' + secondTab);
 await shot('17-tasbih');
 
 await go('Duas'); await sleep(600);
 check('duas page lists categories and a dua', (await text()).includes('Masnoon duas') && (await text()).includes('Al-Bukhari'));
 await shot('18-duas');
+await clickText('button.tab', 'Istikhara'); await sleep(300);
+check('duas include istikhara', (await text()).includes('Sahih al-Bukhari 1162'));
+await shot('18b-istikhara');
 
 await go('Asma ul-Husna'); await sleep(600);
 check('asma page shows name of the day and 99 names', (await text()).includes('Name of the day') && (await page.$$('div.name')).length === 99);
 await shot('19-asma');
+await clickText('div.name', 'Ar-Rahman'); await sleep(400);
+const ad = await page.evaluate(() => { const e = document.querySelector('[data-testid=asma-detail]'); return e ? e.innerText : ''; });
+check('tapping an Asma name opens meaning and greatness', ad.includes('Meaning') && ad.includes('Greatness') && ad.includes('Ar-Rahman') && ad.length > 200, ad.slice(0, 60));
+await shot('19b-asma-detail');
+await clickText('[data-testid=asma-detail] button', 'Close'); await sleep(200);
 
 await go('Hijri calendar'); await sleep(600);
-check('hijri calendar shows occasions and tracker', (await text()).includes('Upcoming occasions') && (await text()).includes('Fasting tracker'));
+check('hijri calendar shows occasions and tracker', (await text()).includes('Upcoming occasions') && (await text()).includes('Fasting tracker') && (await text()).includes('Next recommended fasts') && (await text()).includes('Ashura'));
 await shot('20-hijri');
 
 await go('Zakat'); await sleep(500);
