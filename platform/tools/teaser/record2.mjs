@@ -25,6 +25,8 @@ const context = await browser.newContext({
   storageState: state,
   viewport: { width: 1280, height: 720 },
   recordVideo: { dir: OUT, size: { width: 1280, height: 720 } },
+  timezoneId: 'Africa/Cairo',
+  locale: 'en-US',
   geolocation: { latitude: 30.0444, longitude: 31.2357 },
   permissions: ['geolocation']
 });
@@ -91,6 +93,14 @@ async function scene(id, en, ar, fn) {
   timeline.push({ id, need, ranges: cur.ranges });
 }
 
+const clickText = async (sel, t) => {
+  const ok = await page.evaluate(([sel, t]) => {
+    const el = [...document.querySelectorAll(sel)].find((e) => e.innerText.trim().toLowerCase().includes(t.toLowerCase()));
+    if (el) { el.click(); return true; }
+    return false;
+  }, [sel, t]);
+  if (!ok) throw new Error('missing ' + sel + ' ' + t);
+};
 const scroll = (y) => page.evaluate((y) => window.scrollTo({ top: y, behavior: 'smooth' }), y);
 
 await scene('n01', 'Quran, memorization, prayer and azkar in one place', 'القرآن والحفظ والصلاة والأذكار في مكان واحد', async (need, show) => {
@@ -98,26 +108,29 @@ await scene('n01', 'Quran, memorization, prayer and azkar in one place', 'الق
   await sleep(600);
   await show();
   await page.mouse.move(640, 420, { steps: 25 });
+  await sleep(1800);
+  await scroll(430);
 });
 
 await scene('n02', 'Read the full Quran', 'اقرأ المصحف كاملًا', async (need, show) => {
-  await page.goto(BASE + '/app/quran/1', { waitUntil: 'networkidle' });
-  await page.waitForSelector('.ayah', { timeout: 20000 });
+  await page.goto(BASE + '/app/mushaf?page=2', { waitUntil: 'networkidle' });
+  await page.waitForSelector('span.vtext', { timeout: 30000 });
   await sleep(800);
   await show();
-  await sleep(1500);
-  await scroll(260);
+  await sleep(2200);
+  await clickText('.mushaf-nav button', 'Next page');
 });
 
 await scene('n03', 'Tafsir and translation, with version and source', 'تفسير وترجمة مع الإصدار والمصدر', async (need, show) => {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.locator('.ayah').first().getByRole('button', { name: 'Tafsir and translation' }).click();
-  await page.waitForSelector('.ed-block .ed-text', { timeout: 20000 });
-  await page.locator('.ed-block').first().scrollIntoViewIfNeeded();
-  await sleep(600);
+  await page.addStyleTag({ content: '.sheet { bottom: 120px !important; }' });
+  await page.locator('span.vtext').first().click();
+  await sleep(900);
+  await clickText('.sheet button', 'Translation');
+  await page.waitForSelector('.sheet .ed-text', { timeout: 20000 });
   await show();
-  await sleep(2600);
-  await page.locator('select[name=tafsirKey]').selectOption({ index: 1 });
+  await sleep(2400);
+  await clickText('.sheet button', 'Tafsir');
+  await sleep(1500);
 });
 
 await scene('n04', 'Search inside the tafsir', 'ابحث داخل التفسير', async (need, show) => {
@@ -131,6 +144,10 @@ await scene('n04', 'Search inside the tafsir', 'ابحث داخل التفسير
   await sleep(300);
   await page.click('[data-testid=ts-run]');
   await page.waitForSelector('[data-testid=ts-hit]', { timeout: 20000 });
+  await sleep(1200);
+  await page.locator('[data-testid=ts-hit]').first().click();
+  await page.waitForSelector('span.vtext', { timeout: 30000 });
+  await show();
 });
 
 await scene('n05', 'Memorization plan with a daily target', 'خطة حفظ بورد يومي', async (need, show) => {
@@ -149,8 +166,9 @@ await scene('n07', 'Ayah of the day and your weekly summary', 'آية اليوم
   await page.waitForSelector('[data-testid=daily-ayah]', { timeout: 20000 });
   await sleep(700);
   await show();
-  await sleep(2500);
-  await scroll(250);
+  await sleep(2200);
+  await page.locator('[data-testid=weekly-summary]').scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 160));
 });
 
 await page.addInitScript(() => { const real = Date.now.bind(Date); Date.now = () => real() - 20 * 3600 * 1000; });
