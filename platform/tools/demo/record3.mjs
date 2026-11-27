@@ -86,8 +86,26 @@ await step('s02', 'Create an account', 'إنشاء حساب', async () => {
 await step('s03', 'Dashboard: your day at a glance', 'لوحة التحكم: ملخص يومك', null, 3000);
 await step('w01', 'Ayah of the day with its tafsir, and your weekly summary', 'آية اليوم مع تفسيرها وملخص أسبوعك', async () => { await page.evaluate(() => window.scrollTo(0, 0)); await sleep(2500); await page.evaluate(() => window.scrollBy(0, 500)); }, 3000);
 await step('s04', 'All 114 surahs from the full Tanzil text', 'القرآن كاملاً: ١١٤ سورة', async () => { await nav('Surah list and search'); }, 3000);
-await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
+await step('n01', 'The Quran opens as mushaf pages: turn the page, or jump by page, surah or juz', 'يُفتح القرآن كصفحات مصحف: قلّب الصفحة أو انتقل بالصفحة أو السورة أو الجزء', async () => {
   await clickText('a.surah', 'The Opening');
+  await page.waitForSelector('span.vtext', { timeout: 30000 });
+  await sleep(2500);
+  await clickText('.mushaf-nav button', 'Next page');
+  await sleep(2500);
+  await page.selectOption('.mushaf-nav label:nth-of-type(3) select', { value: '10' });
+  await sleep(2500);
+}, 3000);
+await step('n02', 'Tap any ayah to play it, read tafsir or translation, or share it as text or an image with the Sabeel logo', 'اضغط على أي آية لتشغيلها أو قراءة التفسير أو الترجمة أو مشاركتها كنص أو كصورة بشعار سبيل', async () => {
+  await page.locator('span.vtext').first().click();
+  await sleep(1500);
+  await clickText('.sheet button', 'Translation');
+  await page.waitForSelector('.sheet .ed-text', { timeout: 15000 });
+  await sleep(2500);
+  await clickText('.sheet button', 'Tafsir');
+  await sleep(3000);
+}, 3000);
+await step('s05', 'Read ayah by ayah', 'القراءة آية آية', async () => {
+  await clickText('.sheet a', 'Verse view');
   await page.waitForSelector('.ayah', { timeout: 15000 });
 }, 3000);
 await step('s06', 'Bookmark an ayah, or mark where you stopped', 'علامة على آية أو موضع التوقف', async () => {
@@ -115,10 +133,6 @@ await step('w04', 'Sticky player and the Husary and Minshawi teaching reciters',
   await clickText('button', 'Play from start');
   await sleep(3500);
 }, 3000);
-await step('w05', 'Mushaf pages with colored tajweed', 'صفحات المصحف بألوان التجويد', async () => {
-  await nav('Mushaf');
-  await page.waitForSelector('span.vtext', { timeout: 30000 });
-}, 3500);
 await step('s07', 'Library: bookmarks and last position', 'المكتبة: العلامات وآخر موضع', async () => { await nav('Bookmarks'); }, 3000);
 await step('s08', 'Memorization plan with a daily target', 'خطة الحفظ والورد اليومي', async () => {
   await nav('Memorization');
@@ -137,9 +151,11 @@ await step('s10', 'Spaced-repetition revision: 1, 3, 7, 14, 30, 60 days', 'مر�
     await sleep(1000);
   }
 }, 3000);
-await step('w06', 'Adhan by Sheikh Nasr al-Din Tobar and a reminder 15 minutes before each prayer', 'الأذان بصوت نصر الدين طوبار وتذكير قبل الصلاة بخمس عشرة دقيقة', async () => {
+await step('n03', 'Choose between several muezzins for the adhan, with a reminder 15 minutes before each prayer', 'اختر من عدة مؤذنين للأذان مع تذكير قبل الصلاة بخمس عشرة دقيقة', async () => {
   await nav('Prayer');
   await sleep(1200);
+  await page.selectOption('select[name=mz]', { value: 'beautiful' });
+  await sleep(800);
   await clickText('button', 'Preview');
   await sleep(3000);
   await clickText('button', 'Stop');

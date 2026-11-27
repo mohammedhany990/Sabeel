@@ -64,7 +64,7 @@ export class ShareAyah {
     ctx.fillStyle = '#e2c275';
     ctx.font = '600 30px Georgia, serif';
     ctx.save();
-    ctx.translate(430, 1252);
+    ctx.translate(475, 1252);
     ctx.scale(0.62, 0.62);
     ctx.fillStyle = '#e2c275';
     ctx.fill(new Path2D('M32 6 L40 24 L58 32 L40 40 L32 58 L24 40 L6 32 L24 24 Z'));
@@ -75,7 +75,7 @@ export class ShareAyah {
     ctx.restore();
     ctx.textAlign = 'left';
     ctx.fillStyle = '#e2c275';
-    ctx.fillText('Sabeel', 480, 1286);
+    ctx.fillText('Sabeel', 525, 1286);
     const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/png'));
     if (!blob) return;
     const file = new File([blob], `ayah-${a.surahId}-${a.ayahNumber}.png`, { type: 'image/png' });
