@@ -113,7 +113,8 @@ await check('tafsir search returns linked results', async () => {
   await page.click('[data-testid=ts-run]');
   await page.waitForSelector('[data-testid=ts-hit]', { timeout: 20000 });
   await page.locator('[data-testid=ts-hit]').first().click();
-  await page.waitForSelector('.ayah', { timeout: 20000 });
+  await page.waitForURL('**/app/mushaf?ayah=*', { timeout: 20000 });
+  await page.waitForSelector('span.vtext', { timeout: 30000 });
 });
 
 await check('khatma plan starts and saves progress', async () => {
