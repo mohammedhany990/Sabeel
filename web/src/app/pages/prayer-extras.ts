@@ -32,6 +32,12 @@ export function nextPrayer(times: Record<string, string>, now: number): { name: 
   return null;
 }
 
+export function nextWithRollover(today: Record<string, string> | null, tomorrow: Record<string, string> | null, now: number): { name: string; at: number } | null {
+  const a = today ? nextPrayer(today, now) : null;
+  if (a) return a;
+  return tomorrow ? nextPrayer(tomorrow, now) : null;
+}
+
 export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -50,7 +56,7 @@ export function formatCountdown(ms: number): string {
         @if (isToday() && next(); as n) {
           <div class="big">{{ name(n.name) }}</div>
           <div class="count" data-testid="countdown">{{ remaining() }}</div>
-        } @else { <div class="muted">{{ 'No more prayers today.' | t }}</div> }
+        } @else { <div class="muted">{{ 'Loading next prayer...' | t }}</div> }
       </div>
     </div>
 
@@ -96,6 +102,9 @@ export class PrayerExtras implements OnInit, OnDestroy {
   protected readonly i18n = inject(I18n);
   readonly times = input<PrayerTimes | null>(null);
   readonly isToday = input(true);
+  readonly query = input<{ lat?: number; lng?: number; method?: string } | null>(null);
+  protected readonly tomorrow = signal<PrayerTimes | null>(null);
+  private tomorrowKey = '';
 
   protected readonly daily = DAILY;
   protected readonly now = signal(Date.now());
@@ -105,7 +114,7 @@ export class PrayerExtras implements OnInit, OnDestroy {
   protected readonly autoplay = signal(localStorage.getItem('sabeel.adhan.auto') === '1');
   protected readonly next = computed(() => {
     const t = this.times();
-    return t ? nextPrayer(t.times, this.now()) : null;
+    return t ? nextWithRollover(t.times, this.tomorrow()?.times ?? null, this.now()) : null;
   });
   protected readonly remaining = computed(() => {
     const n = this.next();
@@ -116,6 +125,18 @@ export class PrayerExtras implements OnInit, OnDestroy {
   private lastPlayed = '';
 
   constructor() {
+    effect(() => {
+      const t = this.times();
+      const now = this.now();
+      if (!t || !this.isToday() || nextPrayer(t.times, now)) return;
+      const d = new Date(now);
+      d.setDate(d.getDate() + 1);
+      const key = isoDay(d);
+      if (this.tomorrowKey === key) return;
+      this.tomorrowKey = key;
+      const q = this.query();
+      this.api.prayerTimes({ date: key, lat: q?.lat, lng: q?.lng, method: q?.method }).subscribe({ next: (x) => this.tomorrow.set(x), error: () => { this.tomorrowKey = ''; } });
+    });
     effect(() => {
       const n = this.next();
       const left = n ? n.at - this.now() : Infinity;
@@ -134,6 +155,7 @@ export class PrayerExtras implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timer) clearInterval(this.timer);
+    this.stopAdhan();
   }
 
   protected name(n: string): string {
@@ -169,14 +191,27 @@ export class PrayerExtras implements OnInit, OnDestroy {
     localStorage.setItem('sabeel.adhan.auto', on ? '1' : '0');
   }
 
+  readonly playing = signal(false);
+  private audio: HTMLAudioElement | null = null;
+
   protected preview(): void {
+    if (this.playing()) { this.stopAdhan(); return; }
     this.play();
+  }
+
+  protected stopAdhan(): void {
+    if (this.audio) { this.audio.pause(); this.audio.removeAttribute('src'); this.audio = null; }
+    this.playing.set(false);
   }
 
   private play(): void {
     const a = this.adhans().find((x) => x.id === this.adhanId());
     if (!a) return;
+    this.stopAdhan();
     const audio = new Audio(a.url);
-    audio.play().catch(() => this.toast.error('Could not play this audio.'));
+    this.audio = audio;
+    audio.onended = () => this.playing.set(false);
+    this.playing.set(true);
+    audio.play().catch(() => { this.playing.set(false); this.toast.error('Could not play this audio.'); });
   }
 }

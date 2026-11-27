@@ -7,7 +7,7 @@ import { PageHead } from '../shared/ui';
   selector: 'app-duas',
   imports: [T, PageHead],
   template: `
-    <app-head [title]="'Masnoon duas' | t" [subtitle]="'Authentic supplications for daily situations, from Hisn al-Muslim (Fortress of the Muslim).' | t" />
+    <app-head [title]="'Masnoon duas' | t" [subtitle]="'Authentic supplications for daily situations.' | t" />
     <div class="tabs" style="margin-bottom:18px">
       @for (c of categories; track c.id) {
         <button class="tab" [class.active]="selected() === c.id" (click)="selected.set(c.id)">{{ i18n.isRtl() ? c.arName : c.en }}</button>

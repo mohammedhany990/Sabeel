@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCountdown, lastDays, nextPrayer } from './prayer-extras';
+import { formatCountdown, lastDays, nextPrayer, nextWithRollover } from './prayer-extras';
 
 describe('prayer extras', () => {
   const times = {
@@ -14,6 +14,13 @@ describe('prayer extras', () => {
   it('picks the first prayer after now', () => {
     const now = new Date('2026-11-26T10:00:00Z').getTime();
     expect(nextPrayer(times, now)?.name).toBe('asr');
+  });
+
+  it('rolls over to the next day fajr after isha', () => {
+    const tomorrow = { fajr: '2026-11-27T03:01:00Z', dhuhr: '2026-11-27T09:40:00Z' };
+    const r = nextWithRollover(times, tomorrow, new Date('2026-11-26T20:00:00Z').getTime());
+    expect(r?.name).toBe('fajr');
+    expect(r?.at).toBe(new Date('2026-11-27T03:01:00Z').getTime());
   });
 
   it('returns null after isha', () => {

@@ -124,7 +124,7 @@ What was not done:
 
 ## Quran reader
 
-The Quran entry in the sidebar opens the page-by-page mushaf (604-page Madani layout, tajweed colors from api.quran.com). Previous and next page, swipe, jump to page, surah or juz. Tapping an ayah opens a menu: play, tafsir, translation (QuranEnc editions served by the backend), share as text, share as image with the Sabeel logo, and a link to the verse-by-verse view. Page text is fetched per page from api.quran.com and the last 40 pages are kept in local storage; a page that was not opened before cannot be shown offline.
+The Quran entry in the sidebar opens the page-by-page mushaf (604-page Madani layout, tajweed colors from api.quran.com). Previous and next page, swipe, jump to page, surah or juz. Tapping an ayah opens a menu: play, tafsir, translation (QuranEnc editions served by the backend), share as text, share as image with the Sabeel logo,. Page text is fetched per page from api.quran.com and the last 40 pages are kept in local storage; a page that was not opened before cannot be shown offline.
 
 ## Adhan audio credits
 

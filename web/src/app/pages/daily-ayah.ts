@@ -17,12 +17,12 @@ import { toArabicDigits } from '../core/util';
       <div class="ar txt">{{ text() }} <span class="end">&#64831;{{ toAr(ayahNumber()) }}&#64830;</span></div>
       <div class="block" data-testid="daily-meaning">
         <div class="lbl">{{ 'Meaning' | t }}</div>
-        @if (meaning(); as m) { <p class="body" [attr.dir]="m.dir">{{ m.text }}</p><div class="src muted small">{{ m.source }}</div> }
+        @if (meaning(); as m) { <p class="body" [attr.dir]="m.dir">{{ m.text }}</p> }
         @else { <p class="muted">{{ 'Loading' | t }}</p> }
       </div>
       <div class="block" data-testid="daily-tafsir">
         <div class="lbl">{{ 'Tafsir' | t }}</div>
-        @if (tafsir(); as m) { <p class="body" [attr.dir]="m.dir">{{ m.text }}</p><div class="src muted small">{{ m.source }}</div> }
+        @if (tafsir(); as m) { <p class="body" [attr.dir]="m.dir">{{ m.text }}</p> }
         @else { <p class="muted">{{ 'Loading' | t }}</p> }
       </div>
       <div class="row-actions">

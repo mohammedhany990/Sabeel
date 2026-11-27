@@ -22,7 +22,8 @@ export const guestGuard: CanActivateFn = () => {
 export const verseRedirectGuard: CanActivateFn = (route) => {
   const api = inject(Api);
   const router = inject(Router);
-  if (route.queryParamMap.get('view') === 'verse') return true;
+  if (route.queryParamMap.get('view') === 'verse') { localStorage.setItem('sabeel.quranView', 'verse'); return true; }
+  if (localStorage.getItem('sabeel.quranView') === 'verse' && !route.queryParamMap.get('ayah')) return true;
   const id = Number(route.paramMap.get('id'));
   const ayah = route.queryParamMap.get('ayah');
   return api.surahs().pipe(

@@ -1,6 +1,6 @@
 # Text sources, licenses and versions
 
-Sabeel ships text from two primary sources. Every text is stored and shown unmodified. The app lists them on the in-app Sources page (footer link) and shows the edition title and version next to each tafsir or translation.
+Sabeel ships text from two primary sources. Every text is stored and shown unmodified. The app keeps its pages free of source notes: a single footer line links to tanzil.net and to the in-app Sources page. Every source, version and license is listed in this file.
 
 ## Quran text: Tanzil Project
 
@@ -21,7 +21,7 @@ Bundled in `quran-service/src/main/resources/quran/editions/`, fetched by `platf
 
 Terms read at https://quranenc.com/ne/home/contact_us (Terms and Policies): content may be downloaded and republished if it is not modified, added to or reduced; the publisher and QuranEnc.com are named; the version number is stated; transcript info stays with the text; notes on a translation are reported to QuranEnc; the latest version is kept; and no inappropriate advertising is shown beside it.
 
-How Sabeel follows them: text is stored byte for byte as returned by the API (footnotes included); each shown text carries its title, version and "QuranEnc.com"; the Sources page links to each edition and to the terms; no advertising exists in the app.
+How Sabeel follows them: text is stored byte for byte as returned by the API (footnotes included); the publisher, version and QuranEnc.com are named here and on the Sources page, which links to each edition and to the terms; no advertising exists in the app.
 
 ### What is not verified
 
@@ -35,9 +35,30 @@ How Sabeel follows them: text is stored byte for byte as returned by the API (fo
 - Ibn Kathir and any other tafsir whose license could not be verified.
 - Datasets on third-party aggregators whose per-edition license is not stated.
 - Tanzil translations: their terms limit use and redistribution of the list, so they are not bundled.
-- Audio: no recitation or adhan audio is bundled. Audio base URLs are configured by the operator (see the README).
+- Recitation audio: none is bundled. Audio base URLs are configured by the operator (see the README). The bundled adhan recordings are listed below.
 
 ## Endpoints
 
 - `GET /api/v1/quran/editions` lists the editions with version and source.
 - `GET /api/v1/quran/editions/{key}/{surah}/{ayah}` returns the entries covering the ayah. Tafsir entries can cover a range of ayahs.
+
+## Mushaf page text and tajweed colors: Quran Foundation API
+
+The mushaf pages fetch Uthmani text with tajweed markup per page from api.quran.com (Quran Foundation), https://api.quran.com/api/v4/. The page-by-page layout and tajweed coloring come from that API. The app also reads the page number of a verse from it to open the right page.
+
+## Reciter audio
+
+Reciter audio is streamed from third-party hosts (everyayah.com and quranicaudio.com) and is never copied or rehosted by this project. Per-reciter license notes are in docs/PRODUCTION-READINESS.md, item 18.
+
+## Adhan recordings
+
+| File | Recording | Source | License |
+| --- | --- | --- | --- |
+| madina.mp3, aqsa.mp3, alafasy.mp3 | Madinah, Al-Aqsa, Mishary Alafasy | Internet Archive item "(mp3) Collection Adzan of world" by JpnMuslim, https://archive.org/details/Mp3CollectionAdzan | CC BY-NC-ND 4.0, included unmodified at the project owner's decision; credit to the collection and its uploader |
+| beautiful.mp3 | Adhan by Adam-synagda | https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg | CC0 1.0, converted from Ogg to 64 kbps mono MP3 |
+| azan.mp3 | Adhan by Andrewler | https://commons.wikimedia.org/wiki/File:Azan.ogg | CC BY-SA 4.0, converted from Ogg to 64 kbps mono MP3; this file stays under CC BY-SA 4.0 |
+| tobar.mp3, tobar-fajr.mp3 | Sheikh Nasr al-Din Tobar, general and Fajr adhan | Supplied directly by the project owner | Not from a separately licensed source. Trimmed, denoised and loudness-normalized; tobar.mp3 also has its opening cut to start at the takbir |
+
+## Duas
+
+The masnoon duas follow Hisn al-Muslim (Fortress of the Muslim). Istikhara duas cite Sahih al-Bukhari 1162.

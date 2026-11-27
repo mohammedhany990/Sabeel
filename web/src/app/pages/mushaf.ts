@@ -1,15 +1,16 @@
 import { Component, ElementRef, OnDestroy, OnInit, inject, input, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Api } from '../core/api';
 import { I18n, T } from '../core/i18n';
-import { Ayah, EditionAyah, EditionInfo, Surah } from '../core/models';
+import { Ayah, EditionAyah, EditionInfo, Reciter, Surah } from '../core/models';
 import { extraAyahUrl, extraOf, mergeReciters } from '../core/extra-reciters';
 import { ShareAyah } from '../core/share-ayah';
 import { Toast } from '../core/toast';
 import { PageHead, Spinner } from '../shared/ui';
 import { DockPlayer } from '../shared/dock-player';
+import { ViewToggle } from '../shared/view-toggle';
 import { analyzeTajweed } from '../core/data/tajweed-rules';
 
 interface Verse {
@@ -34,9 +35,10 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
 
 @Component({
   selector: 'app-mushaf',
-  imports: [T, PageHead, Spinner, RouterLink, DockPlayer],
+  imports: [T, PageHead, Spinner, DockPlayer, ViewToggle],
   template: `
-    <app-head [title]="'Mushaf with tajweed' | t" [subtitle]="'Page-by-page Madani layout with colored tajweed text from the Quran Foundation API (api.quran.com).' | t" />
+    <app-head [title]="'Mushaf with tajweed' | t" [subtitle]="'Page-by-page Madani layout with colored tajweed text.' | t" />
+    <div class="viewbar"><app-view-toggle active="mushaf" (pick)="switchView($event)" /></div>
     <div class="mushaf-nav" style="margin-bottom:14px">
       <button class="btn btn-sm" (click)="go(-1)" [disabled]="page$() <= 1">{{ 'Previous page' | t }}</button>
       <label class="jumpto">{{ 'Page' | t }}
@@ -73,46 +75,49 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
           <span class="vtext" [class.sel]="sel() === v.verse_key" [class.playing]="playingKey() === v.verse_key" [attr.data-key]="v.verse_key" (click)="select(v)" [innerHTML]="html(v)"></span><span class="vnum">&#64831;{{ arNum(ayahOf(v)) }}&#64830;</span>
         }
       </div>
-      @if (sel(); as k) {
-        <div class="sheet" role="dialog">
-          <div class="sheet-head">
-            <strong>{{ surahName(selSurah()) }} {{ k }}</strong>
-            <button class="btn btn-sm btn-ghost" (click)="closeSheet()">{{ 'Close' | t }}</button>
-          </div>
-          <div class="sheet-actions">
-            <button class="btn btn-sm btn-gold" (click)="playSel()">{{ (playingKey() === k ? 'Stop' : 'Play') | t }}</button>
-            <button class="btn btn-sm" [class.on]="panel() === 'tafsir'" (click)="openPanel('tafsir')">{{ 'Tafsir' | t }}</button>
-            <button class="btn btn-sm" [class.on]="panel() === 'tajweed'" (click)="openPanel('tajweed')">{{ 'Tajweed rules' | t }}</button>
-            <button class="btn btn-sm" [class.on]="panel() === 'translation'" (click)="openPanel('translation')">{{ 'Translation' | t }}</button>
-            <button class="btn btn-sm" (click)="shareText()">{{ 'Share as text' | t }}</button>
-            <button class="btn btn-sm" (click)="shareImage()">{{ 'Share as image' | t }}</button>
-            <a class="btn btn-sm btn-ghost" [routerLink]="['/app/quran', selSurah()]" [queryParams]="{ view: 'verse' }">{{ 'Verse view' | t }}</a>
-          </div>
-          @if (panel() === 'tajweed') {
-            <div class="tj-panel" data-testid="tajweed-rules">
-              @for (h of tajweedHits(); track h.rule.key) {
-                <div class="tj-rule"><strong [style.color]="h.rule.color">{{ i18n.isRtl() ? h.rule.ar : h.rule.en }}</strong> <span class="ar tj-words">{{ h.words.join(' ، ') }}</span><div class="muted small">{{ i18n.isRtl() ? h.rule.descAr : h.rule.descEn }}</div></div>
-              } @empty { <p class="muted">{{ 'No tajweed marks in this ayah.' | t }}</p> }
+      <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()"></audio>
+      @if (sel() || playingKey()) {
+        <div class="bottom-stack" data-testid="bottom-stack">
+          @if (sel(); as k) {
+            <div class="sheet" role="dialog">
+              <div class="sheet-head">
+                <strong>{{ surahName(selSurah()) }} {{ k }}</strong>
+                <button class="btn btn-sm btn-ghost" (click)="closeSheet()">{{ 'Close' | t }}</button>
+              </div>
+              <div class="sheet-actions">
+                <button class="btn btn-sm btn-gold" (click)="playSel()">{{ (playingKey() === k ? 'Stop' : 'Play') | t }}</button>
+                <button class="btn btn-sm" [class.on]="panel() === 'tafsir'" (click)="openPanel('tafsir')">{{ 'Tafsir' | t }}</button>
+                <button class="btn btn-sm" [class.on]="panel() === 'tajweed'" (click)="openPanel('tajweed')">{{ 'Tajweed rules' | t }}</button>
+                <button class="btn btn-sm" [class.on]="panel() === 'translation'" (click)="openPanel('translation')">{{ 'Translation' | t }}</button>
+                <button class="btn btn-sm" (click)="shareText()">{{ 'Share as text' | t }}</button>
+                <button class="btn btn-sm" (click)="shareImage()">{{ 'Share as image' | t }}</button>
+              </div>
+              @if (panel() === 'tajweed') {
+                <div class="tj-panel" data-testid="tajweed-rules">
+                  @for (h of tajweedHits(); track h.rule.key) {
+                    <div class="tj-rule"><strong [style.color]="h.rule.color">{{ i18n.isRtl() ? h.rule.ar : h.rule.en }}</strong> <span class="ar tj-words">{{ h.words.join(' ، ') }}</span><div class="muted small">{{ i18n.isRtl() ? h.rule.descAr : h.rule.descEn }}</div></div>
+                  } @empty { <p class="muted">{{ 'No tajweed marks in this ayah.' | t }}</p> }
+                </div>
+              } @else if (panel(); as pn) {
+                <label class="field">{{ (pn === 'tafsir' ? 'Tafsir' : 'Translation') | t }}
+                  <select (change)="pickEdition(pn === 'tafsir' ? 'tafsir' : 'translation', $any($event.target).value)">
+                    @for (e of (pn === 'tafsir' ? tafsirEditions() : translationEditions()); track e.key) { <option [value]="e.key" [selected]="e.key === (pn === 'tafsir' ? tafsirKey() : translationKey())">{{ e.title }} ({{ e.version }})</option> }
+                  </select>
+                </label>
+                @if (detail(); as d) {
+                  @for (en of d.entries; track en.fromAyah) {
+                    <p class="ed-text" [attr.dir]="d.edition.language === 'ar' ? 'rtl' : 'ltr'">{{ en.text }}</p>
+                  } @empty { <p class="muted">{{ 'No text for this ayah in this edition.' | t }}</p> }
+                }
+                @if (detailError()) { <div class="error-box">{{ 'Could not load the tafsir.' | t }}</div> }
+              }
             </div>
-          } @else if (panel(); as pn) {
-            <label class="field">{{ (pn === 'tafsir' ? 'Tafsir' : 'Translation') | t }}
-              <select (change)="pickEdition(pn === 'tafsir' ? 'tafsir' : 'translation', $any($event.target).value)">
-                @for (e of (pn === 'tafsir' ? tafsirEditions() : translationEditions()); track e.key) { <option [value]="e.key" [selected]="e.key === (pn === 'tafsir' ? tafsirKey() : translationKey())">{{ e.title }} ({{ e.version }})</option> }
-              </select>
-            </label>
-            @if (detail(); as d) {
-              <div class="ed-title" dir="auto">{{ d.edition.title }} · {{ 'Version' | t }} {{ d.edition.version }} · QuranEnc.com</div>
-              @for (en of d.entries; track en.fromAyah) {
-                <p class="ed-text" [attr.dir]="d.edition.language === 'ar' ? 'rtl' : 'ltr'">{{ en.text }}</p>
-              } @empty { <p class="muted">{{ 'No text for this ayah in this edition.' | t }}</p> }
-            }
-            @if (detailError()) { <div class="error-box">{{ 'Could not load the tafsir.' | t }}</div> }
+          }
+          @if (playingKey(); as pk) {
+            <app-dock-player testid="mushaf-playbar" [floating]="false" [audio]="audioEl()" [title]="surahName(Number(pk.split(':')[0])) + ' ' + pk" [reciters]="reciterOptions()" [reciterId]="reciterIdSig()" (reciterChange)="changeReciter($event)" [paused]="paused()" (toggle)="togglePause()" (stop)="stopAudio()" />
           }
         </div>
-      }
-      <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()"></audio>
-      @if (playingKey(); as pk) {
-        <app-dock-player testid="mushaf-playbar" [audio]="audioEl()" [title]="surahName(Number(pk.split(':')[0])) + ' ' + pk" [subtitle]="reciterName()" [paused]="paused()" (toggle)="togglePause()" (stop)="stopAudio()" />
+        <div class="stack-spacer"></div>
       }
       @if (!i18n.isRtl()) {
         <p class="muted small legend">
@@ -144,8 +149,11 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
     .vtext { cursor: pointer; border-radius: 6px; }
     .vtext.sel { background: rgba(184, 134, 11, 0.25); }
     .vtext.playing { background: rgba(13, 138, 63, 0.22); }
+    .viewbar { display: flex; justify-content: center; margin: 4px 0 16px; }
+    .bottom-stack { position: fixed; z-index: 60; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); display: grid; gap: 8px; max-height: 70vh; }
+    .stack-spacer { height: 150px; }
+    .bottom-stack .sheet { position: static; margin: 0; overflow-y: auto; max-height: 45vh; }
     .sheet { position: sticky; bottom: 12px; z-index: 30; margin-top: 14px; background: linear-gradient(var(--panel), var(--panel)), var(--bg); border: 1px solid var(--gold); border-radius: 14px; padding: 12px 14px; max-height: 55vh; overflow: auto; }
-    .sheet { bottom: 84px; }
     .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--gold); }
     .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .sheet-actions .on { outline: 2px solid var(--gold); }
@@ -182,6 +190,10 @@ export class Mushaf implements OnInit, OnDestroy {
   protected readonly tafsirKey = signal(localStorage.getItem('sabeel.tafsir') || 'arabic_moyassar');
   protected readonly translationKey = signal(localStorage.getItem('sabeel.translation') || 'english_rwwad');
   private reciterId = 0;
+  private readonly router = inject(Router);
+  protected readonly reciterIdSig = signal(0);
+  protected readonly reciterOptions = signal<{ id: number; label: string }[]>([]);
+  private reciterList: Reciter[] = [];
   private touchX = 0;
 
   protected page$ = this.cur;
@@ -340,6 +352,25 @@ export class Mushaf implements OnInit, OnDestroy {
     this.playKey(k);
   }
 
+  protected changeReciter(id: number): void {
+    if (!this.reciterList.some((x) => x.id === id)) return;
+    this.reciterId = id;
+    this.reciterIdSig.set(id);
+    localStorage.setItem('sabeel.reciter', String(id));
+    const rr = this.reciterList.find((x) => x.id === id);
+    this.reciterName.set(rr ? (this.i18n.isRtl() ? rr.nameAr : rr.nameEn) : '');
+    const k = this.playingKey();
+    if (k) this.playKey(k);
+  }
+
+  protected switchView(v: 'mushaf' | 'verse'): void {
+    localStorage.setItem('sabeel.quranView', v);
+    if (v === 'mushaf') return;
+    const key = this.sel() ?? this.verses()[0]?.verse_key ?? '1:1';
+    const [s, a] = key.split(':');
+    this.router.navigate(['/app/quran', s], { queryParams: { view: 'verse', n: a } });
+  }
+
   private playKey(k: string): void {
     const [s, a] = k.split(':').map(Number);
     const start = (url: string) => {
@@ -358,8 +389,12 @@ export class Mushaf implements OnInit, OnDestroy {
     forkJoin({ r: this.api.reciters(), p: this.api.profile().pipe(catchError(() => of(null))) }).subscribe({
       next: ({ r, p }) => {
         const list = mergeReciters(r);
+        this.reciterList = list;
+        this.reciterOptions.set(list.map((x) => ({ id: x.id, label: this.i18n.isRtl() ? x.nameAr : x.nameEn })));
+        const saved = Number(localStorage.getItem('sabeel.reciter'));
         const pref = p?.preferredReciterId;
-        this.reciterId = pref && list.some((x) => x.id === pref) ? pref : (list[0]?.id ?? 1);
+        this.reciterId = saved && list.some((x) => x.id === saved) ? saved : pref && list.some((x) => x.id === pref) ? pref : (list[0]?.id ?? 1);
+        this.reciterIdSig.set(this.reciterId);
         const rr = list.find((x) => x.id === this.reciterId);
         this.reciterName.set(rr ? (this.i18n.isRtl() ? rr.nameAr : rr.nameEn) : '');
         resolve(this.reciterId);

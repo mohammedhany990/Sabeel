@@ -1,9 +1,10 @@
 import { I18n, Loc, Nm, T } from '../core/i18n';
 import { Component, ElementRef, OnDestroy, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Api } from '../core/api';
+import { ViewToggle } from '../shared/view-toggle';
 import { DockPlayer } from '../shared/dock-player';
 import { extraAyahUrl, extraOf, mergeReciters } from '../core/extra-reciters';
 import { Ayah, Bookmark, EditionAyah, EditionInfo, Reciter, Surah } from '../core/models';
@@ -14,8 +15,9 @@ import { Spinner } from '../shared/ui';
 
 @Component({
   selector: 'app-quran-reader',
-  imports: [DockPlayer, T, Loc, Nm, FormsModule, RouterLink, Spinner],
+  imports: [ViewToggle, DockPlayer, T, Loc, Nm, FormsModule, RouterLink, Spinner],
   template: `
+    <div class="viewbar"><app-view-toggle active="verse" (pick)="switchView($event)" /></div>
     <a routerLink="/app/quran" class="muted">{{ '← All surahs' | t }}</a>
     @if (loading()) { <app-spinner /> } @else if (error()) { <div class="error-box" style="margin-top:14px">{{ error() | t }}</div> } @else if (surah(); as s) {
       <div class="card gilded hero">
@@ -30,7 +32,7 @@ import { Spinner } from '../shared/ui';
 
       <div class="card bar">
         <label class="field grow">{{ 'Reciter' | t }}
-          <select [ngModel]="reciterId()" (ngModelChange)="reciterId.set(+$event); stop()" name="reciter">
+          <select [ngModel]="reciterId()" (ngModelChange)="changeReciter(+$event)" name="reciter">
             @for (r of reciters(); track r.id) { <option [value]="r.id">{{ r | nm: 'sub' }} ({{ r | loc: 'style' }})</option> }
           </select>
         </label>
@@ -40,7 +42,7 @@ import { Spinner } from '../shared/ui';
       </div>
 
       @if (playingId() !== null || surahMode()) {
-        <app-dock-player testid="reader-playbar" [audio]="audioEl()" [title]="surahMode() ? ('Full surah' | t) : ('Ayah {n}' | t: { n: playingNumber() })" [subtitle]="reciterLabel()" [paused]="paused()" (toggle)="togglePause()" (stop)="stop()" />
+        <app-dock-player testid="reader-playbar" [audio]="audioEl()" [title]="surahMode() ? ('Full surah' | t) : ('Ayah {n}' | t: { n: playingNumber() })" [reciters]="reciterOptions()" [reciterId]="reciterId()" (reciterChange)="changeReciter($event)" [paused]="paused()" (toggle)="togglePause()" (stop)="stop()" />
       }
       <audio #player (ended)="onEnded()" (error)="onAudioError()" (play)="paused.set(false)" (pause)="onPaused()"></audio>
 
@@ -80,7 +82,6 @@ import { Spinner } from '../shared/ui';
                 </div>
                 @for (d of detail(); track d.edition.key) {
                   <div class="ed-block">
-                    <div class="ed-title" dir="auto">{{ d.edition.title }} · {{ 'Version' | t }} {{ d.edition.version }} · QuranEnc.com</div>
                     @for (en of d.entries; track en.fromAyah) {
                       <p class="ed-text" [attr.dir]="d.edition.language === 'ar' ? 'rtl' : 'ltr'">{{ en.text }}</p>
                       @if (en.notes) { <p class="ed-notes" dir="auto">{{ en.notes }}</p> }
@@ -97,6 +98,7 @@ import { Spinner } from '../shared/ui';
     }
   `,
   styles: [`
+    .viewbar { display: flex; justify-content: center; margin: 4px 0 16px; }
     .hero { text-align: center; margin: 14px 0 18px; }
     .title { font-size: 3.4rem; color: var(--gold); line-height: 1.6; }
     .bar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
@@ -129,6 +131,8 @@ export class QuranReader implements OnDestroy {
   private readonly toast = inject(Toast);
   readonly id = input.required<string>();
   readonly ayah = input<string>();
+  readonly n = input<string>();
+  private readonly router = inject(Router);
   private readonly player = viewChild<ElementRef<HTMLAudioElement>>('player');
 
   protected readonly loading = signal(true);
@@ -200,11 +204,13 @@ export class QuranReader implements OnDestroy {
         this.ayahs.set(r.ayahs);
         this.reciters.set(mergeReciters(r.reciters));
         const pref = r.profile?.preferredReciterId;
-        this.reciterId.set(pref && this.reciters().some((x) => x.id === pref) ? pref : (this.reciters()[0]?.id ?? 1));
+        const saved = Number(localStorage.getItem('sabeel.reciter'));
+        this.reciterId.set(saved && this.reciters().some((x) => x.id === saved) ? saved : pref && this.reciters().some((x) => x.id === pref) ? pref : (this.reciters()[0]?.id ?? 1));
         this.loading.set(false);
         localStorage.setItem('sabeel.lastSurah', String(sid));
         this.api.bookmarks().subscribe({ next: (b) => this.bookmarks.set(b), error: () => undefined });
-        const target = Number(this.ayah());
+        const byN = Number(this.n());
+        const target = byN ? (r.ayahs.find((x) => x.ayahNumber === byN)?.id ?? 0) : Number(this.ayah());
         if (target) {
           this.focusId.set(target);
           setTimeout(() => document.getElementById('a' + target)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
@@ -342,6 +348,28 @@ export class QuranReader implements OnDestroy {
 
   protected onAudioError(): void {
     if (this.playingId() !== null || this.surahMode()) this.toast.error('Audio unavailable for this selection. The audio CDN is a third-party service.');
+  }
+
+  protected reciterOptions(): { id: number; label: string }[] {
+    return this.reciters().map((x) => ({ id: x.id, label: this.i18n.isRtl() ? x.nameAr : x.nameEn }));
+  }
+
+  protected changeReciter(id: number): void {
+    localStorage.setItem('sabeel.reciter', String(id));
+    const cur = this.playingId();
+    this.reciterId.set(id);
+    if (cur !== null && !this.surahMode()) {
+      const a = this.ayahs().find((x) => x.id === cur);
+      if (a) this.playFrom(a);
+    } else this.stop();
+  }
+
+  protected switchView(v: 'mushaf' | 'verse'): void {
+    localStorage.setItem('sabeel.quranView', v);
+    if (v === 'verse') return;
+    const f = this.ayahs().find((x) => x.id === (this.focusId() ?? this.playingId()));
+    const sid = this.surah()?.id ?? 1;
+    this.router.navigate(['/app/mushaf'], { queryParams: { ayah: sid + ':' + (f?.ayahNumber ?? 1) } });
   }
 
   protected stop(): void {

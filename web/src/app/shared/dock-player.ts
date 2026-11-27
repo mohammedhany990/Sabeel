@@ -7,12 +7,16 @@ const RATES = [0.75, 1, 1.25, 1.5];
   selector: 'app-dock-player',
   imports: [T],
   template: `
-    <div class="dock" [class.paused]="paused()" [attr.data-testid]="testid()" role="region" [attr.aria-label]="'Audio player' | t">
+    <div class="dock" [class.paused]="paused()" [class.floating]="floating()" [attr.data-testid]="testid()" role="region" [attr.aria-label]="'Audio player' | t">
       <div class="top">
         <span class="dot"></span>
         <div class="meta">
           <div class="title">{{ title() }}</div>
-          @if (subtitle()) { <div class="sub">{{ subtitle() }}</div> }
+          @if (reciters().length) {
+            <select class="rsel" [value]="reciterId()" (change)="reciterChange.emit(+$any($event.target).value)" [attr.aria-label]="'Reciter' | t" data-testid="dock-reciter">
+              @for (r of reciters(); track r.id) { <option [value]="r.id" [selected]="r.id === reciterId()">{{ r.label }}</option> }
+            </select>
+          } @else if (subtitle()) { <div class="sub">{{ subtitle() }}</div> }
         </div>
         <button type="button" class="ctl rate" (click)="cycleRate()" [attr.aria-label]="'Speed' | t">{{ rate() }}x</button>
         <button type="button" class="ctl main" (click)="toggle.emit()" [attr.aria-label]="(paused() ? 'Resume' : 'Pause') | t" data-testid="dock-toggle">
@@ -33,7 +37,10 @@ const RATES = [0.75, 1, 1.25, 1.5];
   `,
   styles: [`
     :host { display: contents; }
-    .dock { position: fixed; z-index: 60; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); display: grid; gap: 6px; padding: 10px 16px 12px; border-radius: 22px; border: 1px solid var(--gold); background: linear-gradient(135deg, #0d4a42 0%, #072a28 55%, #04181a 100%); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(226, 194, 117, 0.25); color: var(--text); }
+    .dock { width: 100%; box-sizing: border-box; display: grid; gap: 6px; padding: 10px 16px 12px; border-radius: 22px; border: 1px solid var(--gold); background: linear-gradient(135deg, #0d4a42 0%, #072a28 55%, #04181a 100%); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(226, 194, 117, 0.25); color: var(--text); }
+    .dock.floating { position: fixed; z-index: 60; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); }
+    .rsel { max-width: 100%; margin-top: 2px; background: rgba(255, 255, 255, 0.06); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; font: inherit; font-size: 0.8rem; }
+    .rsel option { color: #111; }
     .top { display: flex; align-items: center; gap: 10px; }
     .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 0 4px rgba(47, 191, 148, 0.2); animation: pulse 1.4s ease-in-out infinite; flex: none; }
     .dock.paused .dot { animation: none; background: var(--muted); box-shadow: none; }
@@ -56,6 +63,10 @@ export class DockPlayer implements OnDestroy {
   readonly title = input('');
   readonly subtitle = input('');
   readonly paused = input(false);
+  readonly reciters = input<{ id: number; label: string }[]>([]);
+  readonly reciterId = input(0);
+  readonly floating = input(true);
+  readonly reciterChange = output<number>();
   readonly testid = input('dock-player');
   readonly toggle = output<void>();
   readonly stop = output<void>();

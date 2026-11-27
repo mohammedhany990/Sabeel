@@ -58,7 +58,7 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
         </div>
       </div>
 
-      <app-prayer-extras [times]="times()" [isToday]="date() === today" />
+      <app-prayer-extras [query]="{ lat: form.latitude, lng: form.longitude, method: form.method }" [times]="times()" [isToday]="date() === today" />
 
       <div class="card" style="margin-top:18px">
         <div class="card-title"><h3>{{ 'Adhan' | t }}</h3><span class="badge" [class.badge-ok]="adhan.enabled()">{{ (adhan.enabled() ? 'On' : 'Off') | t }}</span></div>
@@ -70,7 +70,7 @@ const METHODS = ['EGYPT', 'MWL', 'ISNA', 'MAKKAH', 'KARACHI'];
             </select>
           </label>
           <div class="row">
-            <button class="btn" type="button" (click)="adhan.preview()">{{ 'Preview' | t }}</button>
+            <button class="btn" type="button" (click)="adhan.preview()" data-testid="adhan-preview">{{ (adhan.playing() ? 'Stop' : 'Preview') | t }}</button>
             @if (adhan.playing()) { <button class="btn btn-ghost" type="button" (click)="adhan.stop()">{{ 'Stop' | t }}</button> }
             <button class="btn btn-gold" type="button" (click)="toggleAdhan()">{{ (adhan.enabled() ? 'Turn off' : 'Turn on') | t }}</button>
           </div>

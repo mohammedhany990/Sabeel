@@ -72,14 +72,20 @@ if (firstVerse) {
   const t1 = await text();
   check('tapping an ayah opens the menu with all actions', ['Play', 'Tafsir', 'Translation', 'Share as text', 'Share as image'].every((x) => t1.includes(x)));
   await clickText('.sheet button', 'Translation'); await sleep(1200);
-  check('menu translation panel loads an edition', (await text()).includes('QuranEnc.com') && (await text()).includes('Mock text for 1:1'));
+  check('menu translation panel loads an edition', !(await text()).includes('QuranEnc.com') && (await text()).includes('Mock text for 1:1'));
   await shot('05a-mushaf-menu');
   await page.evaluate(() => { window.__shared = null; navigator.canShare = () => true; navigator.share = async (d) => { const f = d.files && d.files[0]; if (f) { const buf = await f.arrayBuffer(); let b = ''; new Uint8Array(buf).forEach((x) => { b += String.fromCharCode(x); }); window.__shared = { type: f.type, size: f.size, b64: btoa(b) }; } }; });
   await clickText('.sheet button', 'Share as image'); await sleep(2500);
   const shared = await page.evaluate(() => window.__shared);
   check('share as image produces a PNG', shared && shared.type === 'image/png' && shared.size > 5000, shared ? String(shared.size) : 'none');
   if (shared) fs.writeFileSync(path.join(here, 'shots', '05b-share-image.png'), Buffer.from(shared.b64, 'base64'));
-  await clickText('.sheet a', 'Verse view'); await sleep(1500);
+  const geo = await page.evaluate(() => { const b = document.querySelector('[data-testid=bottom-stack]'); const r = b ? b.getBoundingClientRect() : null; return r ? { top: r.top, bottom: r.bottom, left: r.left, right: r.right, vw: innerWidth, vh: innerHeight } : null; });
+  check('ayah menu sits in a docked bottom stack inside the viewport', geo && geo.bottom <= geo.vh && geo.left >= 0 && geo.right <= geo.vw, JSON.stringify(geo));
+  await shot('05d-mushaf-stack');
+  check('mushaf shows the view toggle', (await page.$('[data-testid=view-toggle]')) !== null);
+  await page.click('[data-testid=view-verse]'); await page.waitForSelector('.ayah', { timeout: 15000 }).catch(() => null); await sleep(800);
+  check('verse view toggle opens the reader at the same ayah', page.url().includes('/app/quran/1') && page.url().includes('n=1') && (await page.$('[data-testid=view-toggle]')) !== null, page.url());
+  check('last view choice is remembered', (await page.evaluate(() => localStorage.getItem('sabeel.quranView'))) === 'verse');
 } else {
   check('mushaf page loaded for the surah card', false, 'no verses (api.quran.com unreachable?)');
   await page.goto(page.url().split('/app/')[0] + '/app/quran/1'); await sleep(1500);
@@ -92,6 +98,12 @@ await page.evaluate(() => { const m = document.querySelector('main, .content, .m
 const dock = await page.evaluate(() => { const e = document.querySelector('[data-testid=reader-playbar]'); if (!e) return null; const r = e.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, vh: innerHeight, native: !!document.querySelector('audio[controls]') }; });
 check('reader dock player stays visible at the bottom with stop and no native audio bar', dock && dock.bottom <= dock.vh && dock.top > 0 && !dock.native, JSON.stringify(dock));
 await shot('05c-reader-dock');
+const rsel = await page.evaluate(() => { const e = document.querySelector('[data-testid=dock-reciter]'); return e ? e.options.length : 0; });
+check('docked player has a reciter selector with all reciters', rsel >= 2, String(rsel));
+await page.select('[data-testid=dock-reciter]', await page.evaluate(() => { const e = document.querySelector('[data-testid=dock-reciter]'); return e.options[e.options.length - 1].value; })); await sleep(800);
+check('reciter choice is remembered', !!(await page.evaluate(() => localStorage.getItem('sabeel.reciter'))));
+check('switching the reciter keeps the player on the same ayah', (await page.$('[data-testid=reader-playbar]')) !== null);
+await shot('05e-reader-toggle');
 await clickText('[data-testid=reader-playbar] button', 'Stop'); await sleep(400);
 check('stop button hides the player', (await page.$('[data-testid=reader-playbar]')) === null);
 await clickText('.ayah:nth-of-type(2) button', 'Bookmark'); await sleep(500);
@@ -123,6 +135,11 @@ check('review submitted', !(await text()).includes('Submit review'));
 
 await go('Prayer'); await sleep(800); await shot('09-prayer');
 check('prayer times and qibla', (await text()).includes('Fajr') && (await text()).includes('°'));
+const cd1 = await page.evaluate(() => document.querySelector('[data-testid=countdown]')?.textContent?.trim() ?? '');
+await sleep(2300);
+const cd2 = await page.evaluate(() => document.querySelector('[data-testid=countdown]')?.textContent?.trim() ?? '');
+check('next prayer countdown shows HH:MM:SS and ticks every second', /^\d\d:\d\d:\d\d$/.test(cd1) && /^\d\d:\d\d:\d\d$/.test(cd2) && cd1 !== cd2, cd1 + ' -> ' + cd2);
+await page.evaluate(() => document.getElementById('countdown')?.scrollIntoView()); await sleep(300); await shot('09c-countdown');
 check('adhan card with muezzin picker', (await text()).includes('Adhan') && (await text()).includes('Muezzin'));
 await clickText('button', 'Turn on'); await sleep(900);
 check('adhan turns on and offers turn off', (await text()).includes('Turn off'));
