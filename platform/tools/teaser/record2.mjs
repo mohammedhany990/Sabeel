@@ -9,7 +9,7 @@ const durations = fs.existsSync('audio/durations2.json') ? JSON.parse(fs.readFil
 
 const browser = await chromium.launch({ args: ['--no-sandbox'] });
 const email = 'teaser' + Date.now() + '@example.com';
-const pre = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+const pre = await browser.newContext({ viewport: { width: 1280, height: 720 }, timezoneId: 'Africa/Cairo', locale: 'en-US' });
 const prePage = await pre.newPage();
 await prePage.goto(BASE + '/register', { waitUntil: 'networkidle' });
 await prePage.fill('input[name=name]', 'Sabeel Demo');

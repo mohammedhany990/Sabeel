@@ -11,6 +11,7 @@ const browser = await chromium.launch({ args: ['--no-sandbox', '--autoplay-polic
 const context = await browser.newContext({
   viewport: { width: 1280, height: 720 },
   recordVideo: { dir: OUT, size: { width: 1280, height: 720 } },
+  timezoneId: 'Africa/Cairo',
   geolocation: { latitude: 30.0444, longitude: 31.2357 },
   permissions: ['geolocation']
 });
