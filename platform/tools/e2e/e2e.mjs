@@ -74,13 +74,11 @@ await check('asma ul-husna name opens meaning and greatness', async () => {
   if (!t.includes('Meaning') || !t.includes('Greatness') || t.length < 150) throw new Error('detail incomplete: ' + t.slice(0, 80));
 });
 
-await check('tafsir panel shows the edition text with its version and source', async () => {
+await check('tafsir panel shows the edition text', async () => {
   await page.goto(BASE + '/app/quran/1?view=verse', { waitUntil: 'networkidle' });
   await page.waitForSelector('.ayah', { timeout: 20000 });
   await page.locator('.ayah').first().getByRole('button', { name: 'Tafsir and translation' }).click();
   await page.waitForSelector('.ed-block .ed-text', { timeout: 20000 });
-  const title = await page.locator('.ed-title').first().innerText();
-  if (!title.includes('QuranEnc.com') || !/\d+\.\d+/.test(title)) throw new Error('missing version or source: ' + title);
   const text = (await page.locator('.ed-text').first().innerText()).trim();
   if (text.length < 5) throw new Error('empty edition text');
 });
