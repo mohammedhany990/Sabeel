@@ -17,7 +17,10 @@ await prePage.fill('input[name=email]', email);
 await prePage.fill('input[name=password]', 'Passw0rd!demo');
 await prePage.click('button[type=submit]');
 await prePage.waitForURL('**/app/dashboard', { timeout: 30000 });
-await prePage.evaluate(() => localStorage.setItem('sabeel.quranView', 'verse'));
+await prePage.goto(BASE + '/app/prayer', { waitUntil: 'networkidle' });
+await prePage.waitForSelector('input[name=tz]', { timeout: 30000 });
+await prePage.click('button:has-text("Save and recalculate")');
+await prePage.waitForTimeout(2500);
 const state = await pre.storageState();
 await pre.close();
 
@@ -37,8 +40,9 @@ const failures = [];
 const timeline = [];
 let cur = null;
 
+let capTop = false;
 async function caption(en, ar) {
-  await page.evaluate(([en, ar]) => {
+  await page.evaluate(([en, ar, capTop]) => {
     let box = document.getElementById('demo-caption');
     if (!box) {
       const style = document.createElement('style');
@@ -49,6 +53,8 @@ async function caption(en, ar) {
       box.style.cssText = 'position:fixed;left:50%;bottom:26px;transform:translateX(-50%);width:max-content;max-width:88%;z-index:2147483647;background:rgba(7,14,20,.86);border:1px solid rgba(243,217,139,.35);border-radius:18px;color:#fff;text-align:center;padding:10px 28px 12px;font-family:system-ui,sans-serif;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:capin .35s ease both';
       document.body.appendChild(box);
     }
+    box.style.bottom = capTop ? 'auto' : '26px';
+    box.style.top = capTop ? '18px' : 'auto';
     box.innerHTML = '';
     const e = document.createElement('div');
     e.style.cssText = 'font-size:28px;font-weight:700;line-height:1.35';
@@ -57,7 +63,7 @@ async function caption(en, ar) {
     a.style.cssText = 'font-size:30px;font-weight:700;line-height:1.5;direction:rtl;color:#f3d98b';
     a.textContent = ar;
     box.append(e, a);
-  }, [en, ar]);
+  }, [en, ar, capTop]);
 }
 
 async function show(en, ar) {
@@ -75,7 +81,8 @@ async function pad(need) {
   while (kept() < need) await sleep(100);
 }
 
-async function scene(id, en, ar, fn) {
+async function scene(id, en, ar, fn, top = false) {
+  capTop = top;
   const need = (durations[id] || 5) + 1.0;
   cur = { id, ranges: [], open: null };
   try {
@@ -122,7 +129,6 @@ await scene('n02', 'Read the full Quran', 'اقرأ المصحف كاملًا', 
 });
 
 await scene('n03', 'Tafsir and translation, with version and source', 'تفسير وترجمة مع الإصدار والمصدر', async (need, show) => {
-  await page.addStyleTag({ content: '.sheet { bottom: 120px !important; }' });
   await page.locator('span.vtext').first().click();
   await sleep(900);
   await clickText('.sheet button', 'Translation');
@@ -130,8 +136,8 @@ await scene('n03', 'Tafsir and translation, with version and source', 'تفسي�
   await show();
   await sleep(2400);
   await clickText('.sheet button', 'Tafsir');
-  await sleep(1500);
-});
+  await sleep(1800);
+}, true);
 
 await scene('n04', 'Search inside the tafsir', 'ابحث داخل التفسير', async (need, show) => {
   await page.goto(BASE + '/app/quran', { waitUntil: 'networkidle' });
@@ -148,7 +154,8 @@ await scene('n04', 'Search inside the tafsir', 'ابحث داخل التفسير
   await page.locator('[data-testid=ts-hit]').first().click();
   await page.waitForSelector('span.vtext', { timeout: 30000 });
   await show();
-});
+  await sleep(1500);
+}, true);
 
 await scene('n05', 'Memorization plan with a daily target', 'خطة حفظ بورد يومي', async (need, show) => {
   await page.goto(BASE + '/app/memorization', { waitUntil: 'networkidle' });
