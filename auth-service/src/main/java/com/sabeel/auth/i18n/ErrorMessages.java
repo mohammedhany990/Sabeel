@@ -26,6 +26,8 @@ public final class ErrorMessages {
             Map.entry("refresh token expired", "انتهت صلاحية رمز التحديث"),
             Map.entry("invalid reset token", "رمز إعادة التعيين غير صالح"),
             Map.entry("reset token expired or already used", "رمز إعادة التعيين منتهي الصلاحية أو مستخدم من قبل"),
+            Map.entry("current password is incorrect", "كلمة المرور الحالية غير صحيحة"),
+            Map.entry("new password must differ from the current password", "يجب أن تختلف كلمة المرور الجديدة عن الحالية"),
             Map.entry("user not found", "المستخدم غير موجود"),
             Map.entry("endsAt must be after startsAt", "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء"),
             Map.entry("challenge not found", "التحدي غير موجود"),

@@ -166,7 +166,7 @@ export class ForgotPage {
     <form (ngSubmit)="submit()">
       <div><h1>{{ 'Choose a new password' | t }}</h1></div>
       @if (error()) { <div class="error-box">{{ error() | t }}</div> }
-      @if (message()) { <div class="ok-box">{{ message() | t }}</div> }
+      @if (message()) { <div class="ok-box">{{ message() | t }}</div><a class="btn btn-gold" routerLink="/login" id="reset-signin">{{ 'Sign in with your new password' | t }}</a> }
       <label class="field">{{ 'Reset token' | t }}<input name="token" [(ngModel)]="tokenValue" required></label>
       <label class="field">{{ 'New password' | t }}<input type="password" name="pw" [(ngModel)]="password" required minlength="8" maxlength="72"></label>
       <button class="btn btn-gold" type="submit" [disabled]="busy()">{{ 'Update password' | t }}</button>

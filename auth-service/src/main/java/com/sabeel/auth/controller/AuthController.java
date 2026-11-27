@@ -74,6 +74,14 @@ public class AuthController {
         return new MessageResponse("password updated");
     }
 
+    @PostMapping("/change-password")
+    @Operation(summary = "Change the password of the signed-in user")
+    public MessageResponse changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(UUID.fromString(authentication.getName()), request.currentPassword(),
+                request.newPassword(), request.keepRefreshToken());
+        return new MessageResponse("password updated");
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Current authenticated user")
     public UserResponse me(Authentication authentication) {

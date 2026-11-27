@@ -85,6 +85,14 @@ export class Auth {
     return this.http.post<MessageResponse>(`${API_BASE}/auth/reset-password`, { token, newPassword });
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${API_BASE}/auth/change-password`, {
+      currentPassword,
+      newPassword,
+      keepRefreshToken: this.tokens()?.refreshToken ?? null
+    });
+  }
+
   verifyEmail(token: string): Observable<MessageResponse> {
     return this.http.get<MessageResponse>(`${API_BASE}/auth/verify-email`, { params: { token } });
   }

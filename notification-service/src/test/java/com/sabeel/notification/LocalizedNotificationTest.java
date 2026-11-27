@@ -181,6 +181,22 @@ class LocalizedNotificationTest {
     }
 
     @Test
+    void passwordResetEmailHasLinkWithTokenAndRawCode() {
+        for (String lang : new String[]{"en", "ar"}) {
+            String body = templates.passwordReset(lang, "abc.def").body();
+            assertTrue(body.contains("http://localhost:4200/reset-password?token=abc.def"));
+            assertTrue(body.indexOf("abc.def", body.indexOf("token=abc.def") + 5) > 0);
+        }
+    }
+
+    @Test
+    void passwordResetLinkUsesConfiguredBaseUrlWithoutDoubleSlash() {
+        NotificationTemplates custom = new NotificationTemplates();
+        org.springframework.test.util.ReflectionTestUtils.setField(custom, "appBaseUrl", "https://app.example.org/");
+        assertTrue(custom.passwordReset("en", "t1").body().contains("https://app.example.org/reset-password?token=t1"));
+    }
+
+    @Test
     void surahNameTablesCoverAll114Surahs() {
         assertEquals(114, SurahNames.count());
         assertEquals("الفاتحة", SurahNames.name(1, true));

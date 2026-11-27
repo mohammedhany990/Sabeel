@@ -284,6 +284,17 @@ await setVal('input[name=n]', 'Teacher M. Hany'); await clickText('button', 'Sav
 await clickText('button', 'Save preferences'); await sleep(600);
 check('settings page loads profile and saves', (await text()).includes('Profile saved') || true);
 
+await page.evaluate(() => document.querySelector('[data-testid=change-password]')?.scrollIntoView()); await sleep(300);
+await setVal('input[name=cp]', 'Passw0rd!x'); await setVal('input[name=np]', 'NewPassw0rd!y'); await setVal('input[name=cf]', 'Different!z1'); await clickText('button', 'Change password'); await sleep(500);
+check('change password: mismatched confirmation is refused with a message', (await page.$eval('[data-testid=pw-error]', (e) => e.innerText).catch(() => '')).includes('do not match'));
+await setVal('input[name=cp]', 'WrongPass123'); await setVal('input[name=cf]', 'NewPassw0rd!y'); await clickText('button', 'Change password'); await sleep(700);
+check('change password: wrong current password shows the server error', (await page.$eval('[data-testid=pw-error]', (e) => e.innerText).catch(() => '')).includes('current password is incorrect'));
+await setVal('input[name=cp]', 'Passw0rd!x'); await clickText('button', 'Change password'); await sleep(900);
+check('change password: success message shown and fields cleared', (await page.$eval('[data-testid=pw-ok]', (e) => e.innerText).catch(() => '')).includes('Password changed') && (await page.$eval('input[name=cp]', (e) => e.value)) === '');
+await shot('19b-change-password');
+await setVal('input[name=cp]', 'Passw0rd!x'); await setVal('input[name=np]', 'AnotherPass1!'); await setVal('input[name=cf]', 'AnotherPass1!'); await clickText('button', 'Change password'); await sleep(700);
+check('change password: old password no longer accepted', (await page.$eval('[data-testid=pw-error]', (e) => e.innerText).catch(() => '')).includes('current password is incorrect'));
+
 await sleep(21000);
 await go('Notifications'); await sleep(1500);
 check('expired access token is refreshed transparently (still signed in)', page.url().includes('/app/notifications'), page.url());
@@ -299,6 +310,12 @@ await clickText('button', 'Sign out'); await sleep(1000);
 check('sign out returns to login', page.url().endsWith('/login'), page.url());
 await page.goto('http://localhost:4300/app/dashboard', { waitUntil: 'networkidle0' });
 check('guard blocks protected route when signed out', page.url().endsWith('/login'));
+
+await page.goto('http://localhost:4300/reset-password?token=abc.def-123', { waitUntil: 'networkidle0' }); await sleep(600);
+check('reset page prefills the token from the email link', (await page.$eval('input[name=token]', (e) => e.value).catch(() => '')) === 'abc.def-123');
+await setVal('input[name=pw]', 'BrandNewPass1'); await clickText('button', 'Update password'); await sleep(800);
+check('reset page shows success and a sign-in link', (await text()).includes('Password updated') && !!(await page.$('#reset-signin')));
+await shot('22-reset-page');
 
 console.log('\nBAD RESPONSES:', JSON.stringify([...new Set(badResponses)]));
 console.log('ERRORS:', JSON.stringify([...new Set(errors)].slice(0, 15)));

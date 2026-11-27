@@ -115,6 +115,13 @@ route('POST', '/auth/refresh', async ({ body }) => {
   return [200, newTokens(db.users.find((u) => u.id === id))];
 }, true);
 route('POST', '/auth/logout', async ({ body }) => { db.refresh.delete(body.refreshToken); return [200, { message: 'Logged out' }]; });
+route('POST', '/auth/change-password', async ({ user, body }) => {
+  if (user.password !== body.currentPassword) return [400, { detail: 'current password is incorrect' }];
+  if (!body.newPassword || body.newPassword.length < 8) return [400, { detail: 'validation failed' }];
+  user.password = body.newPassword;
+  for (const [tok, id] of [...db.refresh]) if (id === user.id && tok !== body.keepRefreshToken) db.refresh.delete(tok);
+  return [200, { message: 'password updated' }];
+});
 route('POST', '/auth/forgot-password', async () => [200, { message: 'If the email exists, a reset link was sent.' }], true);
 route('POST', '/auth/reset-password', async () => [200, { message: 'Password updated.' }], true);
 route('GET', '/auth/verify-email', async () => [200, { message: 'Email verified.' }], true);

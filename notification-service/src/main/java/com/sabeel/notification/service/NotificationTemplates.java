@@ -1,5 +1,6 @@
 package com.sabeel.notification.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -8,6 +9,9 @@ import java.util.Map;
 public class NotificationTemplates {
     public static final String EN = "en";
     public static final String AR = "ar";
+
+    @Value("${notification.app-base-url:http://localhost:4200}")
+    private String appBaseUrl = "http://localhost:4200";
 
     public record Content(String title, String body) {
     }
@@ -35,12 +39,18 @@ public class NotificationTemplates {
     }
 
     public Content passwordReset(String language, String token) {
+        String base = appBaseUrl == null ? "" : appBaseUrl.trim().replaceAll("/+$", "");
+        String link = base + "/reset-password?token=" + token;
         if (AR.equals(normalize(language))) {
             return new Content("إعادة تعيين كلمة مرور سبيل",
-                    "استخدم هذا الرمز لإعادة تعيين كلمة المرور (صالح لمدة 30 دقيقة):\n\n" + token);
+                    "لإعادة تعيين كلمة المرور اضغط على الرابط التالي (صالح لمدة 30 دقيقة):\n\n" + link
+                            + "\n\nأو افتح صفحة إعادة التعيين والصق هذا الرمز:\n\n" + token
+                            + "\n\nإذا لم تطلب ذلك فتجاهل هذه الرسالة.");
         }
         return new Content("Reset your Sabeel password",
-                "Use this token to reset your password (valid 30 minutes):\n\n" + token);
+                "To reset your password, open this link (valid 30 minutes):\n\n" + link
+                        + "\n\nOr open the reset page and paste this code:\n\n" + token
+                        + "\n\nIf you did not ask for this, ignore this email.");
     }
 
     public Content memorizationTask(String language, String date, int surahId, int fromAyah, int toAyah) {

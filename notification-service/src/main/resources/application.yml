@@ -33,6 +33,7 @@ jwt:
   access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
 notification:
   from-address: ${NOTIFICATION_FROM:no-reply@sabeel.app}
+  app-base-url: ${APP_BASE_URL:http://localhost:4200}
   fcm:
     enabled: ${FCM_ENABLED:false}
     credentials-path: ${FCM_CREDENTIALS_PATH:/run/secrets/fcm-service-account.json}

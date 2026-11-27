@@ -50,6 +50,18 @@ import { PageHead, Spinner } from '../shared/ui';
         </div>
       </div>
 
+      <div class="card" style="margin-top:18px" data-testid="change-password">
+        <div class="card-title"><h3>{{ 'Change password' | t }}</h3></div>
+        <form class="stack" (ngSubmit)="changePassword()">
+          @if (pwError()) { <div data-testid="pw-error" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(239,100,100,.5);background:rgba(120,30,30,.35);color:#ffb4b4">{{ pwError() | t }}</div> }
+          @if (pwDone()) { <div data-testid="pw-ok" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(80,200,150,.5);background:rgba(20,90,60,.45);color:#b8f0d4">{{ 'Password changed. Other devices were signed out.' | t }}</div> }
+          <label class="field">{{ 'Current password' | t }}<input type="password" name="cp" autocomplete="current-password" [(ngModel)]="pw.current" required></label>
+          <label class="field">{{ 'New password' | t }}<input type="password" name="np" autocomplete="new-password" [(ngModel)]="pw.next" required minlength="8" maxlength="72"></label>
+          <label class="field">{{ 'Confirm new password' | t }}<input type="password" name="cf" autocomplete="new-password" [(ngModel)]="pw.confirm" required maxlength="72"></label>
+          <button class="btn btn-gold" type="submit" [disabled]="pwBusy()">{{ 'Change password' | t }}</button>
+        </form>
+      </div>
+
       <div class="card" style="margin-top:18px">
         <div class="card-title"><h3>{{ 'Push device token' | t }}</h3></div>
         <p class="muted">{{ 'Register an FCM web token to receive push notifications on this browser. The backend only delivers push when FCM is enabled on the server.' | t }}</p>
@@ -77,6 +89,23 @@ export class Settings implements OnInit {
   protected pf = { name: '', profileImageUrl: '', country: '', timezone: '', preferredReciterId: null as number | null, preferredLanguage: 'en' };
   protected pr: PreferencesResponse = { pushEnabled: true, emailEnabled: true, memorizationReminderTime: null, revisionReminderTime: null, prayerReminders: true, azkarReminders: true, revisionReminders: true };
   protected token = '';
+  protected pw = { current: '', next: '', confirm: '' };
+  protected readonly pwBusy = signal(false);
+  protected readonly pwError = signal('');
+  protected readonly pwDone = signal(false);
+
+  protected changePassword(): void {
+    this.pwDone.set(false);
+    this.pwError.set('');
+    if (this.pw.next.length < 8) { this.pwError.set('New password needs at least 8 characters.'); return; }
+    if (this.pw.next !== this.pw.confirm) { this.pwError.set('The new passwords do not match.'); return; }
+    if (this.pw.next === this.pw.current) { this.pwError.set('new password must differ from the current password'); return; }
+    this.pwBusy.set(true);
+    this.auth.changePassword(this.pw.current, this.pw.next).subscribe({
+      next: () => { this.pwBusy.set(false); this.pwDone.set(true); this.pw = { current: '', next: '', confirm: '' }; },
+      error: (e) => { this.pwBusy.set(false); this.pwError.set(errorMessage(e)); }
+    });
+  }
 
   ngOnInit(): void {
     forkJoin({ p: this.api.profile(), pr: this.api.preferences(), r: this.api.reciters() }).subscribe({

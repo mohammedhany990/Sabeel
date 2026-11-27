@@ -152,6 +152,25 @@ public class AuthService {
         refreshTokenRepository.revokeAllForUser(user);
     }
 
+    @Transactional
+    public void changePassword(UUID userId, String currentPassword, String newPassword, String keepRefreshToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("user not found"));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw ApiException.badRequest("current password is incorrect");
+        }
+        if (currentPassword.equals(newPassword)) {
+            throw ApiException.badRequest("new password must differ from the current password");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        if (keepRefreshToken == null || keepRefreshToken.isBlank()) {
+            refreshTokenRepository.revokeAllForUser(user);
+        } else {
+            refreshTokenRepository.revokeAllForUserExcept(user, sha256(keepRefreshToken));
+        }
+    }
+
     @Transactional(readOnly = true)
     public UserResponse me(UUID userId) {
         User user = userRepository.findById(userId)
