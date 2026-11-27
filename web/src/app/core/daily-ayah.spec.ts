@@ -61,8 +61,8 @@ describe('duePrayer', () => {
 });
 
 describe('muezzins', () => {
-  it('ships four bundled recordings', () => {
-    expect(MUEZZINS.length).toBe(4);
+  it('ships only the user-supplied Tobar recordings', () => {
+    expect(MUEZZINS.length).toBe(1);
     for (const m of MUEZZINS) expect(m.url).toMatch(/^assets\/adhan\/.+\.mp3$/);
   });
 
