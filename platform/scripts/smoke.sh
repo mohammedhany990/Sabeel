@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 BASE="${BASE:-http://localhost:8080}"
-EMAIL="${EMAIL:-smoke@sabeel.app}"
+RUN_ID="${RUN_ID:-$(date +%s)}"
+EMAIL="${EMAIL:-smoke$RUN_ID@sabeel.app}"
 PASSWORD="${PASSWORD:-password123}"
 FAILED=0
 
@@ -149,17 +150,19 @@ docker compose exec -T postgres psql -U "${POSTGRES_USER:-sabeel}" -d sabeel_aut
 TEACHER_TOKEN=$(curl -s -X POST "$BASE/api/v1/auth/login" -H 'Content-Type: application/json' \
   -d '{"email":"teacher@sabeel.dev","password":"P@ssw0rd!23"}' | jq -r '.accessToken')
 TEACHER_AUTH="Authorization: Bearer $TEACHER_TOKEN"
-COURSE_ID=$(curl -s -X POST "$BASE/api/v1/learning/courses" -H "$TEACHER_AUTH" -H 'Content-Type: application/json' \
-  -d '{"title":"Tafsir Al-Fatiha","description":"intro","category":"TAFSIR"}' | jq -r '.id')
+COURSE=$(curl -s -X POST "$BASE/api/v1/learning/courses" -H "$TEACHER_AUTH" -H 'Content-Type: application/json' \
+  -d "{\"title\":\"Tafsir Al-Fatiha $RUN_ID\",\"description\":\"intro\",\"category\":\"TAFSIR\"}")
+COURSE_SLUG=$(echo "$COURSE" | jq -r '.slug')
+COURSE_ID=$(echo "$COURSE" | jq -r '.id')
 curl -s -X POST "$BASE/api/v1/learning/courses/$COURSE_ID/lessons" -H "$TEACHER_AUTH" -H 'Content-Type: application/json' \
   -d '{"title":"Lesson 1","videoUrl":"https://videos.example/l1.mp4","durationSec":600,"sortOrder":1}' > /dev/null
 check "teacher publishes course" "PUBLISHED" \
   "$(curl -s -X POST "$BASE/api/v1/learning/courses/$COURSE_ID/publish" -H "$TEACHER_AUTH" | jq -r '.status')"
-check "course visible by slug" "tafsir-al-fatiha" \
-  "$(curl -s "$BASE/api/v1/learning/courses/tafsir-al-fatiha" -H "$AUTH" | jq -r '.slug')"
+check "course visible by slug" "$COURSE_SLUG" \
+  "$(curl -s "$BASE/api/v1/learning/courses/$COURSE_SLUG" -H "$AUTH" | jq -r '.slug')"
 ENROLLMENT=$(curl -s -X POST "$BASE/api/v1/learning/enrollments/$COURSE_ID" -H "$AUTH")
 check "student enrolls" "ACTIVE" "$(echo "$ENROLLMENT" | jq -r '.status')"
-LESSON_ID=$(curl -s "$BASE/api/v1/learning/courses/tafsir-al-fatiha" -H "$AUTH" | jq -r '.lessons[0].lessonId')
+LESSON_ID=$(curl -s "$BASE/api/v1/learning/courses/$COURSE_SLUG" -H "$AUTH" | jq -r '.lessons[0].lessonId')
 check "lesson progress completes" "true" \
   "$(curl -s -X POST "$BASE/api/v1/learning/progress" -H "$AUTH" -H 'Content-Type: application/json' \
     -d "{\"enrollmentId\":\"$(echo "$ENROLLMENT" | jq -r '.id')\",\"lessonId\":\"$LESSON_ID\",\"watchedSeconds\":600}" | jq '.completed')"

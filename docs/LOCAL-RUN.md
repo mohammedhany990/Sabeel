@@ -31,7 +31,7 @@ docker compose ps
 ./scripts/smoke.sh
 ```
 
-`smoke.sh` waits for the gateway and services, then runs a set of checks and prints PASS or FAIL for each. It needs `curl` and `jq` (on Windows run it from Git Bash or WSL).
+`smoke.sh` waits for the gateway and services, then runs a set of checks and prints PASS or FAIL for each. Each run registers a new smoke user and creates a new course, so it can be run again on the same data. It needs `curl` and `jq` (on Windows run it from Git Bash or WSL).
 
 ## URLs
 
