@@ -323,3 +323,11 @@ Configuration needed for real delivery: a strong `JWT_SECRET`, an FCM service-ac
 This delivery implements the Phase 1 MVP; the Phase 2 worship utilities (prayer-service, azkar-service, full-surah Quran audio, Prometheus + Grafana, CI smoke workflow); and from Phase 3, learning-service (courses in MongoDB with enrollment, progress and ratings in PostgreSQL), community-service (event-driven badges, challenges and circles) and recitation-service's asynchronous evaluation pipeline.
 
 Recitation evaluation runs on a local whisper.cpp adapter (real audio, no external account or paid service) with a labeled transcript-comparison demo mode for development; accuracy varies with reciter and recording quality, it is text alignment and not a tajweed judgment, and a hosted ASR API remains an optional future adapter behind the same interface. Still unimplemented from the wider design: media-service (recitation object-key storage), admin tooling, and any production deployment.
+
+
+## Web app notes and licensing
+
+- The web app now includes: tafsir and translation panels (QuranEnc editions served by the backend), a sticky reader player, Husary and Minshawi teaching reciters streamed from everyayah.com, share ayah (text or image), a tajweed mushaf view (Quran Foundation API, fetched at runtime, internet needed for each page the first time), adhan by Nasr al-Din Tobar and a 15-minute prayer reminder, prayer tracker with qada and qiyam, tasbih, duas, Asma ul-Husna, Hijri calendar with fasting tracker, an approximate zakat calculator, prophet stories with a quiz, and an installable PWA.
+- Removed: the recitation check page in the web app (the recitation-service and its API remain), the bundled Saheeh International translation, and the bundled Madinah, Al-Aqsa and Alafasy adhan recordings, because their licenses do not allow redistribution of modified copies or are unclear.
+- Hijri dates are an arithmetic approximation; verify with local moon-sighting. The zakat calculator is approximate guidance, not a fatwa.
+- Audio of the teaching reciters streams from a public host and is not copied by this project; check that host's terms before building a product on it.

@@ -1,0 +1,72 @@
+name: demo-video-v4
+
+on:
+  workflow_dispatch:
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build services
+        run: mvn -B -q package -DskipTests
+      - name: Start the stack
+        working-directory: platform
+        run: |
+          cp .env.example .env
+          export COMPOSE_PARALLEL_LIMIT=2
+          docker compose build
+          docker builder prune -af
+          docker compose up -d
+          for i in $(seq 1 90); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || true)
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          sleep 30
+      - name: Seed demo data
+        working-directory: platform
+        run: bash tools/demo/seed.sh
+      - name: Install Playwright
+        working-directory: platform/tools/demo
+        run: |
+          npm init -y >/dev/null
+          npm install playwright
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y ffmpeg
+      - name: Record
+        working-directory: platform/tools/demo
+        run: |
+          python3 probe.py || true
+          python3 durations3.py
+          node record3.mjs
+          cat demo-out/failures.txt || true
+          python3 mux.py demo-out
+          ffprobe -v error -show_entries format=duration -of csv=p=0 demo-out/sabeel-demo.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sabeel-demo-v4
+          path: |
+            platform/tools/demo/demo-out/sabeel-demo.mp4
+            platform/tools/demo/demo-out/failures.txt
+            platform/tools/demo/demo-out/timeline.json
+      - name: Logs on failure
+        if: failure()
+        working-directory: platform
+        run: docker compose logs --no-color --tail=100
+      - name: Tear down
+        if: always()
+        working-directory: platform
+        run: docker compose down -v
