@@ -30,8 +30,7 @@ import { PageHead } from '../shared/ui';
       <div class="card gilded detail" role="dialog" data-testid="asma-detail" [attr.aria-label]="names[pick()!].en">
         <button class="btn btn-sm btn-ghost close" (click)="pick.set(null)">{{ 'Close' | t }}</button>
         <div class="ar big-name">{{ names[pick()!].ar }}</div>
-        <div class="en-name">{{ names[pick()!].en }}</div>
-        <div class="muted">{{ names[pick()!].meaning }}</div>
+        @if (!i18n.isRtl()) { <div class="en-name">{{ names[pick()!].en }}</div><div class="muted">{{ names[pick()!].meaning }}</div> }
         <div class="sec"><div class="lbl">{{ 'Meaning' | t }}</div><p [attr.dir]="i18n.isRtl() ? 'rtl' : 'ltr'">{{ i18n.isRtl() ? details[pick()!].ar : details[pick()!].en }}</p></div>
         <div class="sec"><div class="lbl">{{ 'Greatness' | t }}</div><p [attr.dir]="i18n.isRtl() ? 'rtl' : 'ltr'">{{ i18n.isRtl() ? details[pick()!].greatAr : details[pick()!].greatEn }}</p></div>
         <div class="nav"><button class="btn btn-sm" (click)="step(-1)">{{ 'Previous' | t }}</button><span class="muted">{{ pick()! + 1 }} / 99</span><button class="btn btn-sm" (click)="step(1)">{{ 'Next' | t }}</button></div>
@@ -46,8 +45,10 @@ import { PageHead } from '../shared/ui';
     .name .ar { font-size: 1.5rem; }
     .name.hl { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
     .today-text { margin: 4px auto; max-width: 620px; line-height: 1.8; }
-    .backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, 0.6); }
-    .detail { position: fixed; z-index: 80; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 40px); overflow: auto; text-align: center; display: grid; gap: 8px; padding: 22px; background: linear-gradient(135deg, #0d4a42, #04181a); }
+    .backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(4, 24, 26, 0.6); }
+    .detail { position: fixed; z-index: 80; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 40px); overflow: auto; text-align: center; display: grid; gap: 8px; padding: 22px; background: var(--bg-2); color: var(--text); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .detail .btn { background: var(--panel-strong); color: var(--text); border: 1px solid var(--line-soft); }
+    .detail .close { color: var(--text); }
     .detail .close { justify-self: end; }
     .sec { text-align: start; border-top: 1px solid var(--line); padding-top: 8px; }
     .sec p { margin: 4px 0 0; line-height: 1.8; }

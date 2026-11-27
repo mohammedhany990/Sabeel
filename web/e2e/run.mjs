@@ -296,6 +296,24 @@ await shot('19b-change-password');
 await setVal('input[name=cp]', 'Passw0rd!x'); await setVal('input[name=np]', 'AnotherPass1!'); await setVal('input[name=cf]', 'AnotherPass1!'); await clickText('button', 'Change password'); await sleep(700);
 check('change password: old password no longer accepted', (await page.$eval('[data-testid=pw-error]', (e) => e.innerText).catch(() => '')).includes('current password is incorrect'));
 
+await page.evaluate(() => { localStorage.setItem('sabeel.theme', 'light'); });
+await page.goto('http://localhost:4300/app/asma', { waitUntil: 'networkidle0' }); await sleep(900);
+await page.evaluate(() => document.querySelector('.card.name')?.click()); await sleep(500);
+const pop = await page.evaluate(() => {
+  const parse = (c) => { const m = /rgba?\(([^)]+)\)/.exec(c); const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+  const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+  const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+  const dlg = document.querySelector('[data-testid=asma-detail]');
+  const bgOf = (el) => { for (let n = el; n; n = n.parentElement) { const c = parse(getComputedStyle(n).backgroundColor); if (c.a > 0.95) return c; } return { r: 255, g: 255, b: 255, a: 1 }; };
+  const worst = [...dlg.querySelectorAll('p, .lbl, .en-name, .muted, button, .ar')].map((e) => ratio(parse(getComputedStyle(e).color), bgOf(e)));
+  return { lightBg: lum(bgOf(dlg)) > 0.5, worst: Math.min(...worst), texts: [...dlg.querySelectorAll('.sec p')].map((p) => p.textContent.trim().length) };
+});
+check('light theme: asma popup has a light background', pop.lightBg, JSON.stringify(pop));
+check('light theme: asma popup text and buttons are readable (contrast >= 4.5)', pop.worst >= 4.5, String(pop.worst));
+check('asma popup shows both meaning and greatness text', pop.texts.length === 2 && pop.texts.every((n) => n > 10), JSON.stringify(pop.texts));
+await shot('19c-asma-popup-light');
+await page.evaluate(() => { localStorage.setItem('sabeel.theme', 'dark'); });
+await page.goto('http://localhost:4300/app/settings', { waitUntil: 'networkidle0' }); await sleep(800);
 check('settings shows a Contact us mailto link', (await page.$eval('[data-testid=support-mailto]', (e) => e.getAttribute('href')).catch(() => '')) === 'mailto:help@example.org');
 check('footer shows a Contact us mailto link', (await page.$eval('[data-testid=footer-contact]', (e) => e.getAttribute('href')).catch(() => '')) === 'mailto:help@example.org');
 
@@ -315,11 +333,21 @@ check('sign out returns to login', page.url().endsWith('/login'), page.url());
 await page.goto('http://localhost:4300/app/dashboard', { waitUntil: 'networkidle0' });
 check('guard blocks protected route when signed out', page.url().endsWith('/login'));
 
-await page.goto('http://localhost:4300/reset-password?token=abc.def-123', { waitUntil: 'networkidle0' }); await sleep(600);
-check('reset page prefills the token from the email link', (await page.$eval('input[name=token]', (e) => e.value).catch(() => '')) === 'abc.def-123');
-await setVal('input[name=pw]', 'BrandNewPass1'); await clickText('button', 'Update password'); await sleep(800);
+await page.goto('http://localhost:4300/reset-password?token=abc.def-123', { waitUntil: 'networkidle0' }); await sleep(700);
+check('reset page hides the token field when opened from the email link', (await page.$('input[name=token]')) === null && (await page.$('input[name=pw]')) !== null && (await page.$('input[name=confirm]')) !== null);
+check('reset page removes the token from the address bar', !page.url().includes('token'), page.url());
+check('reset page does not show the token anywhere', !(await text()).includes('abc.def-123'));
+await setVal('input[name=pw]', 'BrandNewPass1'); await setVal('input[name=confirm]', 'Different12345'); await clickText('button', 'Update password'); await sleep(500);
+check('reset page refuses mismatched confirmation', (await text()).includes('do not match'));
+await clickText('button.pwtoggle', 'Show'); await sleep(200);
+check('reset page show/hide toggle reveals the password', (await page.$eval('input[name=pw]', (e) => e.type)) === 'text');
+await setVal('input[name=confirm]', 'BrandNewPass1'); await clickText('button', 'Update password'); await sleep(800);
 check('reset page shows success and a sign-in link', (await text()).includes('Password updated') && !!(await page.$('#reset-signin')));
 await shot('22-reset-page');
+await page.goto('http://localhost:4300/reset-password', { waitUntil: 'networkidle0' }); await sleep(600);
+check('reset page without a token asks to open the email link', !!(await page.$('[data-testid=reset-no-token]')) && (await page.$('input[name=pw]')) === null);
+await page.click('[data-testid=reset-have-code]'); await sleep(300);
+check('reset page offers a code field only after "I have a code"', !!(await page.$('input[name=token]')));
 
 console.log('\nBAD RESPONSES:', JSON.stringify([...new Set(badResponses)]));
 console.log('ERRORS:', JSON.stringify([...new Set(errors)].slice(0, 15)));

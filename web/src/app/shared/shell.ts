@@ -62,7 +62,7 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
     .brand:hover { text-decoration: none; }
     .signout { margin: 12px 8px 0; flex-shrink: 0; }
     nav { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 3px; align-content: start; }
-    .group { margin: 16px 12px 6px; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-deep); font-weight: 700; }
+    .group { margin: 16px 12px 6px; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
     .nav { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; color: var(--muted); font-weight: 500; font-size: 0.93rem; }
     .nav:hover { background: var(--panel); color: var(--text); text-decoration: none; }
     .nav.active { background: linear-gradient(90deg, rgba(226, 194, 117, 0.18), rgba(226, 194, 117, 0.04)); color: var(--gold); box-shadow: inset 2px 0 0 var(--gold); }
@@ -79,11 +79,11 @@ interface NavItem { path: string; label: string; icon: SafeHtml; }
     .bell { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line-soft); color: var(--text); background: var(--panel); cursor: pointer; padding: 0; font: inherit; }
     .bell:hover { border-color: var(--gold); text-decoration: none; }
     .bell.on { border-color: var(--gold); color: var(--gold); background: rgba(226, 194, 117, 0.12); }
-    .dot { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--gold); color: #1b1405; font: 700 0.7rem var(--font-ui); display: grid; place-items: center; }
+    .dot { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--gold-deep); color: #1b1405; font: 700 0.7rem var(--font-ui); display: grid; place-items: center; }
     .content { padding: 18px 34px 60px; max-width: 1280px; width: 100%; }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
-      .side { position: fixed; z-index: 50; width: 280px; transform: translateX(-100%); transition: transform 0.25s; background: #04191a; }
+      .side { position: fixed; z-index: 50; width: 280px; transform: translateX(-100%); transition: transform 0.25s; background: var(--bg-2) !important; }
       .side.open { transform: none; }
       .burger { display: inline-flex; }
       .top, .content { padding-inline: 16px; }

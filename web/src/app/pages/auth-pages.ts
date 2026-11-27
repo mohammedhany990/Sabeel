@@ -18,6 +18,9 @@ const SHARED_STYLES = `
   .sub { color: var(--muted); margin-top: -6px; }
   .foot { text-align: center; color: var(--muted); font-size: 0.9rem; }
   .ok-box { padding: 12px 16px; border-radius: 12px; background: rgba(47, 191, 148, 0.1); border: 1px solid rgba(47, 191, 148, 0.4); color: #b6f0dc; font-size: 0.9rem; }
+  .pwrow { display: flex; gap: 8px; align-items: stretch; }
+  .pwrow input { flex: 1; min-width: 0; }
+  .pwtoggle { border: 1px solid var(--line); background: rgba(255,255,255,0.04); color: var(--gold); border-radius: 12px; padding: 0 14px; cursor: pointer; font: inherit; }
   @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } .art { display: none; } }
 `;
 
@@ -152,7 +155,7 @@ export class ForgotPage {
     this.busy.set(true);
     this.error.set('');
     this.auth.forgotPassword(this.email.trim()).subscribe({
-      next: (r) => { this.busy.set(false); this.message.set(r.message); },
+      next: () => { this.busy.set(false); this.message.set('If the email exists, a reset link was sent.'); },
       error: (e) => { this.busy.set(false); this.error.set(errorMessage(e)); }
     });
   }
@@ -166,10 +169,24 @@ export class ForgotPage {
     <form (ngSubmit)="submit()">
       <div><h1>{{ 'Choose a new password' | t }}</h1></div>
       @if (error()) { <div class="error-box">{{ error() | t }}</div> }
-      @if (message()) { <div class="ok-box">{{ message() | t }}</div><a class="btn btn-gold" routerLink="/login" id="reset-signin">{{ 'Sign in with your new password' | t }}</a> }
-      <label class="field">{{ 'Reset token' | t }}<input name="token" [(ngModel)]="tokenValue" required></label>
-      <label class="field">{{ 'New password' | t }}<input type="password" name="pw" [(ngModel)]="password" required minlength="8" maxlength="72"></label>
-      <button class="btn btn-gold" type="submit" [disabled]="busy()">{{ 'Update password' | t }}</button>
+      @if (message()) { <div class="ok-box">{{ message() | t }}</div> }
+      @if (!message()) {
+        @if (!hasToken() && !manual()) {
+          <p class="sub" data-testid="reset-no-token">{{ 'Open the reset link from your email to choose a new password.' | t }}</p>
+          <button class="btn" type="button" data-testid="reset-have-code" (click)="manual.set(true)">{{ 'I have a code' | t }}</button>
+        } @else {
+          @if (!hasToken()) {
+            <label class="field">{{ 'Reset token' | t }}<input name="token" [(ngModel)]="tokenValue" required autocomplete="off"></label>
+          }
+          <label class="field">{{ 'New password' | t }}
+            <span class="pwrow"><input [type]="show() ? 'text' : 'password'" name="pw" [(ngModel)]="password" required minlength="8" maxlength="72" autocomplete="new-password"><button class="pwtoggle" type="button" data-testid="reset-toggle" (click)="show.set(!show())">{{ (show() ? 'Hide' : 'Show') | t }}</button></span>
+          </label>
+          <label class="field">{{ 'Confirm new password' | t }}<input [type]="show() ? 'text' : 'password'" name="confirm" [(ngModel)]="confirm" required maxlength="72" autocomplete="new-password"></label>
+          <button class="btn btn-gold" type="submit" [disabled]="busy()">{{ 'Update password' | t }}</button>
+        }
+      } @else {
+        <a class="btn btn-gold" routerLink="/login" id="reset-signin">{{ 'Sign in with your new password' | t }}</a>
+      }
       <div class="foot"><a routerLink="/login">{{ 'Back to sign in' | t }}</a></div>
     </form>
   ${SHELL_CLOSE}`
@@ -179,19 +196,33 @@ export class ResetPage {
   readonly token = input<string>();
   tokenValue = '';
   password = '';
+  confirm = '';
+  readonly hasToken = signal(false);
+  readonly manual = signal(false);
+  readonly show = signal(false);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly message = signal('');
 
   constructor() {
-    queueMicrotask(() => { if (this.token()) this.tokenValue = this.token()!; });
+    queueMicrotask(() => {
+      const t = this.token();
+      if (t) {
+        this.tokenValue = t;
+        this.hasToken.set(true);
+        if (typeof history !== 'undefined') history.replaceState(history.state, '', location.pathname);
+      }
+    });
   }
 
   submit(): void {
-    this.busy.set(true);
     this.error.set('');
+    if (!this.tokenValue.trim()) { this.error.set('Open the reset link from your email to choose a new password.'); return; }
+    if (this.password.length < 8) { this.error.set('New password needs at least 8 characters.'); return; }
+    if (this.password !== this.confirm) { this.error.set('The new passwords do not match.'); return; }
+    this.busy.set(true);
     this.auth.resetPassword(this.tokenValue.trim(), this.password).subscribe({
-      next: (r) => { this.busy.set(false); this.message.set(r.message); },
+      next: () => { this.busy.set(false); this.message.set('Password updated.'); this.password = ''; this.confirm = ''; },
       error: (e) => { this.busy.set(false); this.error.set(errorMessage(e)); }
     });
   }
@@ -226,7 +257,7 @@ export class VerifyPage {
         return;
       }
       this.auth.verifyEmail(t).subscribe({
-        next: (r) => { this.state.set('ok'); this.message.set(r.message); },
+        next: () => { this.state.set('ok'); this.message.set('Email verified.'); },
         error: (e) => { this.state.set('error'); this.message.set(errorMessage(e)); }
       });
     });

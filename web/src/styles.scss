@@ -10,8 +10,8 @@
   --emerald: #2fbf94;
   --emerald-deep: #0f6b57;
   --text: #f3efe3;
-  --muted: #9db3ab;
-  --danger: #ef6b6b;
+  --muted: #aec3bb;
+  --danger: #ff8a8a;
   --warn: #f0b24b;
   --radius: 18px;
   --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65);
@@ -170,12 +170,12 @@ html[data-theme='light'] {
   --panel-strong: #ffffff;
   --line: rgba(138, 100, 20, 0.3);
   --line-soft: rgba(20, 35, 31, 0.13);
-  --gold: #86600f;
-  --gold-deep: #86600f;
+  --gold: #7a560a;
+  --gold-deep: #c8a043;
   --emerald: #0d6652;
   --emerald-deep: #0d6652;
   --text: #14231f;
-  --muted: #4a5d56;
+  --muted: #3f524b;
   --danger: #b3261e;
   --warn: #8a5a00;
   --shadow: 0 18px 40px -24px rgba(60, 45, 10, 0.4);
@@ -236,3 +236,9 @@ html[data-theme='light'] .art { background: linear-gradient(160deg, rgba(13, 102
 @keyframes dp-pulse { 50% { box-shadow: 0 0 0 7px rgba(47, 191, 148, 0); } }
 @media (prefers-reduced-motion: reduce) { .dock-player .dp-dot { animation: none; } }
 @media (max-width: 520px) { .dock-player { border-radius: 22px; bottom: 10px; } }
+
+html:not([data-theme='light']) .legend .tj-madda_normal { color: #ffa733; }
+html:not([data-theme='light']) .legend .tj-ghunnah { color: #4ade80; }
+html:not([data-theme='light']) .legend .tj-qalqalah { color: #7ea6ff; }
+html:not([data-theme='light']) .legend .tj-ikhfa { color: #c4a6ff; }
+html:not([data-theme='light']) .legend .tj-ham_wasl { color: #b4bcc8; }

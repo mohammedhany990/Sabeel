@@ -82,6 +82,7 @@ const CATEGORIES = ['TAFSIR', 'HADITH', 'FIQH', 'SEERAH', 'TAJWEED'];
   styles: [`
     .course { color: var(--text); display: grid; gap: 8px; transition: transform 0.15s, border-color 0.2s; }
     .course:hover { transform: translateY(-3px); border-color: var(--gold); text-decoration: none; }
+    .thumb .badge { background: rgba(4, 24, 26, 0.85); color: #f0d791; border-color: rgba(240, 215, 145, 0.5); }
     .thumb { height: 140px; border-radius: 14px; background: linear-gradient(135deg, var(--emerald-deep), #0a3b33) center/cover; padding: 12px; }
     .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
     .small { font-size: 0.8rem; }

@@ -79,7 +79,7 @@ function saveCounts(c: Record<string, number>): void {
     .chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
     .chip.active { border-color: var(--gold); color: var(--gold); }
     .chip-line { color: var(--muted); font-size: 0.9rem; display: flex; gap: 8px; justify-content: center; align-items: center; }
-    .big { padding: 22px; border-radius: 18px; border: none; background: linear-gradient(135deg, var(--gold), #b8944a); color: #1a1408; font-size: 1.3rem; font-weight: 700; cursor: pointer; }
+    .big { padding: 22px; border-radius: 18px; border: none; background: linear-gradient(135deg, #f0d791, #c8a043); color: #1a1408; font-size: 1.3rem; font-weight: 700; cursor: pointer; }
     .big:active { transform: scale(0.98); }
     .row { display: flex; align-items: center; }
     .row.between { justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }

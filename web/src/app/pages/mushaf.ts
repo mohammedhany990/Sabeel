@@ -135,16 +135,16 @@ function colorize(t: string, sanitizer: DomSanitizer): SafeHtml {
     .mushaf { background: #fdf6e3; color: #1a1408; border-radius: 14px; padding: 22px 26px; direction: rtl; text-align: justify; font-family: Amiri, serif; font-size: 1.9rem; line-height: 2.4; user-select: none; }
     .surah-head { text-align: center; color: #0d5c46; font-weight: 700; border: 2px solid #0d5c46; border-radius: 12px; margin: 10px 0 6px; padding: 4px; font-size: 1.5rem; }
     .bismillah { text-align: center; color: #0d5c46; margin-bottom: 6px; }
-    .vnum { color: #b8860b; font-size: 1.1rem; }
+    .vnum { color: #7a5600; font-size: 1.1rem; }
     .legend { margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
-    :host ::ng-deep .tj-madda_normal, :host ::ng-deep .tj-madda_permissible, :host ::ng-deep .tj-madda_allowed, :host ::ng-deep .tj-madda_necessary { color: #e07b00; }
+    :host ::ng-deep .tj-madda_normal, :host ::ng-deep .tj-madda_permissible, :host ::ng-deep .tj-madda_allowed, :host ::ng-deep .tj-madda_necessary { color: #9a4d00; }
     :host ::ng-deep .tj-madda_obligatory, :host ::ng-deep .tj-madda_lazim { color: #d40000; }
-    :host ::ng-deep .tj-ghunnah, :host ::ng-deep .tj-idgham_ghunnah, :host ::ng-deep .tj-idgham_wo_ghunnah { color: #0d8a3f; }
+    :host ::ng-deep .tj-ghunnah, :host ::ng-deep .tj-idgham_ghunnah, :host ::ng-deep .tj-idgham_wo_ghunnah { color: #0a6b30; }
     :host ::ng-deep .tj-qalqalah { color: #1d4ed8; }
-    :host ::ng-deep .tj-ikhfa, :host ::ng-deep .tj-ikhfa_shafawi, :host ::ng-deep .tj-iqlab { color: #7c3aed; }
-    :host ::ng-deep .tj-ham_wasl { color: #6b7280; }
+    :host ::ng-deep .tj-ikhfa, :host ::ng-deep .tj-ikhfa_shafawi, :host ::ng-deep .tj-iqlab { color: #6128c4; }
+    :host ::ng-deep .tj-ham_wasl { color: #4b5563; }
     :host ::ng-deep .tj-tafkheem { color: #b91c1c; font-weight: 700; }
-    :host ::ng-deep .tj-end { color: #b8860b; }
+    :host ::ng-deep .tj-end { color: #7a5600; }
     .small { font-size: 0.85rem; }
     .vtext { cursor: pointer; border-radius: 6px; }
     .vtext.sel { background: rgba(184, 134, 11, 0.25); }

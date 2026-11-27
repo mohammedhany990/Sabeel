@@ -13,7 +13,7 @@ import { T } from '../core/i18n';
   styles: [`
     .seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.05); }
     button { border: 0; background: transparent; color: var(--muted); padding: 8px 18px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 0.9rem; }
-    button.on { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: #1a1408; font-weight: 700; }
+    button.on { background: linear-gradient(135deg, #f0d791, #c8a043); color: #1a1408; font-weight: 700; }
   `]
 })
 export class ViewToggle {

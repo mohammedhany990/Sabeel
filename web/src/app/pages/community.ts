@@ -108,9 +108,9 @@ const METRICS = ['MEMORIZATION_TASKS', 'PLANS_COMPLETED', 'STREAK_DAYS'];
   `,
   styles: [`
     .badgecard { text-align: center; display: grid; gap: 8px; justify-items: center; }
-    .badgecard.locked { opacity: 0.55; }
+    .badgecard.locked .medal { filter: grayscale(1); }
     .medal { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; font-size: 1.7rem; background: linear-gradient(135deg, #f0d791, var(--gold-deep)); color: #1b1405; }
-    .locked .medal { background: var(--panel-strong); color: var(--muted); }
+    .locked .medal { background: var(--panel-strong); color: var(--text); border: 1px solid var(--line-soft); }
     .small { font-size: 0.8rem; }
   `]
 })
